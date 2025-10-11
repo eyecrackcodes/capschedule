@@ -80,8 +80,10 @@ export function ScheduleDisplay({
     return location === "CLT" ? "bg-blue-500" : "bg-green-500";
   };
 
-  const getTierColor = (tier: "Performance" | "Standard") => {
-    return tier === "Performance" ? "bg-purple-500" : "bg-orange-500";
+  const getTierColor = (tier: "Performance" | "Standard" | "Zero CAP Remediation") => {
+    if (tier === "Performance") return "bg-purple-500";
+    if (tier === "Standard") return "bg-orange-500";
+    return "bg-red-500"; // For Zero CAP Remediation
   };
 
   const getPriorityColor = (priority: string) => {
