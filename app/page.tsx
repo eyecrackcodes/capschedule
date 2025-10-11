@@ -25,7 +25,8 @@ import {
   exportEmailFormat,
   copyEmailToClipboard,
 } from "@/lib/export-utils";
-import { AppState, Filters, ParseResult } from "@/types";
+import { AppState, Filters } from "@/types";
+import { ParseResult } from "@/lib/file-parser";
 
 export default function HomePage() {
   const [activeView, setActiveView] = useState<
