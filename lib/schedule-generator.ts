@@ -248,7 +248,7 @@ function scheduleZeroCAPAgents(
     const session: TrainingSession = {
       time: timeSlot.time,
       location: cohort.location,
-      tier: "Zero CAP Remediation" as any,
+      tier: "Zero CAP Remediation",
       agents: cohort.agents,
       priority: `${timeSlot.description} - ${
         TRAINING_FOCUS[daySchedule.day as keyof typeof TRAINING_FOCUS]

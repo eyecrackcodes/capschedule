@@ -18,7 +18,7 @@ export interface AgentRecord {
 export interface TrainingSession {
   time: string; // '8:00-9:00 AM'
   location: "CLT" | "ATX";
-  tier: "Performance" | "Standard";
+  tier: "Performance" | "Standard" | "Zero CAP Remediation";
   agents: AgentRecord[];
   priority: string; // 'Pre-Peak' | 'Post-Lunch Lull' | etc.
   cohortNumber: number;
