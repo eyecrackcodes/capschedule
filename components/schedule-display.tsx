@@ -483,10 +483,15 @@ export function ScheduleDisplay({
                                 </div>
                               </div>
                             </div>
-                            
+
                             {/* AI Curriculum Generator - Only for Tuesday, Wednesday, Thursday */}
-                            {["Tuesday", "Wednesday", "Thursday"].includes(day.day) && (
-                              <CurriculumGenerator session={session} day={day.day} />
+                            {["Tuesday", "Wednesday", "Thursday"].includes(
+                              day.day
+                            ) && (
+                              <CurriculumGenerator
+                                session={session}
+                                day={day.day}
+                              />
                             )}
                           </div>
                         )}

@@ -12,7 +12,10 @@ interface CurriculumGeneratorProps {
   day: string;
 }
 
-export function CurriculumGenerator({ session, day }: CurriculumGeneratorProps) {
+export function CurriculumGenerator({
+  session,
+  day,
+}: CurriculumGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [curriculum, setCurriculum] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -23,12 +26,12 @@ export function CurriculumGenerator({ session, day }: CurriculumGeneratorProps) 
   const generateCurriculum = async () => {
     setIsGenerating(true);
     setError(null);
-    
+
     try {
-      const response = await fetch('/api/generate-curriculum', {
-        method: 'POST',
+      const response = await fetch("/api/generate-curriculum", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           trainingType: trainingFocus,
@@ -40,13 +43,13 @@ export function CurriculumGenerator({ session, day }: CurriculumGeneratorProps) 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate curriculum');
+        throw new Error(data.error || "Failed to generate curriculum");
       }
 
       setCurriculum(data.curriculum);
       setIsExpanded(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsGenerating(false);
     }
@@ -61,11 +64,14 @@ export function CurriculumGenerator({ session, day }: CurriculumGeneratorProps) 
 
   const downloadCurriculum = () => {
     if (curriculum) {
-      const blob = new Blob([curriculum], { type: 'text/plain' });
+      const blob = new Blob([curriculum], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = `${day}_${session.location}_${session.time.replace(/[:\s]/g, '-')}_curriculum.txt`;
+      a.download = `${day}_${session.location}_${session.time.replace(
+        /[:\s]/g,
+        "-"
+      )}_curriculum.txt`;
       a.click();
       URL.revokeObjectURL(url);
     }
@@ -78,7 +84,9 @@ export function CurriculumGenerator({ session, day }: CurriculumGeneratorProps) 
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-purple-600" />
             AI Curriculum Generator
-            <Badge variant="secondary" className="text-xs">Optional</Badge>
+            <Badge variant="secondary" className="text-xs">
+              Optional
+            </Badge>
           </div>
           {!curriculum && (
             <Button
@@ -102,7 +110,7 @@ export function CurriculumGenerator({ session, day }: CurriculumGeneratorProps) 
           )}
         </CardTitle>
       </CardHeader>
-      
+
       {(curriculum || error) && (
         <CardContent>
           {error && (
@@ -110,11 +118,11 @@ export function CurriculumGenerator({ session, day }: CurriculumGeneratorProps) 
               <AlertCircle className="h-4 w-4 text-red-600 mt-0.5" />
               <div className="text-sm text-red-800">
                 <p className="font-semibold">Error generating curriculum</p>
-                <p className="text-xs mt-1">{error}</p>
+                <div className="text-xs mt-1 whitespace-pre-line">{error}</div>
               </div>
             </div>
           )}
-          
+
           {curriculum && (
             <>
               <div className="flex items-center justify-between mb-3">
@@ -146,14 +154,16 @@ export function CurriculumGenerator({ session, day }: CurriculumGeneratorProps) 
                     onClick={() => setIsExpanded(!isExpanded)}
                     className="h-7 text-xs"
                   >
-                    {isExpanded ? 'Collapse' : 'Expand'}
+                    {isExpanded ? "Collapse" : "Expand"}
                   </Button>
                 </div>
               </div>
-              
-              <div className={`bg-white p-4 rounded-lg border border-purple-200 ${
-                isExpanded ? '' : 'max-h-40 overflow-hidden relative'
-              }`}>
+
+              <div
+                className={`bg-white p-4 rounded-lg border border-purple-200 ${
+                  isExpanded ? "" : "max-h-40 overflow-hidden relative"
+                }`}
+              >
                 <pre className="whitespace-pre-wrap text-xs font-mono text-gray-700">
                   {curriculum}
                 </pre>
@@ -161,7 +171,7 @@ export function CurriculumGenerator({ session, day }: CurriculumGeneratorProps) 
                   <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent" />
                 )}
               </div>
-              
+
               <div className="mt-3 flex justify-end">
                 <Button
                   size="sm"

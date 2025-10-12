@@ -17,11 +17,13 @@ The CAP Training Schedule Generator includes an optional AI-powered curriculum g
 ### 2. Configure Your Local Environment
 
 1. Create a `.env.local` file in your project root:
+
    ```bash
    touch .env.local
    ```
 
 2. Add your Claude API key to the file:
+
    ```
    CLAUDE_API_KEY=sk-ant-api-YOUR-KEY-HERE
    ```
@@ -38,6 +40,7 @@ The CAP Training Schedule Generator includes an optional AI-powered curriculum g
 ### 3. Restart Your Development Server
 
 After adding the environment variables, restart your Next.js development server:
+
 ```bash
 npm run dev
 # or
@@ -53,6 +56,7 @@ yarn dev
 3. **Generate Curriculum**: Click the "Generate Curriculum" button that appears at the bottom of the expanded session
 
 4. **Review Content**: The AI will generate a customized 1-hour curriculum including:
+
    - Session overview and objectives
    - Core training modules
    - Practice activities
@@ -82,16 +86,19 @@ The curriculum generator takes into account:
 ## Troubleshooting
 
 ### "Claude API key not configured"
+
 - Ensure `.env.local` file exists in your project root
 - Verify the API key is correctly formatted
 - Restart your development server
 
 ### "Failed to generate curriculum"
+
 - Check your API key is valid and has credits
 - Verify your internet connection
 - Check the browser console for detailed error messages
 
 ### Curriculum not appearing
+
 - Ensure you're viewing a Tuesday, Wednesday, or Thursday session
 - Expand the session details before clicking generate
 - Check that the session has agents assigned
@@ -108,11 +115,13 @@ The curriculum generator takes into account:
 The curriculum generator can create:
 
 - **Close Rate Training** (Tuesday):
+
   - Objection handling techniques
   - Trust-building exercises
   - Closing scripts and role-plays
 
 - **Annual Premium Training** (Wednesday):
+
   - Upselling strategies
   - Value demonstration techniques
   - Needs analysis frameworks
@@ -125,6 +134,7 @@ The curriculum generator can create:
 ## Future Enhancements
 
 Potential improvements to consider:
+
 - Save generated curricula to a database
 - Track which curricula were most effective
 - Allow trainers to provide feedback
