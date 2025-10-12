@@ -23,7 +23,7 @@ import {
 import {
   generateSchedule,
   validateSchedule,
-} from "@/lib/schedule-generator-v3"; // Using v3 with business constraints
+} from "@/lib/schedule-generator-v4"; // Using v4 with conflict prevention and Friday overfill
 import {
   exportToCSV,
   exportToPDF,
