@@ -304,7 +304,7 @@ function scheduleFridayOverfill(
     }
 
     // Schedule CLT or ATX based on alternation and availability
-    const locationsToTry =
+    const locationsToTry: Array<"CLT" | "ATX"> =
       lastScheduledLocation === "CLT" ? ["ATX", "CLT"] : ["CLT", "ATX"];
 
     for (const location of locationsToTry) {
@@ -567,7 +567,7 @@ function scheduleMetricSpecificTrainingNoConflicts(
       }
 
       // Determine which location should be scheduled based on alternation
-      const locationsToTry =
+      const locationsToTry: Array<"CLT" | "ATX"> =
         lastScheduledLocation === "CLT" ? ["ATX", "CLT"] : ["CLT", "ATX"];
 
       for (const targetLocation of locationsToTry) {
