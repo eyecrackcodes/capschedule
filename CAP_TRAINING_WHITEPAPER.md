@@ -97,11 +97,10 @@ CRITICAL:        CAP Score = 0 (immediate intervention)
 The system implements a strategic weekly training schedule:
 
 ```
-Monday:    Zero CAP Remediation - Critical intervention for non-performing agents
 Tuesday:   Close Rate Training - Sales technique improvement
 Wednesday: Annual Premium Training - Value optimization strategies
 Thursday:  Place Rate Training - Quote-to-placement conversion
-Friday:    Zero CAP Overflow - Additional slots for critical cases
+Friday:    Zero CAP Remediation - Critical intervention for non-performing agents
 ```
 
 ### Multi-Factor Assignment Process

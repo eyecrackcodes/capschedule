@@ -39,21 +39,12 @@ export function generateSchedule(
   // Get schedule map for easy access
   const scheduleMap = new Map(schedule.map((s) => [s.day, s]));
 
-  // Schedule zero CAP agents on Monday
-  const mondaySchedule = scheduleMap.get("Monday")!;
-  scheduleZeroCAPAgents(mondaySchedule, cohorts.zeroCAPAgents);
+  // Schedule zero CAP agents on Friday
+  const fridaySchedule = scheduleMap.get("Friday")!;
+  scheduleZeroCAPAgents(fridaySchedule, cohorts.zeroCAPAgents);
 
   // Schedule metric-specific training on Tuesday, Wednesday, Thursday
   scheduleMetricSpecificTraining(scheduleMap, cohorts, avgCAPScore);
-
-  // If we still have zero CAP agents that couldn't fit on Monday, try Friday
-  if (
-    cohorts.zeroCAPAgents.clt.length + cohorts.zeroCAPAgents.atx.length >
-    12 // 6 time slots * 2 locations
-  ) {
-    const fridaySchedule = scheduleMap.get("Friday")!;
-    scheduleZeroCAPAgents(fridaySchedule, cohorts.zeroCAPAgents, 12); // Start from cohort 13
-  }
 
   return schedule;
 }

@@ -34,7 +34,7 @@ export function ScheduleDisplay({
   avgCAPScore = 0,
 }: ScheduleDisplayProps) {
   const [expandedDays, setExpandedDays] = useState<Set<string>>(
-    new Set(["Monday"])
+    new Set(["Tuesday"])
   );
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(
     new Set()
@@ -147,7 +147,7 @@ export function ScheduleDisplay({
               </h3>
               <p className="text-3xl font-bold text-red-600">{zeroCAPCount}</p>
               <p className="text-sm text-gray-500 mt-1">
-                Monday & Friday sessions
+                Friday sessions
               </p>
             </div>
 
@@ -174,7 +174,7 @@ export function ScheduleDisplay({
               </p>
               <p>
                 • <strong>Zero CAP Agents:</strong> Immediate remediation on
-                Monday/Friday
+                Friday
               </p>
               <p>
                 • <strong>Below Average Agents:</strong> Metric-specific
@@ -193,7 +193,6 @@ export function ScheduleDisplay({
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="flex items-start space-x-2">
-                <Badge className="bg-red-100 text-red-800">Monday</Badge>
                 <div>
                   <p className="font-medium text-sm">
                     Zero CAP Score Remediation
@@ -482,7 +481,6 @@ export function ScheduleDisplay({
                                 </div>
                               </div>
                             </div>
-
                           </div>
                         )}
                       </div>

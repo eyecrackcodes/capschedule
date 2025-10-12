@@ -75,17 +75,17 @@ export interface TimeSlot {
 // Time slots with CST as the base (ATX operates 8-5 CST, CLT operates 9-6 EST)
 export const TIME_SLOTS: TimeSlot[] = [
   {
-    time: "8:00-9:00 AM CST / 9:00-10:00 AM EST",
+    time: "8:30-9:30 AM CST / 9:30-10:30 AM EST",
     priority: "HIGH",
     description: "Pre-peak ramp up",
   },
   {
-    time: "9:00-10:00 AM CST / 10:00-11:00 AM EST",
+    time: "9:30-10:30 AM CST / 10:30-11:30 AM EST",
     priority: "MEDIUM",
     description: "Early morning",
   },
   {
-    time: "10:00-11:00 AM CST / 11:00 AM-12:00 PM EST",
+    time: "10:30-11:30 AM CST / 11:30 AM-12:30 PM EST",
     priority: "LOW",
     description: "Approaching peak",
   },
@@ -108,25 +108,24 @@ export const TIME_SLOTS: TimeSlot[] = [
 
 // Simplified time display for each location
 export const ATX_TIME_SLOTS = [
-  "8:00-9:00 AM CST",
-  "9:00-10:00 AM CST",
-  "10:00-11:00 AM CST",
+  "8:30-9:30 AM CST",
+  "9:30-10:30 AM CST",
+  "10:30-11:30 AM CST",
   "2:00-3:00 PM CST",
   "3:00-4:00 PM CST",
   "4:00-5:00 PM CST",
 ];
 
 export const CLT_TIME_SLOTS = [
-  "9:00-10:00 AM EST",
-  "10:00-11:00 AM EST",
-  "11:00 AM-12:00 PM EST",
+  "9:30-10:30 AM EST",
+  "10:30-11:30 AM EST",
+  "11:30 AM-12:30 PM EST",
   "3:00-4:00 PM EST",
   "4:00-5:00 PM EST",
   "5:00-6:00 PM EST",
 ];
 
 export const DAYS_OF_WEEK = [
-  "Monday",
   "Tuesday",
   "Wednesday",
   "Thursday",
@@ -134,7 +133,6 @@ export const DAYS_OF_WEEK = [
 ] as const;
 
 export const TRAINING_FOCUS = {
-  Monday: "Zero CAP Score Remediation",
   Tuesday: "Close Rate Training",
   Wednesday: "Annual Premium Training",
   Thursday: "Place Rate Training",

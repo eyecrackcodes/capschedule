@@ -24,7 +24,7 @@ export function TimeZoneDisplay() {
             <div className="space-y-1 text-sm">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-gray-500" />
-                <span>Operating Hours: 9:00 AM - 6:00 PM EST</span>
+                <span>Operating Hours: 9:30 AM - 6:00 PM EST</span>
               </div>
               <p className="text-xs text-gray-600 mt-2">
                 Training sessions scheduled during local business hours
@@ -40,7 +40,7 @@ export function TimeZoneDisplay() {
             <div className="space-y-1 text-sm">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-gray-500" />
-                <span>Operating Hours: 8:00 AM - 5:00 PM CST</span>
+                <span>Operating Hours: 8:30 AM - 5:00 PM CST</span>
               </div>
               <p className="text-xs text-gray-600 mt-2">
                 Training sessions scheduled during local business hours
