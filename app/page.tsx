@@ -86,9 +86,16 @@ export default function HomePage() {
 
     // Log percentiles for debugging
     console.log("50th Percentiles:", {
-      closeRate: percentiles.closeRate50th,
-      annualPremium: percentiles.annualPremium50th,
-      placeRate: percentiles.placeRate50th,
+      performance: {
+        closeRate: percentiles.performance.closeRate50th,
+        annualPremium: percentiles.performance.annualPremium50th,
+        placeRate: percentiles.performance.placeRate50th,
+      },
+      standard: {
+        closeRate: percentiles.standard.closeRate50th,
+        annualPremium: percentiles.standard.annualPremium50th,
+        placeRate: percentiles.standard.placeRate50th,
+      },
     });
 
     // Debug: Check how many agents need Place Rate training
