@@ -187,23 +187,11 @@ export function getLocationTime(
   }
 }
 
-// Calculate 50th percentile (median) for each metric
+// Calculate 50th percentile (median) for each metric by tier
 export function calculateMetricPercentiles(agents: AgentRecord[]) {
-  // Filter out agents with 0 values for percentile calculations
-  const validCloseRates = agents
-    .filter((a) => a.closeRate && a.closeRate > 0)
-    .map((a) => a.closeRate!)
-    .sort((a, b) => a - b);
-
-  const validAnnualPremiums = agents
-    .filter((a) => a.annualPremium && a.annualPremium > 0)
-    .map((a) => a.annualPremium!)
-    .sort((a, b) => a - b);
-
-  const validPlaceRates = agents
-    .filter((a) => a.placeRate && a.placeRate > 0)
-    .map((a) => a.placeRate!)
-    .sort((a, b) => a - b);
+  // Separate agents by tier
+  const performanceAgents = agents.filter((a) => a.tier === "P");
+  const standardAgents = agents.filter((a) => a.tier === "S");
 
   const getMedian = (arr: number[]) => {
     if (arr.length === 0) return 0;
@@ -211,10 +199,49 @@ export function calculateMetricPercentiles(agents: AgentRecord[]) {
     return arr.length % 2 !== 0 ? arr[mid] : (arr[mid - 1] + arr[mid]) / 2;
   };
 
+  // Calculate percentiles for Performance tier
+  const perfCloseRates = performanceAgents
+    .filter((a) => a.closeRate && a.closeRate > 0)
+    .map((a) => a.closeRate!)
+    .sort((a, b) => a - b);
+
+  const perfAnnualPremiums = performanceAgents
+    .filter((a) => a.annualPremium && a.annualPremium > 0)
+    .map((a) => a.annualPremium!)
+    .sort((a, b) => a - b);
+
+  const perfPlaceRates = performanceAgents
+    .filter((a) => a.placeRate && a.placeRate > 0)
+    .map((a) => a.placeRate!)
+    .sort((a, b) => a - b);
+
+  // Calculate percentiles for Standard tier
+  const stdCloseRates = standardAgents
+    .filter((a) => a.closeRate && a.closeRate > 0)
+    .map((a) => a.closeRate!)
+    .sort((a, b) => a - b);
+
+  const stdAnnualPremiums = standardAgents
+    .filter((a) => a.annualPremium && a.annualPremium > 0)
+    .map((a) => a.annualPremium!)
+    .sort((a, b) => a - b);
+
+  const stdPlaceRates = standardAgents
+    .filter((a) => a.placeRate && a.placeRate > 0)
+    .map((a) => a.placeRate!)
+    .sort((a, b) => a - b);
+
   return {
-    closeRate50th: getMedian(validCloseRates),
-    annualPremium50th: getMedian(validAnnualPremiums),
-    placeRate50th: getMedian(validPlaceRates),
+    performance: {
+      closeRate50th: getMedian(perfCloseRates),
+      annualPremium50th: getMedian(perfAnnualPremiums),
+      placeRate50th: getMedian(perfPlaceRates),
+    },
+    standard: {
+      closeRate50th: getMedian(stdCloseRates),
+      annualPremium50th: getMedian(stdAnnualPremiums),
+      placeRate50th: getMedian(stdPlaceRates),
+    },
   };
 }
 
@@ -230,16 +257,21 @@ export function assignTrainingRecommendations(
     if (agent.capScore === 0) {
       recommendations.push("Zero CAP Remediation - All Metrics");
     } else {
-      // Check each metric against 50th percentile
+      // Get the appropriate percentiles based on agent's tier
+      const tierPercentiles = agent.tier === "P" 
+        ? percentiles.performance 
+        : percentiles.standard;
+
+      // Check each metric against tier-specific 50th percentile
       const belowCloseRate =
         agent.closeRate !== undefined &&
-        agent.closeRate < percentiles.closeRate50th;
+        agent.closeRate < tierPercentiles.closeRate50th;
       const belowAP =
         agent.annualPremium !== undefined &&
-        agent.annualPremium < percentiles.annualPremium50th;
+        agent.annualPremium < tierPercentiles.annualPremium50th;
       const belowPlaceRate =
         agent.placeRate !== undefined &&
-        agent.placeRate < percentiles.placeRate50th;
+        agent.placeRate < tierPercentiles.placeRate50th;
 
       if (belowCloseRate) recommendations.push("Close Rate Training");
       if (belowAP) recommendations.push("Annual Premium Training");

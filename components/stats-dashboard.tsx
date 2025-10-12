@@ -8,9 +8,16 @@ import { Stats } from "@/types";
 interface StatsDashboardProps {
   stats: Stats;
   percentiles?: {
-    closeRate50th: number;
-    annualPremium50th: number;
-    placeRate50th: number;
+    performance: {
+      closeRate50th: number;
+      annualPremium50th: number;
+      placeRate50th: number;
+    };
+    standard: {
+      closeRate50th: number;
+      annualPremium50th: number;
+      placeRate50th: number;
+    };
   };
 }
 
@@ -156,32 +163,63 @@ export function StatsDashboard({ stats, percentiles }: StatsDashboardProps) {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">
-              50th Percentile Benchmarks
+              50th Percentile Benchmarks by Tier
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-4">
+              {/* Performance Tier Benchmarks */}
               <div>
-                <p className="text-sm text-gray-600">Close Rate</p>
-                <p className="text-xl font-bold text-blue-600">
-                  {percentiles.closeRate50th.toFixed(1)}%
-                </p>
+                <h4 className="font-semibold text-purple-700 mb-2">Performance Tier</h4>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Close Rate</p>
+                    <p className="text-xl font-bold text-blue-600">
+                      {percentiles.performance.closeRate50th.toFixed(1)}%
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Annual Premium</p>
+                    <p className="text-xl font-bold text-green-600">
+                      ${percentiles.performance.annualPremium50th.toFixed(0)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Place Rate</p>
+                    <p className="text-xl font-bold text-purple-600">
+                      {percentiles.performance.placeRate50th.toFixed(1)}%
+                    </p>
+                  </div>
+                </div>
               </div>
+              
+              {/* Standard Tier Benchmarks */}
               <div>
-                <p className="text-sm text-gray-600">Annual Premium</p>
-                <p className="text-xl font-bold text-green-600">
-                  ${percentiles.annualPremium50th.toFixed(0)}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Place Rate</p>
-                <p className="text-xl font-bold text-purple-600">
-                  {percentiles.placeRate50th.toFixed(1)}%
-                </p>
+                <h4 className="font-semibold text-orange-700 mb-2">Standard Tier</h4>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Close Rate</p>
+                    <p className="text-xl font-bold text-blue-600">
+                      {percentiles.standard.closeRate50th.toFixed(1)}%
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Annual Premium</p>
+                    <p className="text-xl font-bold text-green-600">
+                      ${percentiles.standard.annualPremium50th.toFixed(0)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Place Rate</p>
+                    <p className="text-xl font-bold text-purple-600">
+                      {percentiles.standard.placeRate50th.toFixed(1)}%
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-            <p className="text-xs text-gray-500 mt-2">
-              Agents below these benchmarks receive metric-specific training
+            <p className="text-xs text-gray-500 mt-3">
+              Agents below their tier's benchmarks receive metric-specific training
             </p>
           </CardContent>
         </Card>

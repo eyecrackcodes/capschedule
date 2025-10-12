@@ -60,9 +60,16 @@ export interface AppState {
   schedule: DaySchedule[];
   filters: Filters;
   percentiles?: {
-    closeRate50th: number;
-    annualPremium50th: number;
-    placeRate50th: number;
+    performance: {
+      closeRate50th: number;
+      annualPremium50th: number;
+      placeRate50th: number;
+    };
+    standard: {
+      closeRate50th: number;
+      annualPremium50th: number;
+      placeRate50th: number;
+    };
   };
 }
 
