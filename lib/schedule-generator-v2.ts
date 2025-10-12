@@ -128,50 +128,54 @@ function scheduleMetricSpecificTraining(
     // Create new cohorts with min 2 and max 5 agents per location
     const MIN_COHORT_SIZE = 2;
     const MAX_COHORT_SIZE = 5;
-    
+
     // First, separate agents by location
     const agentsByLocation = {
-      CLT: agentsNeedingTraining.filter(a => a.location === "CLT"),
-      ATX: agentsNeedingTraining.filter(a => a.location === "ATX")
+      CLT: agentsNeedingTraining.filter((a) => a.location === "CLT"),
+      ATX: agentsNeedingTraining.filter((a) => a.location === "ATX"),
     };
-    
+
     const newCohorts: Array<{
       agents: AgentRecord[];
       location: "CLT" | "ATX";
       tier: "Performance" | "Standard";
     }> = [];
-    
+
     // Process each location separately to ensure minimum threshold
-    (["CLT", "ATX"] as const).forEach(location => {
+    (["CLT", "ATX"] as const).forEach((location) => {
       const locationAgents = agentsByLocation[location];
-      
+
       if (locationAgents.length === 0) return;
-      
+
       // If we have fewer than minimum, we might need to wait or combine with next week
       if (locationAgents.length < MIN_COHORT_SIZE) {
-        console.log(`Warning: ${location} has only ${locationAgents.length} agents for ${requiredTraining} (minimum is ${MIN_COHORT_SIZE})`);
+        console.log(
+          `Warning: ${location} has only ${locationAgents.length} agents for ${requiredTraining} (minimum is ${MIN_COHORT_SIZE})`
+        );
         // Still create the cohort but mark it as below minimum
         if (locationAgents.length > 0) {
           newCohorts.push({
-            agents: locationAgents.map(a => a.agent),
+            agents: locationAgents.map((a) => a.agent),
             location,
             tier: locationAgents[0].tier, // Use the first agent's tier
           });
         }
         return;
       }
-      
+
       // Create cohorts for this location
       let currentCohort: AgentRecord[] = [];
       let currentTier: "Performance" | "Standard" = locationAgents[0].tier;
-      
+
       for (let i = 0; i < locationAgents.length; i++) {
         const item = locationAgents[i];
-        
+
         // Check if we should start a new cohort
-        if (currentCohort.length >= MAX_COHORT_SIZE || 
-            (currentCohort.length >= MIN_COHORT_SIZE && 
-             i + MIN_COHORT_SIZE > locationAgents.length)) {
+        if (
+          currentCohort.length >= MAX_COHORT_SIZE ||
+          (currentCohort.length >= MIN_COHORT_SIZE &&
+            i + MIN_COHORT_SIZE > locationAgents.length)
+        ) {
           // Save current cohort
           newCohorts.push({
             agents: [...currentCohort],
@@ -181,23 +185,29 @@ function scheduleMetricSpecificTraining(
           currentCohort = [];
           currentTier = item.tier;
         }
-        
+
         currentCohort.push(item.agent);
       }
-      
+
       // Handle remaining agents
       if (currentCohort.length > 0) {
         // If we have less than minimum, try to merge with previous cohort if possible
         if (currentCohort.length < MIN_COHORT_SIZE && newCohorts.length > 0) {
           const lastCohort = newCohorts[newCohorts.length - 1];
-          if (lastCohort.location === location && 
-              lastCohort.agents.length + currentCohort.length <= MAX_COHORT_SIZE) {
+          if (
+            lastCohort.location === location &&
+            lastCohort.agents.length + currentCohort.length <= MAX_COHORT_SIZE
+          ) {
             // Merge with previous cohort
             lastCohort.agents.push(...currentCohort);
-            console.log(`Merged ${currentCohort.length} agents with previous ${location} cohort`);
+            console.log(
+              `Merged ${currentCohort.length} agents with previous ${location} cohort`
+            );
           } else {
             // Can't merge, create anyway but warn
-            console.log(`Warning: Creating ${location} cohort with only ${currentCohort.length} agents`);
+            console.log(
+              `Warning: Creating ${location} cohort with only ${currentCohort.length} agents`
+            );
             newCohorts.push({
               agents: currentCohort,
               location,
@@ -214,7 +224,7 @@ function scheduleMetricSpecificTraining(
         }
       }
     });
-    
+
     // Sort cohorts to alternate between locations
     newCohorts.sort((a, b) => {
       // First by size (larger cohorts first to ensure they get scheduled)
@@ -441,8 +451,11 @@ export function validateSchedule(schedule: DaySchedule[]): {
           `Cohort too large (${session.agents.length} agents) in ${session.location} ${session.tier} on ${day.day}`
         );
       }
-      
-      if (session.agents.length < 2 && session.tier !== "Zero CAP Remediation") {
+
+      if (
+        session.agents.length < 2 &&
+        session.tier !== "Zero CAP Remediation"
+      ) {
         warnings.push(
           `Cohort below minimum size (${session.agents.length} agents) in ${session.location} on ${day.day} at ${session.time}. Consider combining with another cohort or waiting for more agents.`
         );

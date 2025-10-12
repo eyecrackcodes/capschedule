@@ -13,8 +13,9 @@ Our new training schedule system intelligently staggers sessions to protect oper
 **Bottom Line**: This approach ensures continuous coverage across both locations while providing critical performance training to agents who need it most. We're investing in agent development without compromising customer service levels.
 
 The system automatically assigns agents to specific training based on their performance metrics:
+
 - Tuesday: Close Rate improvement
-- Wednesday: Annual Premium optimization  
+- Wednesday: Annual Premium optimization
 - Thursday: Place Rate enhancement
 - Monday/Friday: Critical intervention for zero CAP agents
 
@@ -25,17 +26,20 @@ The system automatically assigns agents to specific training based on their perf
 ### How We Identify Training Needs
 
 **1. Performance Benchmarking**
+
 - We calculate the 50th percentile (median) for Close Rate, Annual Premium, and Place Rate
 - Agents below these benchmarks receive targeted training for their specific weakness
 - Example: If 50th percentile Close Rate is 13.1%, agents with <13.1% get Tuesday training
 
 **2. Smart Prioritization**
+
 - **Critical**: Zero CAP agents → Immediate Monday/Friday intervention
 - **High Priority**: 20+ points below average CAP → First scheduling slots
 - **Medium Priority**: 10-19 points below average → Standard scheduling
 - **Targeted Training**: Above average CAP but weak in specific metric → Day-specific training
 
 **3. Cohort Intelligence**
+
 - Minimum 2 agents per class (peer learning)
 - Maximum 5 agents per class (personalized attention)
 - Mixed Performance/Standard tiers when possible
@@ -44,6 +48,7 @@ The system automatically assigns agents to specific training based on their perf
 ### The Algorithm Behind the Schedule
 
 **Time Slot Strategy**:
+
 ```
 BEST TIMES (High Priority):
 • 8-9 AM CST / 9-10 AM EST - Pre-peak productivity
@@ -59,6 +64,7 @@ ACCEPTABLE TIMES (Low Priority):
 ```
 
 **Site Alternation Logic**:
+
 1. System checks which location was scheduled last
 2. Attempts to schedule opposite location next
 3. If not possible, proceeds but flags for review
@@ -76,6 +82,7 @@ ACCEPTABLE TIMES (Low Priority):
 ## 📄 White Paper Available
 
 For a comprehensive technical deep dive including:
+
 - Complete methodology and calculations
 - Detailed scheduling algorithms
 - Implementation specifications
@@ -87,6 +94,6 @@ Please reach out if you have questions about how this impacts your team's availa
 
 ---
 
-*System Status: Live and processing schedules*  
-*Next Training Cycle: Starting Monday*  
-*Questions: Reply in thread or DM*
+_System Status: Live and processing schedules_  
+_Next Training Cycle: Starting Monday_  
+_Questions: Reply in thread or DM_

@@ -11,6 +11,7 @@ import {
   ATX_TIME_SLOTS,
   CLT_TIME_SLOTS,
 } from "@/types";
+import { CurriculumGenerator } from "./curriculum-generator";
 import {
   ChevronDown,
   ChevronRight,
@@ -80,7 +81,9 @@ export function ScheduleDisplay({
     return location === "CLT" ? "bg-blue-500" : "bg-green-500";
   };
 
-  const getTierColor = (tier: "Performance" | "Standard" | "Zero CAP Remediation") => {
+  const getTierColor = (
+    tier: "Performance" | "Standard" | "Zero CAP Remediation"
+  ) => {
     if (tier === "Performance") return "bg-purple-500";
     if (tier === "Standard") return "bg-orange-500";
     return "bg-red-500"; // For Zero CAP Remediation
@@ -358,14 +361,18 @@ export function ScheduleDisplay({
                               )}`}
                             ></div>
                             <span className="text-sm">{session.tier}</span>
-                                    <Badge 
-                                      variant={session.agents.length < 2 ? "destructive" : "outline"} 
-                                      className="text-xs"
-                                    >
-                                      <Users className="h-3 w-3 mr-1" />
-                                      {session.agents.length}
-                                      {session.agents.length < 2 && " (Below Min)"}
-                                    </Badge>
+                            <Badge
+                              variant={
+                                session.agents.length < 2
+                                  ? "destructive"
+                                  : "outline"
+                              }
+                              className="text-xs"
+                            >
+                              <Users className="h-3 w-3 mr-1" />
+                              {session.agents.length}
+                              {session.agents.length < 2 && " (Below Min)"}
+                            </Badge>
                           </div>
                           <div className="flex items-center space-x-2">
                             <span
@@ -477,6 +484,11 @@ export function ScheduleDisplay({
                               </div>
                             </div>
                           </div>
+                          
+                          {/* AI Curriculum Generator - Only for Tuesday, Wednesday, Thursday */}
+                          {isExpanded && ["Tuesday", "Wednesday", "Thursday"].includes(day.day) && (
+                            <CurriculumGenerator session={session} day={day.day} />
+                          )}
                         )}
                       </div>
                     );
