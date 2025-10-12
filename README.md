@@ -44,7 +44,6 @@ This application helps call center managers efficiently schedule training for ag
 - Visual warnings for cohorts below minimum size
 - Export capabilities (PDF, CSV, Email-ready format)
 - Responsive design for mobile and desktop
-- **AI-Powered Curriculum Generator** (Optional, requires Claude API key)
 
 ## Technical Stack
 
@@ -87,7 +86,6 @@ pnpm dev
 2. **Review Analysis**: Check the dashboard for agent statistics and training needs
 3. **Generate Schedule**: The system automatically creates an optimized training schedule
 4. **Export Results**: Download the schedule as PDF or CSV, or copy for email
-5. **Generate Curriculum** (Optional): Use AI to create customized training content for each session
 
 ## File Format
 
@@ -118,17 +116,6 @@ npm start
 # Run linting
 npm run lint
 ```
-
-## AI Curriculum Generator (Optional)
-
-The application includes an optional AI-powered curriculum generator that creates customized training content:
-
-- Uses Claude API to generate 1-hour training curricula
-- Customized for Close Rate, Annual Premium, or Place Rate training
-- Considers agent performance metrics and group composition
-- Includes exercises, role-plays, and action items
-
-See [CLAUDE_API_SETUP.md](./CLAUDE_API_SETUP.md) for setup instructions.
 
 ## Contributing
 

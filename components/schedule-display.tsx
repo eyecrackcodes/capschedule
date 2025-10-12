@@ -11,7 +11,6 @@ import {
   ATX_TIME_SLOTS,
   CLT_TIME_SLOTS,
 } from "@/types";
-import { CurriculumGenerator } from "./curriculum-generator";
 import {
   ChevronDown,
   ChevronRight,
@@ -484,15 +483,6 @@ export function ScheduleDisplay({
                               </div>
                             </div>
 
-                            {/* AI Curriculum Generator - Only for Tuesday, Wednesday, Thursday */}
-                            {["Tuesday", "Wednesday", "Thursday"].includes(
-                              day.day
-                            ) && (
-                              <CurriculumGenerator
-                                session={session}
-                                day={day.day}
-                              />
-                            )}
                           </div>
                         )}
                       </div>
