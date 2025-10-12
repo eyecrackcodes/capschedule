@@ -21,16 +21,18 @@ interface HourlyOutage {
 export function PhoneOutageForecast({ schedule }: PhoneOutageForecastProps) {
   // Convert schedule to hourly outage data
   const hourlyOutages: HourlyOutage[] = [];
-  
+
   schedule.forEach((day) => {
     // Group by time slots
     const timeSlotMap = new Map<string, HourlyOutage>();
-    
+
     day.sessions.forEach((session) => {
       // Extract CST time from the combined time string
-      const cstMatch = session.time.match(/(\d{1,2}:\d{2}-\d{1,2}:\d{2} (?:AM|PM) CST)/);
+      const cstMatch = session.time.match(
+        /(\d{1,2}:\d{2}-\d{1,2}:\d{2} (?:AM|PM) CST)/
+      );
       const cstTime = cstMatch ? cstMatch[1] : session.time;
-      
+
       if (!timeSlotMap.has(cstTime)) {
         timeSlotMap.set(cstTime, {
           hour: cstTime,
@@ -42,9 +44,9 @@ export function PhoneOutageForecast({ schedule }: PhoneOutageForecastProps) {
           totalAgents: 0,
         });
       }
-      
+
       const outage = timeSlotMap.get(cstTime)!;
-      
+
       // Count agents by location and tier
       if (session.location === "ATX") {
         if (session.tier === "Performance") {
@@ -59,10 +61,10 @@ export function PhoneOutageForecast({ schedule }: PhoneOutageForecastProps) {
           outage.cltStandard += session.agents.length;
         }
       }
-      
+
       outage.totalAgents += session.agents.length;
     });
-    
+
     // Add to hourly outages
     timeSlotMap.forEach((outage) => {
       hourlyOutages.push(outage);
@@ -74,10 +76,10 @@ export function PhoneOutageForecast({ schedule }: PhoneOutageForecastProps) {
   hourlyOutages.sort((a, b) => {
     const dayDiff = dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day);
     if (dayDiff !== 0) return dayDiff;
-    
+
     // Sort by time within the same day
-    const aHour = parseInt(a.hour.split(':')[0]);
-    const bHour = parseInt(b.hour.split(':')[0]);
+    const aHour = parseInt(a.hour.split(":")[0]);
+    const bHour = parseInt(b.hour.split(":")[0]);
     return aHour - bHour;
   });
 
@@ -85,13 +87,18 @@ export function PhoneOutageForecast({ schedule }: PhoneOutageForecastProps) {
   const weeklySummary = {
     totalHours: hourlyOutages.length,
     totalAgentHours: hourlyOutages.reduce((sum, o) => sum + o.totalAgents, 0),
-    peakOutage: Math.max(...hourlyOutages.map(o => o.totalAgents)),
+    peakOutage: Math.max(...hourlyOutages.map((o) => o.totalAgents)),
     avgPerHour: 0,
   };
-  weeklySummary.avgPerHour = Math.round(weeklySummary.totalAgentHours / weeklySummary.totalHours * 10) / 10;
+  weeklySummary.avgPerHour =
+    Math.round(
+      (weeklySummary.totalAgentHours / weeklySummary.totalHours) * 10
+    ) / 10;
 
   // Identify peak hours
-  const peakHours = hourlyOutages.filter(o => o.totalAgents === weeklySummary.peakOutage);
+  const peakHours = hourlyOutages.filter(
+    (o) => o.totalAgents === weeklySummary.peakOutage
+  );
 
   return (
     <Card className="border-l-4 border-l-red-500">
@@ -111,20 +118,28 @@ export function PhoneOutageForecast({ schedule }: PhoneOutageForecastProps) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div>
               <p className="text-red-600 font-medium">Total Agent Hours</p>
-              <p className="text-2xl font-bold text-red-800">{weeklySummary.totalAgentHours}</p>
+              <p className="text-2xl font-bold text-red-800">
+                {weeklySummary.totalAgentHours}
+              </p>
             </div>
             <div>
               <p className="text-red-600 font-medium">Avg Agents/Hour</p>
-              <p className="text-2xl font-bold text-red-800">{weeklySummary.avgPerHour}</p>
+              <p className="text-2xl font-bold text-red-800">
+                {weeklySummary.avgPerHour}
+              </p>
             </div>
             <div>
               <p className="text-red-600 font-medium">Peak Outage</p>
-              <p className="text-2xl font-bold text-red-800">{weeklySummary.peakOutage}</p>
+              <p className="text-2xl font-bold text-red-800">
+                {weeklySummary.peakOutage}
+              </p>
               <p className="text-xs text-red-600">agents off phones</p>
             </div>
             <div>
               <p className="text-red-600 font-medium">Training Hours</p>
-              <p className="text-2xl font-bold text-red-800">{weeklySummary.totalHours}</p>
+              <p className="text-2xl font-bold text-red-800">
+                {weeklySummary.totalHours}
+              </p>
               <p className="text-xs text-red-600">across the week</p>
             </div>
           </div>
@@ -140,7 +155,8 @@ export function PhoneOutageForecast({ schedule }: PhoneOutageForecastProps) {
             <div className="space-y-1">
               {peakHours.map((peak, idx) => (
                 <p key={idx} className="text-sm text-orange-700">
-                  <strong>{peak.day}</strong> at {peak.hour}: <Badge variant="destructive">{peak.totalAgents} agents</Badge>
+                  <strong>{peak.day}</strong> at {peak.hour}:{" "}
+                  <Badge variant="destructive">{peak.totalAgents} agents</Badge>
                 </p>
               ))}
             </div>
@@ -184,34 +200,50 @@ export function PhoneOutageForecast({ schedule }: PhoneOutageForecastProps) {
                     <td className="py-2 px-2">{outage.hour}</td>
                     <td className="text-center py-2 px-2">
                       {outage.atxPerformance > 0 && (
-                        <Badge variant="outline" className="bg-purple-100 text-purple-800">
+                        <Badge
+                          variant="outline"
+                          className="bg-purple-100 text-purple-800"
+                        >
                           {outage.atxPerformance}
                         </Badge>
                       )}
                     </td>
                     <td className="text-center py-2 px-2">
                       {outage.atxStandard > 0 && (
-                        <Badge variant="outline" className="bg-orange-100 text-orange-800">
+                        <Badge
+                          variant="outline"
+                          className="bg-orange-100 text-orange-800"
+                        >
                           {outage.atxStandard}
                         </Badge>
                       )}
                     </td>
                     <td className="text-center py-2 px-2">
                       {outage.cltPerformance > 0 && (
-                        <Badge variant="outline" className="bg-purple-100 text-purple-800">
+                        <Badge
+                          variant="outline"
+                          className="bg-purple-100 text-purple-800"
+                        >
                           {outage.cltPerformance}
                         </Badge>
                       )}
                     </td>
                     <td className="text-center py-2 px-2">
                       {outage.cltStandard > 0 && (
-                        <Badge variant="outline" className="bg-orange-100 text-orange-800">
+                        <Badge
+                          variant="outline"
+                          className="bg-orange-100 text-orange-800"
+                        >
                           {outage.cltStandard}
                         </Badge>
                       )}
                     </td>
                     <td className="text-center py-2 px-2">
-                      <Badge variant={outage.totalAgents >= 8 ? "destructive" : "secondary"}>
+                      <Badge
+                        variant={
+                          outage.totalAgents >= 8 ? "destructive" : "secondary"
+                        }
+                      >
                         {outage.totalAgents}
                       </Badge>
                     </td>
@@ -224,30 +256,39 @@ export function PhoneOutageForecast({ schedule }: PhoneOutageForecastProps) {
 
         {/* Marketing Guidance */}
         <div className="bg-blue-50 p-4 rounded-lg">
-          <h3 className="font-semibold text-blue-800 mb-2">Marketing Team Guidance</h3>
+          <h3 className="font-semibold text-blue-800 mb-2">
+            Marketing Team Guidance
+          </h3>
           <ul className="space-y-2 text-sm text-blue-700">
             <li className="flex items-start gap-2">
               <span className="text-blue-600">•</span>
               <span>
-                <strong>Highest Impact Times:</strong> Review peak outage times above and consider reducing marketing activities during these windows
+                <strong>Highest Impact Times:</strong> Review peak outage times
+                above and consider reducing marketing activities during these
+                windows
               </span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-blue-600">•</span>
               <span>
-                <strong>Location Considerations:</strong> ATX operates 8:30-5 CST, CLT operates 9:30-6 EST (1 hour ahead)
+                <strong>Location Considerations:</strong> ATX operates 8:30-5
+                CST, CLT operates 9:30-6 EST (1 hour ahead)
               </span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-blue-600">•</span>
               <span>
-                <strong>Agent Mix:</strong> Performance agents (purple) typically handle more complex/high-value calls than Standard agents (orange)
+                <strong>Agent Mix:</strong> Performance agents (purple)
+                typically handle more complex/high-value calls than Standard
+                agents (orange)
               </span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-blue-600">•</span>
               <span>
-                <strong>Weekly Pattern:</strong> Training intensity is distributed across Tue-Thu for metrics, with Fri for critical remediation
+                <strong>Weekly Pattern:</strong> Training intensity is
+                distributed across Tue-Thu for metrics, with Fri for critical
+                remediation
               </span>
             </li>
           </ul>

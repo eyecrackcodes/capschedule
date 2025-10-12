@@ -239,7 +239,7 @@ function scheduleMetricSpecificTrainingWithConstraints(
         const session: TrainingSession = {
           time: timeSlot.time,
           location: "CLT",
-          tier: cltCohort[0].tier === "Performance" ? "Performance" : "Standard",
+          tier: cltCohort[0].tier === "P" ? "Performance" : "Standard",
           agents: cltCohort,
           priority: `${timeSlot.description} - ${TRAINING_FOCUS[day as keyof typeof TRAINING_FOCUS]}`,
           cohortNumber: daySchedule.sessions.filter(s => s.location === "CLT").length + 1,
@@ -251,7 +251,7 @@ function scheduleMetricSpecificTrainingWithConstraints(
         agentsNeedingTraining.unshift({
           agent: cltCohort[0],
           location: "CLT",
-          tier: cltCohort[0].tier === "Performance" ? "Performance" : "Standard",
+          tier: cltCohort[0].tier === "P" ? "Performance" : "Standard",
           priority: getPriorityLevel(cltCohort[0].capScore, avgCAPScore),
         });
         // Remove from trackers
@@ -265,7 +265,7 @@ function scheduleMetricSpecificTrainingWithConstraints(
         const session: TrainingSession = {
           time: timeSlot.time,
           location: "ATX",
-          tier: atxCohort[0].tier === "Performance" ? "Performance" : "Standard",
+          tier: atxCohort[0].tier === "P" ? "Performance" : "Standard",
           agents: atxCohort,
           priority: `${timeSlot.description} - ${TRAINING_FOCUS[day as keyof typeof TRAINING_FOCUS]}`,
           cohortNumber: daySchedule.sessions.filter(s => s.location === "ATX").length + 1,
@@ -277,7 +277,7 @@ function scheduleMetricSpecificTrainingWithConstraints(
         agentsNeedingTraining.unshift({
           agent: atxCohort[0],
           location: "ATX",
-          tier: atxCohort[0].tier === "Performance" ? "Performance" : "Standard",
+          tier: atxCohort[0].tier === "P" ? "Performance" : "Standard",
           priority: getPriorityLevel(atxCohort[0].capScore, avgCAPScore),
         });
         // Remove from trackers

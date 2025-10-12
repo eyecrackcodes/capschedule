@@ -20,7 +20,10 @@ import {
   calculateMetricPercentiles,
   assignTrainingRecommendations,
 } from "@/lib/business-logic";
-import { generateSchedule, validateSchedule } from "@/lib/schedule-generator-v3"; // Using v3 with business constraints
+import {
+  generateSchedule,
+  validateSchedule,
+} from "@/lib/schedule-generator-v3"; // Using v3 with business constraints
 import {
   exportToCSV,
   exportToPDF,
@@ -111,7 +114,7 @@ export default function HomePage() {
 
     const cohorts = createCohorts(agentsWithRecommendations);
     const schedule = generateSchedule(cohorts, stats.avgCAPScore);
-    
+
     // Validate the generated schedule
     const validation = validateSchedule(schedule);
     if (validation.warnings.length > 0) {
