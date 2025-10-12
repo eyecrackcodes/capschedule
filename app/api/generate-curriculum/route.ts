@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export async function GET() {
+  return NextResponse.json({
+    message: "Generate curriculum API is available",
+    method: "POST",
+    requiredFields: ["trainingType", "agents", "day"],
+    apiKeyConfigured: !!process.env.CLAUDE_API_KEY,
+  });
+}
+
 export async function POST(request: NextRequest) {
   console.log("API Route called: /api/generate-curriculum");
-  
+
   try {
     const body = await request.json();
     console.log("Request body:", JSON.stringify(body, null, 2));
-    
+
     const { trainingType, agents, day } = body;
 
     // Check if API key is configured
@@ -68,12 +77,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ curriculum });
   } catch (error) {
     console.error("Error in generate-curriculum API:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { 
+      {
         error: "An error occurred while generating the curriculum.",
         details: errorMessage,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     );

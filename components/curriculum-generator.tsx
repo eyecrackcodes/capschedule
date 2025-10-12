@@ -28,6 +28,12 @@ export function CurriculumGenerator({
     setError(null);
 
     try {
+      console.log("Generating curriculum with:", {
+        trainingType: trainingFocus,
+        agentCount: session.agents.length,
+        day: day,
+      });
+
       const response = await fetch("/api/generate-curriculum", {
         method: "POST",
         headers: {
@@ -39,6 +45,12 @@ export function CurriculumGenerator({
           day: day,
         }),
       });
+
+      console.log("Response status:", response.status);
+      
+      if (response.status === 404) {
+        throw new Error("API endpoint not found. Please ensure the deployment is complete.");
+      }
 
       const data = await response.json();
 
