@@ -1,5 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// Handle CORS preflight requests
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
+}
+
 export async function GET() {
   return NextResponse.json({
     message: "Generate curriculum API is available",
@@ -12,11 +24,30 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   console.log("API Route called: /api/generate-curriculum");
 
+  // Test if the route is being hit at all
+  if (!request.body) {
+    return NextResponse.json(
+      { error: "No request body received" },
+      { status: 400 }
+    );
+  }
+
   try {
     const body = await request.json();
     console.log("Request body:", JSON.stringify(body, null, 2));
 
     const { trainingType, agents, day } = body;
+    
+    // Quick test response
+    if (!trainingType || !agents || !day) {
+      return NextResponse.json(
+        { 
+          error: "Missing required fields",
+          received: { trainingType, agentsCount: agents?.length, day }
+        },
+        { status: 400 }
+      );
+    }
 
     // Check if API key is configured
     const apiKey = process.env.CLAUDE_API_KEY;
@@ -72,9 +103,16 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json();
+    
+    // Ensure we have a valid response
+    if (!data.content || !data.content[0] || !data.content[0].text) {
+      console.error("Invalid Claude API response:", data);
+      throw new Error("Invalid response from Claude API");
+    }
+    
     const curriculum = data.content[0].text;
 
-    return NextResponse.json({ curriculum });
+    return NextResponse.json({ curriculum }, { status: 200 });
   } catch (error) {
     console.error("Error in generate-curriculum API:", error);
     const errorMessage =
