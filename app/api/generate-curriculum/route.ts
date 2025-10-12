@@ -1,47 +1,53 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
     const { trainingType, agents, day } = await request.json();
-    
+
     // Check if API key is configured
     const apiKey = process.env.CLAUDE_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
-        { error: 'Claude API key not configured. Please add CLAUDE_API_KEY to your .env.local file.' },
+        {
+          error:
+            "Claude API key not configured. Please add CLAUDE_API_KEY to your .env.local file.",
+        },
         { status: 503 }
       );
     }
 
     // Create a detailed prompt based on training type
     const prompt = generatePrompt(trainingType, agents, day);
-    
+
     // Call Claude API
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: process.env.CLAUDE_MODEL || 'claude-3-sonnet-20240229',
+        model: process.env.CLAUDE_MODEL || "claude-3-sonnet-20240229",
         max_tokens: 4000,
         temperature: 0.7,
         messages: [
           {
-            role: 'user',
-            content: prompt
-          }
-        ]
+            role: "user",
+            content: prompt,
+          },
+        ],
       }),
     });
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('Claude API error:', error);
+      console.error("Claude API error:", error);
       return NextResponse.json(
-        { error: 'Failed to generate curriculum. Please check your API key and try again.' },
+        {
+          error:
+            "Failed to generate curriculum. Please check your API key and try again.",
+        },
         { status: response.status }
       );
     }
@@ -51,18 +57,18 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ curriculum });
   } catch (error) {
-    console.error('Error generating curriculum:', error);
+    console.error("Error generating curriculum:", error);
     return NextResponse.json(
-      { error: 'An error occurred while generating the curriculum.' },
+      { error: "An error occurred while generating the curriculum." },
       { status: 500 }
     );
   }
 }
 
 function generatePrompt(trainingType: string, agents: any[], day: string) {
-  const agentNames = agents.map(a => a.name).join(', ');
+  const agentNames = agents.map((a) => a.name).join(", ");
   const avgMetrics = calculateAverageMetrics(agents);
-  
+
   const basePrompt = `You are an expert life insurance sales trainer creating a customized training curriculum.
 
 Training Focus: ${trainingType}
@@ -99,43 +105,47 @@ Please create a comprehensive 1-hour training curriculum that includes:
 
 `;
 
-  const specificPrompts = {
-    'Close Rate Training': `Focus on:
+  const specificPrompts: Record<string, string> = {
+    "Close Rate Training": `Focus on:
 - Overcoming objections
 - Building trust quickly
 - Effective closing techniques
 - Reading buying signals
 - Creating urgency without pressure
 - Handling price objections`,
-    
-    'Annual Premium Training': `Focus on:
+
+    "Annual Premium Training": `Focus on:
 - Upselling techniques
 - Value demonstration
 - Needs analysis skills
 - Premium justification strategies
 - Building long-term value propositions
 - Cross-selling complementary products`,
-    
-    'Place Rate Training': `Focus on:
+
+    "Place Rate Training": `Focus on:
 - Quote follow-up strategies
 - Addressing concerns post-quote
 - Building conviction in recommendations
 - Simplifying complex products
 - Creating implementation urgency
 - Handling comparison shopping`,
-    
-    'Zero CAP Remediation - All Metrics': `Focus on:
+
+    "Zero CAP Remediation - All Metrics": `Focus on:
 - Fundamental sales skills reset
 - Confidence building
 - Basic product knowledge
 - Call flow optimization
 - Active listening techniques
-- Setting realistic goals`
+- Setting realistic goals`,
   };
 
-  return basePrompt + (specificPrompts[trainingType] || '') + `
+  return (
+    basePrompt +
+    (specificPrompts[trainingType] || "") +
+    `
 
-Format the response in a clear, actionable way that trainers can immediately implement. Include specific talking points, exercises, and timing for each section.`;
+Format the response in a clear, actionable way that trainers can immediately implement. Include specific talking points, exercises, and timing for each section.`
+  );
 }
 
 function calculateAverageMetrics(agents: any[]) {
@@ -144,10 +154,10 @@ function calculateAverageMetrics(agents: any[]) {
     avgCloseRate: 0,
     avgAnnualPremium: 0,
     avgPlaceRate: 0,
-    count: agents.length
+    count: agents.length,
   };
 
-  agents.forEach(agent => {
+  agents.forEach((agent) => {
     metrics.avgCAP += agent.capScore || 0;
     metrics.avgCloseRate += agent.closeRate || 0;
     metrics.avgAnnualPremium += agent.annualPremium || 0;
@@ -157,9 +167,13 @@ function calculateAverageMetrics(agents: any[]) {
   // Calculate averages
   if (metrics.count > 0) {
     metrics.avgCAP = Math.round(metrics.avgCAP / metrics.count);
-    metrics.avgCloseRate = Math.round((metrics.avgCloseRate / metrics.count) * 10) / 10;
-    metrics.avgAnnualPremium = Math.round(metrics.avgAnnualPremium / metrics.count);
-    metrics.avgPlaceRate = Math.round((metrics.avgPlaceRate / metrics.count) * 10) / 10;
+    metrics.avgCloseRate =
+      Math.round((metrics.avgCloseRate / metrics.count) * 10) / 10;
+    metrics.avgAnnualPremium = Math.round(
+      metrics.avgAnnualPremium / metrics.count
+    );
+    metrics.avgPlaceRate =
+      Math.round((metrics.avgPlaceRate / metrics.count) * 10) / 10;
   }
 
   return metrics;
