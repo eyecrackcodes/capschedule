@@ -146,9 +146,7 @@ export function ScheduleDisplay({
                 Zero CAP Remediation
               </h3>
               <p className="text-3xl font-bold text-red-600">{zeroCAPCount}</p>
-              <p className="text-sm text-gray-500 mt-1">
-                Friday sessions
-              </p>
+              <p className="text-sm text-gray-500 mt-1">Friday sessions</p>
             </div>
 
             <div className="bg-white p-4 rounded-lg shadow-sm">

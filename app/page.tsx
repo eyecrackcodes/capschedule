@@ -11,6 +11,8 @@ import { LocationScheduleView } from "@/components/location-schedule-view";
 import { ManagerAgentView } from "@/components/manager-agent-view";
 import { TimeZoneDisplay } from "@/components/time-zone-display";
 import { CohortSizeSummary } from "@/components/cohort-size-summary";
+import { ScheduleConstraints } from "@/components/schedule-constraints";
+import { PhoneOutageForecast } from "@/components/phone-outage-forecast";
 import {
   calculateStats,
   createCohorts,
@@ -18,7 +20,7 @@ import {
   calculateMetricPercentiles,
   assignTrainingRecommendations,
 } from "@/lib/business-logic";
-import { generateSchedule } from "@/lib/schedule-generator-v2";
+import { generateSchedule, validateSchedule } from "@/lib/schedule-generator-v3"; // Using v3 with business constraints
 import {
   exportToCSV,
   exportToPDF,
@@ -109,6 +111,15 @@ export default function HomePage() {
 
     const cohorts = createCohorts(agentsWithRecommendations);
     const schedule = generateSchedule(cohorts, stats.avgCAPScore);
+    
+    // Validate the generated schedule
+    const validation = validateSchedule(schedule);
+    if (validation.warnings.length > 0) {
+      console.log("Schedule warnings:", validation.warnings);
+    }
+    if (validation.errors.length > 0) {
+      console.error("Schedule errors:", validation.errors);
+    }
 
     setAppState((prev) => ({
       ...prev,
@@ -183,9 +194,17 @@ export default function HomePage() {
               {/* Time Zone Information */}
               <TimeZoneDisplay />
 
+              {/* Schedule Constraints */}
+              <ScheduleConstraints />
+
               {/* Cohort Size Summary */}
               {appState.schedule.length > 0 && (
                 <CohortSizeSummary schedule={appState.schedule} />
+              )}
+
+              {/* Phone Outage Forecast for Marketing */}
+              {appState.schedule.length > 0 && (
+                <PhoneOutageForecast schedule={appState.schedule} />
               )}
 
               {/* Edge Case Handler */}
