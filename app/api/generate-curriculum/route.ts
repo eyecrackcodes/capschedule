@@ -5,9 +5,9 @@ export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
     },
   });
 }
@@ -37,13 +37,13 @@ export async function POST(request: NextRequest) {
     console.log("Request body:", JSON.stringify(body, null, 2));
 
     const { trainingType, agents, day } = body;
-    
+
     // Quick test response
     if (!trainingType || !agents || !day) {
       return NextResponse.json(
-        { 
+        {
           error: "Missing required fields",
-          received: { trainingType, agentsCount: agents?.length, day }
+          received: { trainingType, agentsCount: agents?.length, day },
         },
         { status: 400 }
       );
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: process.env.CLAUDE_MODEL || "claude-3-sonnet-20240229",
+        model: process.env.CLAUDE_MODEL || "claude-3-opus-20240229",
         max_tokens: 4000,
         temperature: 0.7,
         messages: [
@@ -103,13 +103,13 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json();
-    
+
     // Ensure we have a valid response
     if (!data.content || !data.content[0] || !data.content[0].text) {
       console.error("Invalid Claude API response:", data);
       throw new Error("Invalid response from Claude API");
     }
-    
+
     const curriculum = data.content[0].text;
 
     return NextResponse.json({ curriculum }, { status: 200 });

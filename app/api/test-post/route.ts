@@ -14,7 +14,10 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to parse body", details: error instanceof Error ? error.message : "Unknown" },
+      {
+        error: "Failed to parse body",
+        details: error instanceof Error ? error.message : "Unknown",
+      },
       { status: 400 }
     );
   }
