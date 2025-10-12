@@ -47,9 +47,11 @@ export function CurriculumGenerator({
       });
 
       console.log("Response status:", response.status);
-      
+
       if (response.status === 404) {
-        throw new Error("API endpoint not found. Please ensure the deployment is complete.");
+        throw new Error(
+          "API endpoint not found. Please ensure the deployment is complete."
+        );
       }
 
       const data = await response.json();
