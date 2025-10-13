@@ -375,7 +375,19 @@ export default function HomePage() {
                     <div className="text-center py-12">
                       <SaveScheduleDialog
                         schedule={appState.schedule}
-                        avgCAPScore={appState.stats.avgCAPScore}
+                        avgCAPScore={
+                          appState.eligibleAgents.filter((a) => a.capScore > 0)
+                            .length > 0
+                            ? Math.round(
+                                (appState.eligibleAgents
+                                  .filter((a) => a.capScore > 0)
+                                  .reduce((sum, a) => sum + a.capScore, 0) /
+                                  appState.eligibleAgents.filter((a) => a.capScore > 0)
+                                    .length) *
+                                  10
+                              ) / 10
+                            : 0
+                        }
                         avgAdjustedCAPScore={appState.stats.avgCAPScore}
                         eligibleAgents={appState.eligibleAgents}
                         onSaveComplete={() => {
