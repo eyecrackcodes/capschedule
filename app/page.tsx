@@ -15,7 +15,7 @@ import { ScheduleConstraints } from "@/components/schedule-constraints";
 import { PhoneOutageForecast } from "@/components/phone-outage-forecast";
 import { SaveScheduleDialog } from "@/components/database/save-schedule-dialog";
 import { SavedSchedulesView } from "@/components/database/saved-schedules-view";
-import { AttendanceTracker } from "@/components/database/attendance-tracker";
+import { AttendanceTrackerEnhanced } from "@/components/database/attendance-tracker-enhanced";
 import { AnalyticsDashboard } from "@/components/database/analytics-dashboard";
 import { WeeklyDataUploader } from "@/components/database/weekly-data-uploader";
 import {
@@ -560,7 +560,7 @@ export default function HomePage() {
                   {databaseView === "history" && <SavedSchedulesView />}
 
                   {/* Attendance Tracking View */}
-                  {databaseView === "attendance" && <AttendanceTracker />}
+                  {databaseView === "attendance" && <AttendanceTrackerEnhanced />}
 
                   {/* Analytics Dashboard View */}
                   {databaseView === "analytics" && <AnalyticsDashboard />}
