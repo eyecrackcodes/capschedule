@@ -132,6 +132,10 @@ export default function HomePage() {
     try {
       const { schedule: scheduleData, sessions } = data;
       
+      // Collect all unique agents from all sessions
+      const allAgents: AgentRecord[] = [];
+      const agentMap = new Map<string, AgentRecord>();
+      
       // Group sessions by day
       const dayMap = new Map<string, TrainingSession[]>();
       
@@ -140,11 +144,8 @@ export default function HomePage() {
           dayMap.set(session.day, []);
         }
         
-        const trainingSession: TrainingSession = {
-          time: session.time_slot,
-          location: session.location,
-          tier: session.tier as any,
-          agents: session.agent_assignments.map((a: any) => ({
+        const agents = session.agent_assignments.map((a: any) => {
+          const agent: AgentRecord = {
             name: a.agent_name,
             manager: a.manager,
             site: a.site,
@@ -161,7 +162,22 @@ export default function HomePage() {
             wowDelta: 0,
             priorRank: 0,
             currentRank: 0,
-          })),
+          };
+          
+          // Store unique agents
+          if (!agentMap.has(agent.name)) {
+            agentMap.set(agent.name, agent);
+            allAgents.push(agent);
+          }
+          
+          return agent;
+        });
+        
+        const trainingSession: TrainingSession = {
+          time: session.time_slot,
+          location: session.location,
+          tier: session.tier as any,
+          agents: agents,
           priority: session.priority,
           cohortNumber: session.cohort_number,
         };
@@ -179,16 +195,40 @@ export default function HomePage() {
       const dayOrder = ["Tuesday", "Wednesday", "Thursday", "Friday"];
       schedule.sort((a, b) => dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day));
       
-      // Create stats from schedule data
+      // Calculate stats from actual loaded agents
+      console.log("📊 Calculating stats from", allAgents.length, "unique agents");
+      console.log("Sample agents:", allAgents.slice(0, 3).map(a => ({ name: a.name, site: a.site, tier: a.tier })));
+      
+      const cltAgents = allAgents.filter((a) => a.site === "CHA");
+      const atxAgents = allAgents.filter((a) => a.site === "AUS");
+      
+      console.log("CLT agents:", cltAgents.length, "ATX agents:", atxAgents.length);
+      
+      // Extract full dataset info from metadata if available
+      const metadata = scheduleData.metadata || {};
+      const totalCompanyAgents = metadata.total_company_agents || allAgents.length;
+      const excludedCount = metadata.excluded_by_tenure || 0;
+      const eligibleCount = metadata.eligible_agents || allAgents.length;
+      
       const stats = {
-        totalAgents: scheduleData.total_agents_scheduled,
-        eligibleCount: scheduleData.total_agents_scheduled,
-        excludedCount: 0,
+        totalAgents: totalCompanyAgents, // Full company count from metadata
+        eligibleCount: eligibleCount, // Eligible after tenure filter
+        excludedCount: excludedCount, // Excluded by tenure
         avgCAPScore: scheduleData.avg_adjusted_cap_score,
-        needsTraining: scheduleData.total_agents_scheduled,
-        clt: { performance: 0, standard: 0, total: 0 },
-        atx: { performance: 0, standard: 0, total: 0 },
+        needsTraining: allAgents.length, // Agents scheduled for training
+        clt: {
+          performance: cltAgents.filter((a) => a.tier === "P").length,
+          standard: cltAgents.filter((a) => a.tier === "S").length,
+          total: cltAgents.length,
+        },
+        atx: {
+          performance: atxAgents.filter((a) => a.tier === "P").length,
+          standard: atxAgents.filter((a) => a.tier === "S").length,
+          total: atxAgents.length,
+        },
       };
+      
+      console.log("Final stats:", stats);
       
       return { schedule, stats };
     } catch (error) {
@@ -537,6 +577,7 @@ export default function HomePage() {
                         }
                         avgAdjustedCAPScore={appState.stats.avgCAPScore}
                         eligibleAgents={appState.eligibleAgents}
+                        fullStats={appState.stats}
                         onSaveComplete={() => {
                           alert("Schedule saved successfully!");
                           setDatabaseView("history");
