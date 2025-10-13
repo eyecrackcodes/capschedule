@@ -98,10 +98,9 @@ function parseAgentRow(row: string[], rowNumber: number): AgentRecord {
     );
   }
 
-  // Debug logging for first few rows
+  // Debug logging for first few rows (optional - can be removed in production)
   if (rowNumber <= 5) {
     console.log(`Row ${rowNumber} data:`, row);
-    console.log(`Column 13: "${row[13]}", Column 14: "${row[14]}", Column 15: "${row[15]}"`);
   }
 
   // Column mapping based on your file structure:
@@ -134,21 +133,14 @@ function parseAgentRow(row: string[], rowNumber: number): AgentRecord {
   // CAP score is in column 9
   let capScoreStr = row[9]?.trim() || "";
   
-  // Try multiple columns for Leads Per Day (could be 14 or 15)
+  // Leads Per Day is in column 15 (last column after Place Rate)
+  // Note: Column 14 is empty in the current file format
   let leadsPerDay = 0;
-  const leadsCol14 = row[14]?.trim() || "";
-  const leadsCol15 = row[15]?.trim() || "";
-  
-  // Try column 15 first (most likely), then column 14
-  const leadsPerDayStr = leadsCol15 || leadsCol14;
+  const leadsPerDayStr = row[15]?.trim() || row[14]?.trim() || ""; // Try 15 first, fallback to 14
   
   if (leadsPerDayStr) {
     const cleanedLeads = leadsPerDayStr.replace(/[^0-9.-]/g, "");
     leadsPerDay = parseFloat(cleanedLeads) || 0;
-  }
-  
-  if (rowNumber <= 5) {
-    console.log(`Parsing leads - Col14: "${leadsCol14}", Col15: "${leadsCol15}", Result: ${leadsPerDay}`);
   }
 
   // Parse the performance metrics
