@@ -105,7 +105,8 @@ function parseAgentRow(row: string[], rowNumber: number): AgentRecord {
 
   // Column mapping based on your file structure:
   // 0: Tenure, 1: Q (tier), 2: Site, 3: MANAGER, 4: (empty), 5: WoW Delta,
-  // 6: Prior Rank, 7: Current Rank, 8: Sales Agent, 9: CAP Score
+  // 6: Prior Rank, 7: Current Rank, 8: Sales Agent, 9: CAP Score, 10: (empty),
+  // 11: Close Rate, 12: Annual Premium, 13: Place Rate, 14: Leads Per Day
   const tenure = parseFloat(row[0]?.trim() || "0");
   const tier = row[1]?.trim() as "P" | "S";
   const siteRaw = row[2]?.trim().toUpperCase() || "";
@@ -131,6 +132,14 @@ function parseAgentRow(row: string[], rowNumber: number): AgentRecord {
 
   // CAP score is in column 9
   let capScoreStr = row[9]?.trim() || "";
+  
+  // Leads Per Day is in column 14
+  let leadsPerDay = 0;
+  const leadsPerDayStr = row[14]?.trim() || "";
+  if (leadsPerDayStr) {
+    const cleanedLeads = leadsPerDayStr.replace(/[^0-9.-]/g, "");
+    leadsPerDay = parseFloat(cleanedLeads) || 0;
+  }
 
   // Parse the performance metrics
   let closeRate = 0;
@@ -167,10 +176,18 @@ function parseAgentRow(row: string[], rowNumber: number): AgentRecord {
     }
   }
 
+  // Calculate Lead Attainment (capped at 100%)
+  // Formula: (Leads Per Day / 8) * 100, max 100%
+  const leadAttainment = Math.min((leadsPerDay / 8) * 100, 100);
+  
+  // Calculate Adjusted CAP Score
+  // Adjusted CAP = Original CAP * (Lead Attainment / 100)
+  const adjustedCAPScore = Math.round(capScore * (leadAttainment / 100));
+
   // Debug log the parsed values for first few rows
   if (rowNumber <= 5) {
     console.log(
-      `Row ${rowNumber} - Name: ${name}, Site: "${site}" (raw: "${row[2]}"), Manager: "${manager}", CAP: ${capScore}, Close Rate: ${closeRate}%, AP: $${annualPremium}, Place Rate: ${placeRate}%`
+      `Row ${rowNumber} - Name: ${name}, Site: "${site}" (raw: "${row[2]}"), Manager: "${manager}", CAP: ${capScore}, Leads/Day: ${leadsPerDay}, Attainment: ${leadAttainment.toFixed(1)}%, Adjusted CAP: ${adjustedCAPScore}, Close Rate: ${closeRate}%, AP: $${annualPremium}, Place Rate: ${placeRate}%`
     );
   }
 
@@ -206,6 +223,9 @@ function parseAgentRow(row: string[], rowNumber: number): AgentRecord {
     currentRank,
     name,
     capScore,
+    leadsPerDay,
+    leadAttainment,
+    adjustedCAPScore,
     email,
     closeRate,
     annualPremium,

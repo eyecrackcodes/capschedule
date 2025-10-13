@@ -53,7 +53,7 @@ export function StatsDashboard({ stats, percentiles }: StatsDashboardProps) {
         {/* Average CAP Score */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg CAP Score</CardTitle>
+            <CardTitle className="text-sm font-medium">Avg Adjusted CAP</CardTitle>
             <Badge variant="secondary">{stats.avgCAPScore}</Badge>
           </CardHeader>
           <CardContent>
@@ -64,7 +64,7 @@ export function StatsDashboard({ stats, percentiles }: StatsDashboardProps) {
             >
               {stats.avgCAPScore}
             </div>
-            <p className="text-xs text-muted-foreground">Company benchmark</p>
+            <p className="text-xs text-muted-foreground">With Lead Attainment</p>
           </CardContent>
         </Card>
 

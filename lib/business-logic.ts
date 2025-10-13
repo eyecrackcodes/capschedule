@@ -3,13 +3,13 @@ import { AgentRecord, Stats, Cohorts } from "@/types";
 export function calculateStats(agents: AgentRecord[]): Stats {
   const totalAgents = agents.length;
 
-  // Calculate company average CAP score using ONLY eligible agents (tenure > 1.9) AND non-zero CAP scores
-  const agentsWithNonZeroCAP = agents.filter((agent) => agent.capScore > 0);
+  // Calculate company average CAP score using ONLY eligible agents (tenure > 1.9) AND non-zero ADJUSTED CAP scores
+  const agentsWithNonZeroCAP = agents.filter((agent) => agent.adjustedCAPScore > 0);
   const avgCAPScore =
     agentsWithNonZeroCAP.length > 0
       ? Math.round(
           (agentsWithNonZeroCAP.reduce(
-            (sum, agent) => sum + agent.capScore,
+            (sum, agent) => sum + agent.adjustedCAPScore,
             0
           ) /
             agentsWithNonZeroCAP.length) *
@@ -17,11 +17,11 @@ export function calculateStats(agents: AgentRecord[]): Stats {
         ) / 10
       : 0;
 
-  // Count agents needing training (CAP Score < Company Average OR CAP Score = 0 OR needs metric training)
+  // Count agents needing training (Adjusted CAP Score < Company Average OR Adjusted CAP Score = 0 OR needs metric training)
   const needsTraining = agents.filter(
     (agent) =>
-      agent.capScore < avgCAPScore ||
-      agent.capScore === 0 ||
+      agent.adjustedCAPScore < avgCAPScore ||
+      agent.adjustedCAPScore === 0 ||
       (agent.recommendedTraining && agent.recommendedTraining.length > 0)
   ).length;
 
@@ -57,24 +57,24 @@ export function createCohorts(
   agents: AgentRecord[],
   maxSize: number = 5
 ): Cohorts & { zeroCAPAgents: { clt: AgentRecord[][]; atx: AgentRecord[][] } } {
-  // Calculate average excluding zero CAP scores
-  const agentsWithNonZeroCAP = agents.filter((agent) => agent.capScore > 0);
+  // Calculate average excluding zero ADJUSTED CAP scores
+  const agentsWithNonZeroCAP = agents.filter((agent) => agent.adjustedCAPScore > 0);
   const avgCAPScore =
     agentsWithNonZeroCAP.length > 0
-      ? agentsWithNonZeroCAP.reduce((sum, agent) => sum + agent.capScore, 0) /
+      ? agentsWithNonZeroCAP.reduce((sum, agent) => sum + agent.adjustedCAPScore, 0) /
         agentsWithNonZeroCAP.length
       : 0;
 
-  // Separate zero CAP score agents
-  const zeroCAPAgents = agents.filter((agent) => agent.capScore === 0);
+  // Separate zero ADJUSTED CAP score agents
+  const zeroCAPAgents = agents.filter((agent) => agent.adjustedCAPScore === 0);
   const zeroCAPCLT = zeroCAPAgents.filter((agent) => agent.site === "CHA");
   const zeroCAPATX = zeroCAPAgents.filter((agent) => agent.site === "AUS");
 
-  // Filter agents needing training (CAP Score < Company Average but > 0 OR needs specific metric training)
+  // Filter agents needing training (Adjusted CAP Score < Company Average but > 0 OR needs specific metric training)
   const trainingAgents = agents.filter(
     (agent) =>
-      agent.capScore > 0 &&
-      (agent.capScore < avgCAPScore ||
+      agent.adjustedCAPScore > 0 &&
+      (agent.adjustedCAPScore < avgCAPScore ||
         (agent.recommendedTraining &&
           agent.recommendedTraining.length > 0 &&
           !agent.recommendedTraining.includes(
@@ -104,9 +104,9 @@ export function createCohorts(
   console.log(`ATX Performance: ${atxPerformance.length}`);
   console.log(`ATX Standard: ${atxStandard.length}`);
 
-  // Sort each group by CAP score (ascending - lowest first for highest priority)
+  // Sort each group by ADJUSTED CAP score (ascending - lowest first for highest priority)
   const sortByCAPScore = (a: AgentRecord, b: AgentRecord) =>
-    a.capScore - b.capScore;
+    a.adjustedCAPScore - b.adjustedCAPScore;
 
   cltPerformance.sort(sortByCAPScore);
   cltStandard.sort(sortByCAPScore);
@@ -139,10 +139,10 @@ export function getTrainingEligibleAgents(
 ): AgentRecord[] {
   const avgCAPScore =
     agents.length > 0
-      ? agents.reduce((sum, agent) => sum + agent.capScore, 0) / agents.length
+      ? agents.reduce((sum, agent) => sum + agent.adjustedCAPScore, 0) / agents.length
       : 0;
 
-  return agents.filter((agent) => agent.capScore < avgCAPScore);
+  return agents.filter((agent) => agent.adjustedCAPScore < avgCAPScore);
 }
 
 export function getPriorityLevel(
@@ -253,8 +253,8 @@ export function assignTrainingRecommendations(
   return agents.map((agent) => {
     const recommendations: string[] = [];
 
-    // For zero CAP agents, they need all training
-    if (agent.capScore === 0) {
+    // For zero ADJUSTED CAP agents, they need all training
+    if (agent.adjustedCAPScore === 0) {
       recommendations.push("Zero CAP Remediation - All Metrics");
     } else {
       // Get the appropriate percentiles based on agent's tier

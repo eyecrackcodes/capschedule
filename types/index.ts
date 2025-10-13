@@ -8,6 +8,9 @@ export interface AgentRecord {
   currentRank: number;
   name: string;
   capScore: number;
+  leadsPerDay: number;
+  leadAttainment: number; // Percentage (0-100)
+  adjustedCAPScore: number; // CAP Score adjusted by Lead Attainment
   email?: string;
   closeRate?: number;
   annualPremium?: number;

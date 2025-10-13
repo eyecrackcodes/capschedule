@@ -258,15 +258,15 @@ function scheduleFridayOverfill(
   collectOverfillAgents(cohorts.atxPerformance, "ATX", "Performance");
   collectOverfillAgents(cohorts.atxStandard, "ATX", "Standard");
 
-  // Sort by priority
+  // Sort by priority (using adjusted CAP scores)
   overfillAgents.sort((a, b) => {
-    const aPriority = getPriorityLevel(a.agent.capScore, avgCAPScore);
-    const bPriority = getPriorityLevel(b.agent.capScore, avgCAPScore);
+    const aPriority = getPriorityLevel(a.agent.adjustedCAPScore, avgCAPScore);
+    const bPriority = getPriorityLevel(b.agent.adjustedCAPScore, avgCAPScore);
     const priorityOrder = { HIGH: 0, MEDIUM: 1, LOW: 2 };
     if (aPriority !== bPriority) {
       return priorityOrder[aPriority] - priorityOrder[bPriority];
     }
-    return a.agent.capScore - b.agent.capScore;
+    return a.agent.adjustedCAPScore - b.agent.adjustedCAPScore;
   });
 
   // Schedule agents in morning slots, alternating locations
@@ -525,7 +525,7 @@ function scheduleMetricSpecificTrainingNoConflicts(
                 agent,
                 location,
                 tier,
-                priority: getPriorityLevel(agent.capScore, avgCAPScore),
+                priority: getPriorityLevel(agent.adjustedCAPScore, avgCAPScore),
               });
             }
           }
@@ -542,13 +542,13 @@ function scheduleMetricSpecificTrainingNoConflicts(
       `Found ${agentsNeedingTraining.length} agents needing ${requiredTraining}`
     );
 
-    // Sort by priority and CAP score
+    // Sort by priority and adjusted CAP score
     agentsNeedingTraining.sort((a, b) => {
       if (a.priority !== b.priority) {
         const priorityOrder = { HIGH: 0, MEDIUM: 1, LOW: 2 };
         return priorityOrder[a.priority] - priorityOrder[b.priority];
       }
-      return a.agent.capScore - b.agent.capScore;
+      return a.agent.adjustedCAPScore - b.agent.adjustedCAPScore;
     });
 
     // Schedule agents into time slots with conflict prevention
