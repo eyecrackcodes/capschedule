@@ -3,25 +3,30 @@ import { AgentRecord, Stats, Cohorts } from "@/types";
 export function calculateStats(agents: AgentRecord[]): Stats {
   const totalAgents = agents.length;
 
-  // Calculate company average CAP score using ONLY eligible agents (tenure > 1.9) AND non-zero ADJUSTED CAP scores
-  const agentsWithNonZeroCAP = agents.filter((agent) => agent.adjustedCAPScore > 0);
+  // Filter out agents with 0 original CAP score - they are not eligible for training
+  const eligibleAgents = agents.filter((agent) => agent.capScore > 0);
+
+  // Calculate company average CAP score using ONLY eligible agents with non-zero ADJUSTED CAP scores
+  const agentsWithNonZeroAdjustedCAP = eligibleAgents.filter(
+    (agent) => agent.adjustedCAPScore > 0
+  );
   const avgCAPScore =
-    agentsWithNonZeroCAP.length > 0
+    agentsWithNonZeroAdjustedCAP.length > 0
       ? Math.round(
-          (agentsWithNonZeroCAP.reduce(
+          (agentsWithNonZeroAdjustedCAP.reduce(
             (sum, agent) => sum + agent.adjustedCAPScore,
             0
           ) /
-            agentsWithNonZeroCAP.length) *
+            agentsWithNonZeroAdjustedCAP.length) *
             10
         ) / 10
       : 0;
 
-  // Count agents needing training (Adjusted CAP Score < Company Average OR Adjusted CAP Score = 0 OR needs metric training)
-  const needsTraining = agents.filter(
+  // Count agents needing training (Adjusted CAP Score < Company Average OR needs metric training)
+  // Exclude agents with 0 original CAP score
+  const needsTraining = eligibleAgents.filter(
     (agent) =>
       agent.adjustedCAPScore < avgCAPScore ||
-      agent.adjustedCAPScore === 0 ||
       (agent.recommendedTraining && agent.recommendedTraining.length > 0)
   ).length;
 
@@ -57,29 +62,30 @@ export function createCohorts(
   agents: AgentRecord[],
   maxSize: number = 5
 ): Cohorts & { zeroCAPAgents: { clt: AgentRecord[][]; atx: AgentRecord[][] } } {
+  // Filter out agents with 0 original CAP score - they are not eligible for training
+  const eligibleAgents = agents.filter((agent) => agent.capScore > 0);
+
   // Calculate average excluding zero ADJUSTED CAP scores
-  const agentsWithNonZeroCAP = agents.filter((agent) => agent.adjustedCAPScore > 0);
+  const agentsWithNonZeroCAP = eligibleAgents.filter(
+    (agent) => agent.adjustedCAPScore > 0
+  );
   const avgCAPScore =
     agentsWithNonZeroCAP.length > 0
       ? agentsWithNonZeroCAP.reduce((sum, agent) => sum + agent.adjustedCAPScore, 0) /
         agentsWithNonZeroCAP.length
       : 0;
 
-  // Separate zero ADJUSTED CAP score agents
-  const zeroCAPAgents = agents.filter((agent) => agent.adjustedCAPScore === 0);
-  const zeroCAPCLT = zeroCAPAgents.filter((agent) => agent.site === "CHA");
-  const zeroCAPATX = zeroCAPAgents.filter((agent) => agent.site === "AUS");
+  // No more zero CAP agents in training - they are excluded
+  const zeroCAPAgents: AgentRecord[] = [];
+  const zeroCAPCLT: AgentRecord[] = [];
+  const zeroCAPATX: AgentRecord[] = [];
 
   // Filter agents needing training (Adjusted CAP Score < Company Average but > 0 OR needs specific metric training)
-  const trainingAgents = agents.filter(
+  const trainingAgents = eligibleAgents.filter(
     (agent) =>
       agent.adjustedCAPScore > 0 &&
       (agent.adjustedCAPScore < avgCAPScore ||
-        (agent.recommendedTraining &&
-          agent.recommendedTraining.length > 0 &&
-          !agent.recommendedTraining.includes(
-            "Zero CAP Remediation - All Metrics"
-          )))
+        (agent.recommendedTraining && agent.recommendedTraining.length > 0))
   );
 
   // Group by location and tier
@@ -253,10 +259,16 @@ export function assignTrainingRecommendations(
   return agents.map((agent) => {
     const recommendations: string[] = [];
 
-    // For zero ADJUSTED CAP agents, they need all training
-    if (agent.adjustedCAPScore === 0) {
-      recommendations.push("Zero CAP Remediation - All Metrics");
-    } else {
+    // Skip agents with 0 original CAP score - they are not eligible for training
+    if (agent.capScore === 0) {
+      return {
+        ...agent,
+        recommendedTraining: [],
+      };
+    }
+
+    // For agents with valid CAP scores, check metrics
+    if (agent.adjustedCAPScore > 0) {
       // Get the appropriate percentiles based on agent's tier
       const tierPercentiles = agent.tier === "P" 
         ? percentiles.performance 
