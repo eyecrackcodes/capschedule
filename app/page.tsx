@@ -13,6 +13,10 @@ import { TimeZoneDisplay } from "@/components/time-zone-display";
 import { CohortSizeSummary } from "@/components/cohort-size-summary";
 import { ScheduleConstraints } from "@/components/schedule-constraints";
 import { PhoneOutageForecast } from "@/components/phone-outage-forecast";
+import { SaveScheduleDialog } from "@/components/database/save-schedule-dialog";
+import { SavedSchedulesView } from "@/components/database/saved-schedules-view";
+import { AttendanceTracker } from "@/components/database/attendance-tracker";
+import { AnalyticsDashboard } from "@/components/database/analytics-dashboard";
 import {
   calculateStats,
   createCohorts,
@@ -35,8 +39,11 @@ import { ParseResult } from "@/lib/file-parser";
 
 export default function HomePage() {
   const [activeView, setActiveView] = useState<
-    "calendar" | "location" | "manager"
+    "calendar" | "location" | "manager" | "database"
   >("calendar");
+  const [databaseView, setDatabaseView] = useState<
+    "save" | "history" | "attendance" | "analytics"
+  >("save");
   const [appState, setAppState] = useState<AppState>({
     file: null,
     rawData: [],
@@ -264,6 +271,16 @@ export default function HomePage() {
                 >
                   Manager View
                 </button>
+                <button
+                  onClick={() => setActiveView("database")}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeView === "database"
+                      ? "bg-white text-blue-600 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  Database & Analytics
+                </button>
               </div>
 
               {/* Schedule Display */}
@@ -285,6 +302,90 @@ export default function HomePage() {
                   schedule={appState.schedule}
                   avgCAPScore={appState.stats.avgCAPScore}
                 />
+              )}
+
+              {activeView === "database" && (
+                <div className="space-y-6">
+                  {/* Database Sub-Tabs */}
+                  <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+                    <button
+                      onClick={() => setDatabaseView("save")}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        databaseView === "save"
+                          ? "bg-white text-blue-600 shadow-sm"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      Save Schedule
+                    </button>
+                    <button
+                      onClick={() => setDatabaseView("history")}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        databaseView === "history"
+                          ? "bg-white text-blue-600 shadow-sm"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      Saved Schedules
+                    </button>
+                    <button
+                      onClick={() => setDatabaseView("attendance")}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        databaseView === "attendance"
+                          ? "bg-white text-blue-600 shadow-sm"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      Attendance
+                    </button>
+                    <button
+                      onClick={() => setDatabaseView("analytics")}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        databaseView === "analytics"
+                          ? "bg-white text-blue-600 shadow-sm"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      Analytics
+                    </button>
+                  </div>
+
+                  {/* Save Schedule View */}
+                  {databaseView === "save" && appState.schedule.length > 0 && (
+                    <div className="text-center py-12">
+                      <SaveScheduleDialog
+                        schedule={appState.schedule}
+                        avgCAPScore={appState.stats.avgCAPScore}
+                        avgAdjustedCAPScore={appState.stats.avgCAPScore}
+                        eligibleAgents={appState.eligibleAgents}
+                        onSaveComplete={() => {
+                          alert("Schedule saved successfully!");
+                          setDatabaseView("history");
+                        }}
+                      />
+                      <p className="text-gray-500 mt-4">
+                        Save this schedule to track attendance and view analytics
+                      </p>
+                    </div>
+                  )}
+
+                  {databaseView === "save" && appState.schedule.length === 0 && (
+                    <div className="text-center py-12 bg-gray-50 rounded-lg">
+                      <p className="text-gray-500">
+                        Generate a schedule first, then you can save it to the database
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Saved Schedules View */}
+                  {databaseView === "history" && <SavedSchedulesView />}
+
+                  {/* Attendance Tracking View */}
+                  {databaseView === "attendance" && <AttendanceTracker />}
+
+                  {/* Analytics Dashboard View */}
+                  {databaseView === "analytics" && <AnalyticsDashboard />}
+                </div>
               )}
             </div>
           </ErrorBoundary>
