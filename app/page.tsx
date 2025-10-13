@@ -17,6 +17,7 @@ import { SaveScheduleDialog } from "@/components/database/save-schedule-dialog";
 import { SavedSchedulesView } from "@/components/database/saved-schedules-view";
 import { AttendanceTracker } from "@/components/database/attendance-tracker";
 import { AnalyticsDashboard } from "@/components/database/analytics-dashboard";
+import { WeeklyDataUploader } from "@/components/database/weekly-data-uploader";
 import {
   calculateStats,
   createCohorts,
@@ -42,8 +43,8 @@ export default function HomePage() {
     "calendar" | "location" | "manager" | "database"
   >("calendar");
   const [databaseView, setDatabaseView] = useState<
-    "save" | "history" | "attendance" | "analytics"
-  >("save");
+    "upload" | "save" | "history" | "attendance" | "analytics"
+  >("upload");
   const [appState, setAppState] = useState<AppState>({
     file: null,
     rawData: [],
@@ -309,6 +310,16 @@ export default function HomePage() {
                   {/* Database Sub-Tabs */}
                   <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
                     <button
+                      onClick={() => setDatabaseView("upload")}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        databaseView === "upload"
+                          ? "bg-white text-blue-600 shadow-sm"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      Upload New Week
+                    </button>
+                    <button
                       onClick={() => setDatabaseView("save")}
                       className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                         databaseView === "save"
@@ -316,7 +327,7 @@ export default function HomePage() {
                           : "text-gray-600 hover:text-gray-900"
                       }`}
                     >
-                      Save Schedule
+                      Save Current
                     </button>
                     <button
                       onClick={() => setDatabaseView("history")}
@@ -349,6 +360,15 @@ export default function HomePage() {
                       Analytics
                     </button>
                   </div>
+
+                  {/* Upload New Week View */}
+                  {databaseView === "upload" && (
+                    <WeeklyDataUploader
+                      onUploadComplete={() => {
+                        setDatabaseView("history");
+                      }}
+                    />
+                  )}
 
                   {/* Save Schedule View */}
                   {databaseView === "save" && appState.schedule.length > 0 && (
