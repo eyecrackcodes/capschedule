@@ -24,12 +24,11 @@ export function calculateStats(agents: AgentRecord[]): Stats {
         ) / 10
       : 0;
 
-  // Count agents needing training (Adjusted CAP Score < Company Average OR needs metric training)
+  // Count agents needing training (Adjusted CAP Score < Company Average ONLY)
   // Exclude agents with 0 original CAP score
+  // Metric-specific recommendations just determine WHICH DAY they train, not WHETHER they train
   const needsTraining = eligibleAgents.filter(
-    (agent) =>
-      agent.adjustedCAPScore < avgCAPScore ||
-      (agent.recommendedTraining && agent.recommendedTraining.length > 0)
+    (agent) => agent.adjustedCAPScore < avgCAPScore
   ).length;
 
   // Breakdown by location and tier
@@ -82,12 +81,10 @@ export function createCohorts(
   const zeroCAPCLT: AgentRecord[] = [];
   const zeroCAPATX: AgentRecord[] = [];
 
-  // Filter agents needing training (Adjusted CAP Score < Company Average but > 0 OR needs specific metric training)
+  // Filter agents needing training (Adjusted CAP Score < Company Average ONLY)
+  // Metric recommendations just determine which day/type of training, not eligibility
   const trainingAgents = eligibleAgents.filter(
-    (agent) =>
-      agent.adjustedCAPScore > 0 &&
-      (agent.adjustedCAPScore < avgCAPScore ||
-        (agent.recommendedTraining && agent.recommendedTraining.length > 0))
+    (agent) => agent.adjustedCAPScore > 0 && agent.adjustedCAPScore < avgCAPScore
   );
 
   // Group by location and tier
