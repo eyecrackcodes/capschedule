@@ -7,9 +7,11 @@ export function calculateStats(agents: AgentRecord[]): Stats {
   const eligibleAgents = agents.filter((agent) => agent.capScore > 0);
 
   // Calculate company average CAP score using ONLY eligible agents with non-zero ADJUSTED CAP scores
+  // Also exclude agents with 0 or missing leads per day (they can't have valid adjusted scores)
   const agentsWithNonZeroAdjustedCAP = eligibleAgents.filter(
-    (agent) => agent.adjustedCAPScore > 0
+    (agent) => agent.adjustedCAPScore > 0 && agent.leadsPerDay > 0
   );
+  
   const avgCAPScore =
     agentsWithNonZeroAdjustedCAP.length > 0
       ? Math.round(
@@ -267,32 +269,26 @@ export function assignTrainingRecommendations(
       };
     }
 
-    // For agents with valid CAP scores, check metrics
-    if (agent.adjustedCAPScore > 0) {
-      // Get the appropriate percentiles based on agent's tier
-      const tierPercentiles = agent.tier === "P" 
-        ? percentiles.performance 
-        : percentiles.standard;
+    // For agents with valid original CAP scores, check their metrics
+    // Get the appropriate percentiles based on agent's tier
+    const tierPercentiles = agent.tier === "P" 
+      ? percentiles.performance 
+      : percentiles.standard;
 
-      // Check each metric against tier-specific 50th percentile
-      const belowCloseRate =
-        agent.closeRate !== undefined &&
-        agent.closeRate < tierPercentiles.closeRate50th;
-      const belowAP =
-        agent.annualPremium !== undefined &&
-        agent.annualPremium < tierPercentiles.annualPremium50th;
-      const belowPlaceRate =
-        agent.placeRate !== undefined &&
-        agent.placeRate < tierPercentiles.placeRate50th;
+    // Check each metric against tier-specific 50th percentile
+    const belowCloseRate =
+      agent.closeRate !== undefined &&
+      agent.closeRate < tierPercentiles.closeRate50th;
+    const belowAP =
+      agent.annualPremium !== undefined &&
+      agent.annualPremium < tierPercentiles.annualPremium50th;
+    const belowPlaceRate =
+      agent.placeRate !== undefined &&
+      agent.placeRate < tierPercentiles.placeRate50th;
 
-      if (belowCloseRate) recommendations.push("Close Rate Training");
-      if (belowAP) recommendations.push("Annual Premium Training");
-      if (belowPlaceRate) recommendations.push("Place Rate Training");
-
-      // Don't add general training if they have specific metric training needs
-      // General training is only for agents with no specific metric weaknesses
-      // This should be handled elsewhere based on average CAP score
-    }
+    if (belowCloseRate) recommendations.push("Close Rate Training");
+    if (belowAP) recommendations.push("Annual Premium Training");
+    if (belowPlaceRate) recommendations.push("Place Rate Training");
 
     return {
       ...agent,

@@ -98,7 +98,7 @@ function parseAgentRow(row: string[], rowNumber: number): AgentRecord {
     );
   }
 
-  // Debug logging for first few rows
+  // Debug logging for first few rows (optional - can be removed in production)
   if (rowNumber <= 5) {
     console.log(`Row ${rowNumber} data:`, row);
   }
@@ -133,9 +133,11 @@ function parseAgentRow(row: string[], rowNumber: number): AgentRecord {
   // CAP score is in column 9
   let capScoreStr = row[9]?.trim() || "";
   
-  // Leads Per Day is in column 14
+  // Leads Per Day is in column 15 (last column after Place Rate)
+  // Note: Column 14 is empty in the current file format
   let leadsPerDay = 0;
-  const leadsPerDayStr = row[14]?.trim() || "";
+  const leadsPerDayStr = row[15]?.trim() || row[14]?.trim() || ""; // Try 15 first, fallback to 14
+  
   if (leadsPerDayStr) {
     const cleanedLeads = leadsPerDayStr.replace(/[^0-9.-]/g, "");
     leadsPerDay = parseFloat(cleanedLeads) || 0;
