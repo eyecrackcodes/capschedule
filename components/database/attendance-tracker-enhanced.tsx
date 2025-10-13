@@ -219,10 +219,10 @@ export function AttendanceTrackerEnhanced() {
   const sessions = Object.values(groupedAssignments);
 
   // Sort sessions by week, day, time
-  const dayOrder = { Tuesday: 0, Wednesday: 1, Thursday: 2, Friday: 3 };
-  sessions.sort((a, b) => {
+  const dayOrder: Record<string, number> = { Tuesday: 0, Wednesday: 1, Thursday: 2, Friday: 3 };
+  sessions.sort((a: any, b: any) => {
     if (a.week_of !== b.week_of) return a.week_of.localeCompare(b.week_of);
-    if (a.day !== b.day) return (dayOrder[a.day as keyof typeof dayOrder] || 99) - (dayOrder[b.day as keyof typeof dayOrder] || 99);
+    if (a.day !== b.day) return (dayOrder[a.day] || 99) - (dayOrder[b.day] || 99);
     return a.time_slot.localeCompare(b.time_slot);
   });
 
