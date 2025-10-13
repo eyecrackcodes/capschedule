@@ -83,30 +83,46 @@ export default function HomePage() {
     setIsLoadingFromDB(true);
     
     try {
+      console.log("🔍 Attempting to load schedule from database...");
+      
       const schedulesResult = await getTrainingSchedules();
       
+      console.log("📊 Schedules query result:", schedulesResult);
+      
       if (schedulesResult.success && schedulesResult.data && schedulesResult.data.length > 0) {
+        console.log(`✅ Found ${schedulesResult.data.length} schedules in database`);
+        
         // Get the most recent schedule
         const latestSchedule = schedulesResult.data[0];
+        console.log("📅 Loading latest schedule:", latestSchedule.week_of);
         
         // Load full schedule details
         const detailsResult = await getScheduleById(latestSchedule.id);
+        
+        console.log("📋 Schedule details result:", detailsResult);
         
         if (detailsResult.success && detailsResult.data) {
           // Convert database format to app format
           const dbSchedule = convertDatabaseScheduleToAppFormat(detailsResult.data);
           
           if (dbSchedule) {
+            console.log("✨ Successfully loaded schedule with", dbSchedule.schedule.length, "days");
             setAppState((prev) => ({
               ...prev,
               schedule: dbSchedule.schedule,
               stats: dbSchedule.stats,
             }));
+          } else {
+            console.warn("⚠️ Failed to convert database schedule to app format");
           }
+        } else {
+          console.warn("⚠️ Failed to load schedule details:", detailsResult.error);
         }
+      } else {
+        console.log("📭 No schedules found in database - showing file upload");
       }
     } catch (error) {
-      console.error("Error loading schedule from database:", error);
+      console.error("❌ Error loading schedule from database:", error);
     } finally {
       setIsLoadingFromDB(false);
     }
