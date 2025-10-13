@@ -106,9 +106,11 @@ export function AttendanceTrackerEnhanced() {
     attended: boolean,
     reason?: string
   ) {
+    console.log("✏️ Marking attendance:", { assignmentId, attended, reason });
     const newChanges = new Map(attendanceChanges);
     newChanges.set(assignmentId, { attended, reason });
     setAttendanceChanges(newChanges);
+    console.log("📝 Total unsaved changes:", newChanges.size);
   }
 
   async function handleBulkSave() {
@@ -638,10 +640,23 @@ function AttendanceRow({
   const currentStatus = pendingChange?.attended ?? assignment.attended;
   const hasChange = pendingChange !== undefined;
 
+  const handleAttended = () => {
+    console.log("✅ Marking attended:", assignment.agent_name);
+    onChange(assignment.id, true);
+  };
+
+  const handleNoShow = () => {
+    console.log("❌ Marking no-show:", assignment.agent_name);
+    const reason = prompt("Reason for no-show (optional):");
+    onChange(assignment.id, false, reason || undefined);
+  };
+
   return (
     <div
-      className={`flex items-center justify-between p-3 rounded border ${
-        hasChange ? "bg-yellow-50 border-yellow-300" : "bg-white border-gray-200"
+      className={`flex items-center justify-between p-3 rounded border transition-colors ${
+        hasChange 
+          ? "bg-yellow-50 border-yellow-300 shadow-sm" 
+          : "bg-white border-gray-200"
       }`}
     >
       <div className="flex-1">
@@ -653,9 +668,17 @@ function AttendanceRow({
           <Badge className="text-xs bg-purple-100 text-purple-800">
             Adj CAP: {assignment.adjusted_cap_score}
           </Badge>
+          {hasChange && (
+            <Badge className="text-xs bg-yellow-600 text-white animate-pulse">
+              Unsaved
+            </Badge>
+          )}
         </div>
-        {pendingChange?.reason && (
-          <p className="text-xs text-red-600 mt-1">Reason: {pendingChange.reason}</p>
+        {currentStatus !== null && (
+          <p className={`text-xs mt-1 ${currentStatus ? "text-green-600" : "text-red-600"}`}>
+            {currentStatus ? "✓ Will be marked as attended" : "✗ Will be marked as no-show"}
+            {pendingChange?.reason && ` - ${pendingChange.reason}`}
+          </p>
         )}
       </div>
 
@@ -664,24 +687,26 @@ function AttendanceRow({
           size="sm"
           variant={currentStatus === true ? "default" : "outline"}
           className={
-            currentStatus === true ? "bg-green-600 hover:bg-green-700" : ""
+            currentStatus === true 
+              ? "bg-green-600 hover:bg-green-700 text-white" 
+              : "hover:bg-green-50"
           }
-          onClick={() => onChange(assignment.id, true)}
+          onClick={handleAttended}
         >
-          <CheckCircle2 className="h-4 w-4 mr-1" />
+          <CheckCircle2 className={`h-4 w-4 mr-1 ${currentStatus === true ? "fill-white" : ""}`} />
           Attended
         </Button>
         <Button
           size="sm"
           variant={currentStatus === false ? "destructive" : "outline"}
-          onClick={() => {
-            if (currentStatus !== false) {
-              const reason = prompt("Reason for no-show (optional):");
-              onChange(assignment.id, false, reason || undefined);
-            }
-          }}
+          className={
+            currentStatus === false
+              ? ""
+              : "hover:bg-red-50"
+          }
+          onClick={handleNoShow}
         >
-          <XCircle className="h-4 w-4 mr-1" />
+          <XCircle className={`h-4 w-4 mr-1 ${currentStatus === false ? "fill-white" : ""}`} />
           No-Show
         </Button>
       </div>
