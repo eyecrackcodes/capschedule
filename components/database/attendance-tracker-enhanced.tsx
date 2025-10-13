@@ -44,8 +44,8 @@ export function AttendanceTrackerEnhanced() {
     location: "all",
     day: "all",
     timeRange: "all",
-    status: "pending",
-    dateRange: "this-week",
+    status: "all",  // Changed from "pending" to show everything by default
+    dateRange: "all",  // Changed from "this-week" to show all weeks by default
   });
 
   useEffect(() => {
