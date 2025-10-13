@@ -116,23 +116,12 @@ ALTER TABLE training_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE agent_assignments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cap_score_history ENABLE ROW LEVEL SECURITY;
 
--- Public read access (anyone can view schedules)
-CREATE POLICY "Public read access" ON training_schedules FOR SELECT USING (true);
-CREATE POLICY "Public read access" ON training_sessions FOR SELECT USING (true);
-CREATE POLICY "Public read access" ON agent_assignments FOR SELECT USING (true);
-CREATE POLICY "Public read access" ON cap_score_history FOR SELECT USING (true);
-
--- Authenticated users can insert/update/delete
-CREATE POLICY "Authenticated full access" ON training_schedules FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated full access" ON training_sessions FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated full access" ON agent_assignments FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated full access" ON cap_score_history FOR ALL USING (auth.role() = 'authenticated');
-
--- Service role has full access (for admin operations)
-CREATE POLICY "Service role full access" ON training_schedules FOR ALL USING (auth.role() = 'service_role');
-CREATE POLICY "Service role full access" ON training_sessions FOR ALL USING (auth.role() = 'service_role');
-CREATE POLICY "Service role full access" ON agent_assignments FOR ALL USING (auth.role() = 'service_role');
-CREATE POLICY "Service role full access" ON cap_score_history FOR ALL USING (auth.role() = 'service_role');
+-- Allow full public access for internal tool
+-- Note: For production with external users, replace these with proper auth policies
+CREATE POLICY "Public full access" ON training_schedules FOR ALL USING (true);
+CREATE POLICY "Public full access" ON training_sessions FOR ALL USING (true);
+CREATE POLICY "Public full access" ON agent_assignments FOR ALL USING (true);
+CREATE POLICY "Public full access" ON cap_score_history FOR ALL USING (true);
 
 -- ============================================================================
 -- FUNCTIONS

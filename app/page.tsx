@@ -15,7 +15,7 @@ import { ScheduleConstraints } from "@/components/schedule-constraints";
 import { PhoneOutageForecast } from "@/components/phone-outage-forecast";
 import { SaveScheduleDialog } from "@/components/database/save-schedule-dialog";
 import { SavedSchedulesView } from "@/components/database/saved-schedules-view";
-import { AttendanceTracker } from "@/components/database/attendance-tracker";
+import { AttendanceTrackerEnhanced } from "@/components/database/attendance-tracker-enhanced";
 import { AnalyticsDashboard } from "@/components/database/analytics-dashboard";
 import { WeeklyDataUploader } from "@/components/database/weekly-data-uploader";
 import {
@@ -35,8 +35,10 @@ import {
   exportEmailFormat,
   copyEmailToClipboard,
 } from "@/lib/export-utils";
-import { AppState, Filters } from "@/types";
+import { AppState, Filters, DaySchedule, TrainingSession, AgentRecord } from "@/types";
 import { ParseResult } from "@/lib/file-parser";
+import { getTrainingSchedules, getScheduleById } from "@/lib/database";
+import { useEffect } from "react";
 
 export default function HomePage() {
   const [activeView, setActiveView] = useState<
@@ -45,6 +47,7 @@ export default function HomePage() {
   const [databaseView, setDatabaseView] = useState<
     "upload" | "save" | "history" | "attendance" | "analytics"
   >("upload");
+  const [isLoadingFromDB, setIsLoadingFromDB] = useState(true);
   const [appState, setAppState] = useState<AppState>({
     file: null,
     rawData: [],
@@ -70,6 +73,129 @@ export default function HomePage() {
       tier: "all",
     },
   });
+
+  // Load latest schedule from database on mount
+  useEffect(() => {
+    loadLatestSchedule();
+  }, []);
+
+  async function loadLatestSchedule() {
+    setIsLoadingFromDB(true);
+    
+    try {
+      console.log("🔍 Attempting to load schedule from database...");
+      
+      const schedulesResult = await getTrainingSchedules();
+      
+      console.log("📊 Schedules query result:", schedulesResult);
+      
+      if (schedulesResult.success && schedulesResult.data && schedulesResult.data.length > 0) {
+        console.log(`✅ Found ${schedulesResult.data.length} schedules in database`);
+        
+        // Get the most recent schedule
+        const latestSchedule = schedulesResult.data[0];
+        console.log("📅 Loading latest schedule:", latestSchedule.week_of);
+        
+        // Load full schedule details
+        const detailsResult = await getScheduleById(latestSchedule.id);
+        
+        console.log("📋 Schedule details result:", detailsResult);
+        
+        if (detailsResult.success && detailsResult.data) {
+          // Convert database format to app format
+          const dbSchedule = convertDatabaseScheduleToAppFormat(detailsResult.data);
+          
+          if (dbSchedule) {
+            console.log("✨ Successfully loaded schedule with", dbSchedule.schedule.length, "days");
+            setAppState((prev) => ({
+              ...prev,
+              schedule: dbSchedule.schedule,
+              stats: dbSchedule.stats,
+            }));
+          } else {
+            console.warn("⚠️ Failed to convert database schedule to app format");
+          }
+        } else {
+          console.warn("⚠️ Failed to load schedule details:", detailsResult.error);
+        }
+      } else {
+        console.log("📭 No schedules found in database - showing file upload");
+      }
+    } catch (error) {
+      console.error("❌ Error loading schedule from database:", error);
+    } finally {
+      setIsLoadingFromDB(false);
+    }
+  }
+
+  function convertDatabaseScheduleToAppFormat(data: any): { schedule: DaySchedule[], stats: any } | null {
+    try {
+      const { schedule: scheduleData, sessions } = data;
+      
+      // Group sessions by day
+      const dayMap = new Map<string, TrainingSession[]>();
+      
+      sessions.forEach((session: any) => {
+        if (!dayMap.has(session.day)) {
+          dayMap.set(session.day, []);
+        }
+        
+        const trainingSession: TrainingSession = {
+          time: session.time_slot,
+          location: session.location,
+          tier: session.tier as any,
+          agents: session.agent_assignments.map((a: any) => ({
+            name: a.agent_name,
+            manager: a.manager,
+            site: a.site,
+            tier: a.tier_code,
+            capScore: a.original_cap_score,
+            adjustedCAPScore: a.adjusted_cap_score,
+            leadsPerDay: a.leads_per_day,
+            leadAttainment: a.lead_attainment,
+            tenure: a.tenure,
+            closeRate: a.close_rate,
+            annualPremium: a.annual_premium,
+            placeRate: a.place_rate,
+            recommendedTraining: a.recommended_training,
+            wowDelta: 0,
+            priorRank: 0,
+            currentRank: 0,
+          })),
+          priority: session.priority,
+          cohortNumber: session.cohort_number,
+        };
+        
+        dayMap.get(session.day)!.push(trainingSession);
+      });
+      
+      // Convert to DaySchedule array
+      const schedule: DaySchedule[] = Array.from(dayMap.entries()).map(([day, sessions]) => ({
+        day,
+        sessions,
+      }));
+      
+      // Sort by day order
+      const dayOrder = ["Tuesday", "Wednesday", "Thursday", "Friday"];
+      schedule.sort((a, b) => dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day));
+      
+      // Create stats from schedule data
+      const stats = {
+        totalAgents: scheduleData.total_agents_scheduled,
+        eligibleCount: scheduleData.total_agents_scheduled,
+        excludedCount: 0,
+        avgCAPScore: scheduleData.avg_adjusted_cap_score,
+        needsTraining: scheduleData.total_agents_scheduled,
+        clt: { performance: 0, standard: 0, total: 0 },
+        atx: { performance: 0, standard: 0, total: 0 },
+      };
+      
+      return { schedule, stats };
+    } catch (error) {
+      console.error("Error converting database schedule:", error);
+      return null;
+    }
+  }
 
   const handleFileProcessed = (result: ParseResult) => {
     if (!result.success || !result.data) {
@@ -176,7 +302,8 @@ export default function HomePage() {
     copyEmailToClipboard(appState.schedule);
   };
 
-  const hasData = appState.eligibleAgents.length > 0;
+  // Check if we have data from either file upload OR database
+  const hasData = appState.eligibleAgents.length > 0 || appState.schedule.length > 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -192,10 +319,30 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* File Upload */}
-        {!hasData && (
+        {/* File Upload - Only show if no data AND not loading from DB */}
+        {!hasData && !isLoadingFromDB && (
           <div className="mb-8">
             <FileUpload onFileProcessed={handleFileProcessed} />
+            <div className="text-center mt-4">
+              <p className="text-sm text-gray-500">
+                Or go to{" "}
+                <button
+                  onClick={() => setActiveView("database")}
+                  className="text-blue-600 hover:underline font-medium"
+                >
+                  Database & Analytics
+                </button>{" "}
+                to upload weekly data
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {/* Loading State */}
+        {isLoadingFromDB && (
+          <div className="mb-8 text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+            <p className="text-gray-600">Loading schedule from database...</p>
           </div>
         )}
 
@@ -413,7 +560,7 @@ export default function HomePage() {
                   {databaseView === "history" && <SavedSchedulesView />}
 
                   {/* Attendance Tracking View */}
-                  {databaseView === "attendance" && <AttendanceTracker />}
+                  {databaseView === "attendance" && <AttendanceTrackerEnhanced />}
 
                   {/* Analytics Dashboard View */}
                   {databaseView === "analytics" && <AnalyticsDashboard />}
