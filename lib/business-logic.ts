@@ -6,10 +6,26 @@ export function calculateStats(agents: AgentRecord[]): Stats {
   // Filter out agents with 0 original CAP score - they are not eligible for training
   const eligibleAgents = agents.filter((agent) => agent.capScore > 0);
 
+  // Debug: Log what we're working with
+  console.log('=== CAP SCORE CALCULATION DEBUG ===');
+  console.log('Total agents:', totalAgents);
+  console.log('Eligible agents (CAP > 0):', eligibleAgents.length);
+  console.log('Sample agent data:', eligibleAgents.slice(0, 3).map(a => ({
+    name: a.name,
+    originalCAP: a.capScore,
+    leadsPerDay: a.leadsPerDay,
+    leadAttainment: a.leadAttainment,
+    adjustedCAP: a.adjustedCAPScore
+  })));
+
   // Calculate company average CAP score using ONLY eligible agents with non-zero ADJUSTED CAP scores
+  // Also exclude agents with 0 or missing leads per day (they can't have valid adjusted scores)
   const agentsWithNonZeroAdjustedCAP = eligibleAgents.filter(
-    (agent) => agent.adjustedCAPScore > 0
+    (agent) => agent.adjustedCAPScore > 0 && agent.leadsPerDay > 0
   );
+  
+  console.log('Agents with valid adjusted CAP:', agentsWithNonZeroAdjustedCAP.length);
+  
   const avgCAPScore =
     agentsWithNonZeroAdjustedCAP.length > 0
       ? Math.round(
@@ -21,6 +37,9 @@ export function calculateStats(agents: AgentRecord[]): Stats {
             10
         ) / 10
       : 0;
+  
+  console.log('Calculated Avg Adjusted CAP:', avgCAPScore);
+  console.log('===================================');
 
   // Count agents needing training (Adjusted CAP Score < Company Average OR needs metric training)
   // Exclude agents with 0 original CAP score
