@@ -302,7 +302,8 @@ export default function HomePage() {
     copyEmailToClipboard(appState.schedule);
   };
 
-  const hasData = appState.eligibleAgents.length > 0;
+  // Check if we have data from either file upload OR database
+  const hasData = appState.eligibleAgents.length > 0 || appState.schedule.length > 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
