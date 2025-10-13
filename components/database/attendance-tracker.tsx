@@ -10,6 +10,7 @@ import {
   bulkMarkAttendance,
   getTrainingSchedules,
 } from "@/lib/database";
+import { supabase } from "@/lib/supabase";
 import {
   CheckCircle2,
   XCircle,
@@ -43,13 +44,26 @@ export function AttendanceTracker() {
 
   async function loadAssignments(scheduleId: string) {
     setIsLoading(true);
-    // This would need a custom query to get assignments by schedule
-    // For now, we'll use pending attendance
-    const result = await getPendingAttendance();
-    if (result.success && result.data) {
-      // Filter by schedule if needed
-      setAssignments(result.data);
+    
+    // Get assignments for this specific schedule
+    const { data, error } = await supabase
+      .from("agent_assignments")
+      .select(
+        `
+        *,
+        training_sessions!session_id (day, time_slot, location, training_type)
+      `
+      )
+      .eq("schedule_id", scheduleId)
+      .order("created_at");
+
+    if (error) {
+      console.error("Error loading assignments:", error);
+      setAssignments([]);
+    } else {
+      setAssignments(data || []);
     }
+    
     setIsLoading(false);
   }
 

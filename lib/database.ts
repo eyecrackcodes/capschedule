@@ -179,12 +179,13 @@ export async function getScheduleById(scheduleId: string) {
     if (scheduleError) throw scheduleError;
 
     // Get sessions with assignments
+    // Note: We explicitly specify the foreign key relationship using !inner
     const { data: sessions, error: sessionsError } = await supabase
       .from("training_sessions")
       .select(
         `
         *,
-        agent_assignments (*)
+        agent_assignments!session_id (*)
       `
       )
       .eq("schedule_id", scheduleId)
