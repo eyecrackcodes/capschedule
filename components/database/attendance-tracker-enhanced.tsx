@@ -140,6 +140,9 @@ export function AttendanceTrackerEnhanced() {
     setIsSaving(false);
   }
 
+  // Debug: Log filtering info
+  console.log("🎯 Filtering", assignments.length, "assignments with filters:", filters);
+  
   // Smart filtering logic
   const filteredAssignments = assignments.filter((assignment) => {
     const session = assignment.training_sessions;
@@ -180,33 +183,36 @@ export function AttendanceTrackerEnhanced() {
 
     // Date range filter
     if (filters.dateRange !== "all") {
-      const weekOf = new Date(schedule.week_of);
+      const weekOf = new Date(schedule.week_of + 'T00:00:00'); // Parse as local date
       const today = new Date();
       const dayOfWeek = today.getDay(); // 0=Sunday, 1=Monday, etc.
       
-      // Calculate current week's Monday
+      // Calculate current week's Monday (normalize to midnight)
       const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
       const thisMonday = new Date(today);
       thisMonday.setDate(today.getDate() - daysToMonday);
       thisMonday.setHours(0, 0, 0, 0);
       
-      const weekOfTime = weekOf.getTime();
-      const thisMondayTime = thisMonday.getTime();
+      // Normalize both to date strings for comparison (YYYY-MM-DD)
+      const weekOfStr = schedule.week_of;
+      const thisMondayStr = thisMonday.toISOString().split('T')[0];
       
       if (filters.dateRange === "this-week") {
-        if (weekOfTime !== thisMondayTime) return false;
+        if (weekOfStr !== thisMondayStr) return false;
       } else if (filters.dateRange === "past-due") {
-        if (weekOfTime >= thisMondayTime) return false;
+        if (weekOfStr >= thisMondayStr) return false;
       } else if (filters.dateRange === "upcoming") {
-        if (weekOfTime <= thisMondayTime) return false;
+        if (weekOfStr <= thisMondayStr) return false;
       } else if (filters.dateRange === "today") {
         const todayDay = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][today.getDay()];
-        if (weekOfTime !== thisMondayTime || session.day !== todayDay) return false;
+        if (weekOfStr !== thisMondayStr || session.day !== todayDay) return false;
       }
     }
 
     return true;
   });
+  
+  console.log("📊 Filtered down to", filteredAssignments.length, "assignments");
 
   // Group by session for better display
   const groupedAssignments = filteredAssignments.reduce((acc, assignment) => {
