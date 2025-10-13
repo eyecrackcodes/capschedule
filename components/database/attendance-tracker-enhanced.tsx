@@ -68,6 +68,8 @@ export function AttendanceTrackerEnhanced() {
   }
 
   async function loadAllAssignments() {
+    console.log("🔍 Loading all assignments...");
+    
     const { data, error } = await supabase
       .from("agent_assignments")
       .select(
@@ -87,10 +89,14 @@ export function AttendanceTrackerEnhanced() {
       )
       .order("created_at");
 
+    console.log("📊 Assignments query result:", { data, error, count: data?.length });
+
     if (error) {
-      console.error("Error loading assignments:", error);
+      console.error("❌ Error loading assignments:", error);
       setAssignments([]);
     } else {
+      console.log("✅ Loaded", data?.length || 0, "assignments");
+      console.log("Sample assignment:", data?.[0]);
       setAssignments(data || []);
     }
   }
@@ -139,7 +145,10 @@ export function AttendanceTrackerEnhanced() {
     const session = assignment.training_sessions;
     const schedule = assignment.training_schedules;
     
-    if (!session || !schedule) return false;
+    if (!session || !schedule) {
+      console.warn("⚠️ Assignment missing session or schedule data:", assignment);
+      return false;
+    }
 
     // Location filter
     if (filters.location !== "all" && session.location !== filters.location) {
