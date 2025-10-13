@@ -53,18 +53,26 @@ export function StatsDashboard({ stats, percentiles }: StatsDashboardProps) {
         {/* Average CAP Score */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Adjusted CAP</CardTitle>
-            <Badge variant="secondary">{stats.avgCAPScore}</Badge>
+            <CardTitle className="text-sm font-medium">CAP Scores</CardTitle>
           </CardHeader>
           <CardContent>
-            <div
-              className={`text-2xl font-bold ${getCAPScoreColor(
-                stats.avgCAPScore
-              )}`}
-            >
-              {stats.avgCAPScore}
+            <div className="space-y-2">
+              <div>
+                <p className="text-xs text-gray-600">Adjusted (with leads)</p>
+                <div
+                  className={`text-2xl font-bold ${getCAPScoreColor(
+                    stats.avgCAPScore
+                  )}`}
+                >
+                  {stats.avgCAPScore || 'N/A'}
+                </div>
+              </div>
+              {percentiles && (
+                <div className="border-t pt-2">
+                  <p className="text-xs text-gray-600">Check console for debug info</p>
+                </div>
+              )}
             </div>
-            <p className="text-xs text-muted-foreground">With Lead Attainment</p>
           </CardContent>
         </Card>
 
