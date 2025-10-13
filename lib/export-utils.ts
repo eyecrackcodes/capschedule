@@ -14,7 +14,10 @@ export function exportToCSV(schedule: DaySchedule[]): void {
     "Cohort Number",
     "Agent Name",
     "Manager",
-    "CAP Score",
+    "Adjusted CAP Score",
+    "Original CAP Score",
+    "Lead Attainment %",
+    "Leads Per Day",
     "Tenure",
     "Site",
     "Tier Code",
@@ -33,7 +36,10 @@ export function exportToCSV(schedule: DaySchedule[]): void {
           session.cohortNumber.toString(),
           agent.name,
           agent.manager,
+          agent.adjustedCAPScore.toString(),
           agent.capScore.toString(),
+          agent.leadAttainment.toFixed(1),
+          agent.leadsPerDay.toString(),
           agent.tenure.toString(),
           agent.site,
           agent.tier,
@@ -115,7 +121,7 @@ export function exportToPDF(schedule: DaySchedule[]): void {
           yPosition = 20;
         }
 
-        const agentText = `  • ${agent.name} (${agent.manager}) - CAP: ${agent.capScore}`;
+        const agentText = `  • ${agent.name} (${agent.manager}) - Adj CAP: ${agent.adjustedCAPScore} (Orig: ${agent.capScore}, ${agent.leadAttainment.toFixed(0)}% Attain)`;
         pdf.text(agentText, 40, yPosition);
         yPosition += 8;
       });

@@ -21,7 +21,9 @@ export function ManagerAgentView({
     {
       agents: Array<{
         name: string;
-        capScore: number;
+        adjustedCAPScore: number;
+        originalCAPScore: number;
+        leadAttainment: number;
         location: string;
         tier: string;
         trainingDay: string;
@@ -39,14 +41,16 @@ export function ManagerAgentView({
         }
 
         const trainingType =
-          agent.capScore === 0
+          agent.adjustedCAPScore === 0
             ? "Zero CAP Remediation"
             : TRAINING_FOCUS[day.day as keyof typeof TRAINING_FOCUS] ||
               "General Training";
 
         managerMap.get(agent.manager)!.agents.push({
           name: agent.name,
-          capScore: agent.capScore,
+          adjustedCAPScore: agent.adjustedCAPScore,
+          originalCAPScore: agent.capScore,
+          leadAttainment: agent.leadAttainment,
           location: session.location,
           tier: agent.tier,
           trainingDay: day.day,
@@ -97,7 +101,7 @@ export function ManagerAgentView({
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Company Avg CAP</p>
+              <p className="text-sm text-gray-600">Avg Adjusted CAP</p>
               <p className="text-2xl font-bold">{avgCAPScore}</p>
             </div>
           </div>
@@ -107,10 +111,10 @@ export function ManagerAgentView({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {sortedManagers.map(([manager, data]) => {
           const zeroCAPCount = data.agents.filter(
-            (a) => a.capScore === 0
+            (a) => a.adjustedCAPScore === 0
           ).length;
           const belowAvgCount = data.agents.filter(
-            (a) => a.capScore > 0 && a.capScore < avgCAPScore
+            (a) => a.adjustedCAPScore > 0 && a.adjustedCAPScore < avgCAPScore
           ).length;
 
           return (
@@ -146,7 +150,7 @@ export function ManagerAgentView({
                     <div
                       key={idx}
                       className={`p-3 rounded-lg border ${
-                        agent.capScore === 0
+                        agent.adjustedCAPScore === 0
                           ? "bg-red-50 border-red-200"
                           : "bg-gray-50 border-gray-200"
                       }`}
@@ -157,12 +161,15 @@ export function ManagerAgentView({
                           <div className="flex items-center gap-2 mt-1">
                             <Badge
                               variant={
-                                agent.capScore === 0 ? "destructive" : "outline"
+                                agent.adjustedCAPScore === 0 ? "destructive" : "outline"
                               }
                               className="text-xs"
                             >
-                              CAP: {agent.capScore}
+                              Adj CAP: {agent.adjustedCAPScore}
                             </Badge>
+                            <span className="text-xs text-gray-500">
+                              (Orig: {agent.originalCAPScore} | {agent.leadAttainment.toFixed(0)}%)
+                            </span>
                             <Badge
                               className={`text-xs ${
                                 agent.location === "CLT"
@@ -195,12 +202,12 @@ export function ManagerAgentView({
                         </div>
                       </div>
 
-                      {agent.capScore === 0 && (
+                      {agent.adjustedCAPScore === 0 && (
                         <p className="text-xs text-red-600 mt-2 font-medium">
                           ⚠️ Critical - Immediate intervention required
                         </p>
                       )}
-                      {agent.capScore > 0 && agent.capScore < avgCAPScore && (
+                      {agent.adjustedCAPScore > 0 && agent.adjustedCAPScore < avgCAPScore && (
                         <p className="text-xs text-orange-600 mt-2">
                           Below company average ({avgCAPScore})
                         </p>

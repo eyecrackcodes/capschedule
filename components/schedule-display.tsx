@@ -168,7 +168,8 @@ export function ScheduleDisplay({
             </p>
             <div className="text-sm text-yellow-700 mt-1">
               <p>
-                • <strong>Company Average CAP Score:</strong> {avgCAPScore}
+                • <strong>Company Average Adjusted CAP:</strong> {avgCAPScore} (with
+                Lead Attainment)
               </p>
               <p>
                 • <strong>Zero CAP Agents:</strong> Immediate remediation on
@@ -410,24 +411,27 @@ export function ScheduleDisplay({
                                       <div className="text-right">
                                         <Badge
                                           variant={
-                                            agent.capScore === 0
+                                            agent.adjustedCAPScore === 0
                                               ? "destructive"
                                               : "outline"
                                           }
                                           className="text-xs"
                                         >
-                                          CAP: {agent.capScore}
+                                          Adj CAP: {agent.adjustedCAPScore}
                                         </Badge>
+                                        <p className="text-xs text-gray-500">
+                                          Orig: {agent.capScore} | {agent.leadAttainment.toFixed(0)}% Attain
+                                        </p>
                                         <p className="text-xs text-gray-500">
                                           Tenure: {agent.tenure}y
                                         </p>
-                                        {agent.capScore === 0 && (
+                                        {agent.adjustedCAPScore === 0 && (
                                           <p className="text-xs text-red-600 font-medium">
                                             Zero CAP - Critical
                                           </p>
                                         )}
-                                        {agent.capScore > 0 &&
-                                          agent.capScore < avgCAPScore && (
+                                        {agent.adjustedCAPScore > 0 &&
+                                          agent.adjustedCAPScore < avgCAPScore && (
                                             <p className="text-xs text-orange-600">
                                               Below avg ({avgCAPScore})
                                             </p>
