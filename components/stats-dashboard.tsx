@@ -39,13 +39,17 @@ export function StatsDashboard({ stats, percentiles }: StatsDashboardProps) {
         {/* Total Agents */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Agents</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {stats.excludedCount > 0 ? "Total Agents" : "Agents in Training"}
+            </CardTitle>
             <Badge variant="info">{stats.totalAgents}</Badge>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalAgents}</div>
             <p className="text-xs text-muted-foreground">
-              Eligible for analysis
+              {stats.excludedCount > 0 
+                ? "Eligible for analysis" 
+                : "Scheduled this week"}
             </p>
           </CardContent>
         </Card>
@@ -71,7 +75,9 @@ export function StatsDashboard({ stats, percentiles }: StatsDashboardProps) {
         {/* Training Needed */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Need Training</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {stats.excludedCount > 0 ? "Need Training" : "Scheduled"}
+            </CardTitle>
             <Badge variant="warning">{stats.needsTraining}</Badge>
           </CardHeader>
           <CardContent>
@@ -79,7 +85,9 @@ export function StatsDashboard({ stats, percentiles }: StatsDashboardProps) {
               {stats.needsTraining}
             </div>
             <p className="text-xs text-muted-foreground">
-              {getTrainingPercentage()}% of eligible agents
+              {stats.excludedCount > 0 
+                ? `${getTrainingPercentage()}% of eligible agents`
+                : "Below company average"}
             </p>
           </CardContent>
         </Card>

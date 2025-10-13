@@ -18,7 +18,12 @@ export async function saveTrainingSchedule(
   schedule: DaySchedule[],
   weekOf: Date,
   avgCAPScore: number,
-  avgAdjustedCAPScore: number
+  avgAdjustedCAPScore: number,
+  fullStats?: {
+    totalAgents: number;
+    excludedCount: number;
+    eligibleCount: number;
+  }
 ) {
   try {
     // 1. Check if schedule already exists for this week
@@ -34,28 +39,32 @@ export async function saveTrainingSchedule(
       );
     }
 
-    // 2. Count total agents
-    const totalAgents = schedule.reduce(
+    // 2. Count total scheduled agents
+    const totalScheduledAgents = schedule.reduce(
       (sum, day) =>
         sum +
         day.sessions.reduce((daySum, session) => daySum + session.agents.length, 0),
       0
     );
 
-    // 3. Create the schedule record
+    // 3. Create the schedule record with enhanced metadata
     const { data: scheduleData, error: scheduleError } = await supabase
       .from("training_schedules")
       .insert({
         week_of: weekOf.toISOString().split("T")[0],
         avg_cap_score: avgCAPScore,
         avg_adjusted_cap_score: avgAdjustedCAPScore,
-        total_agents_scheduled: totalAgents,
+        total_agents_scheduled: totalScheduledAgents,
         metadata: {
           days_with_sessions: schedule.length,
           total_sessions: schedule.reduce(
             (sum, day) => sum + day.sessions.length,
             0
           ),
+          // Save full dataset info if provided
+          total_company_agents: fullStats?.totalAgents || totalScheduledAgents,
+          excluded_by_tenure: fullStats?.excludedCount || 0,
+          eligible_agents: fullStats?.eligibleCount || totalScheduledAgents,
         },
       })
       .select()

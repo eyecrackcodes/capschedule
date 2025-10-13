@@ -204,12 +204,18 @@ export default function HomePage() {
       
       console.log("CLT agents:", cltAgents.length, "ATX agents:", atxAgents.length);
       
+      // Extract full dataset info from metadata if available
+      const metadata = scheduleData.metadata || {};
+      const totalCompanyAgents = metadata.total_company_agents || allAgents.length;
+      const excludedCount = metadata.excluded_by_tenure || 0;
+      const eligibleCount = metadata.eligible_agents || allAgents.length;
+      
       const stats = {
-        totalAgents: allAgents.length,
-        eligibleCount: allAgents.length,
-        excludedCount: 0, // Not available from database
+        totalAgents: totalCompanyAgents, // Full company count from metadata
+        eligibleCount: eligibleCount, // Eligible after tenure filter
+        excludedCount: excludedCount, // Excluded by tenure
         avgCAPScore: scheduleData.avg_adjusted_cap_score,
-        needsTraining: allAgents.length, // All loaded agents need training
+        needsTraining: allAgents.length, // Agents scheduled for training
         clt: {
           performance: cltAgents.filter((a) => a.tier === "P").length,
           standard: cltAgents.filter((a) => a.tier === "S").length,
@@ -571,6 +577,7 @@ export default function HomePage() {
                         }
                         avgAdjustedCAPScore={appState.stats.avgCAPScore}
                         eligibleAgents={appState.eligibleAgents}
+                        fullStats={appState.stats}
                         onSaveComplete={() => {
                           alert("Schedule saved successfully!");
                           setDatabaseView("history");
