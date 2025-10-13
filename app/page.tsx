@@ -196,8 +196,13 @@ export default function HomePage() {
       schedule.sort((a, b) => dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day));
       
       // Calculate stats from actual loaded agents
+      console.log("📊 Calculating stats from", allAgents.length, "unique agents");
+      console.log("Sample agents:", allAgents.slice(0, 3).map(a => ({ name: a.name, site: a.site, tier: a.tier })));
+      
       const cltAgents = allAgents.filter((a) => a.site === "CHA");
       const atxAgents = allAgents.filter((a) => a.site === "AUS");
+      
+      console.log("CLT agents:", cltAgents.length, "ATX agents:", atxAgents.length);
       
       const stats = {
         totalAgents: allAgents.length,
@@ -216,6 +221,8 @@ export default function HomePage() {
           total: atxAgents.length,
         },
       };
+      
+      console.log("Final stats:", stats);
       
       return { schedule, stats };
     } catch (error) {
