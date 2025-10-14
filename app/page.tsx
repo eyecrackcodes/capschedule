@@ -259,7 +259,7 @@ export default function HomePage() {
     );
 
     // Log percentiles for debugging
-    console.log("50th Percentiles:", {
+    console.log("25th Percentiles (Bottom Quartile):", {
       performance: {
         closeRate: percentiles.performance.closeRate50th,
         annualPremium: percentiles.performance.annualPremium50th,
