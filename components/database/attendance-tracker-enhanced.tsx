@@ -224,6 +224,20 @@ export function AttendanceTrackerEnhanced() {
   
   console.log("📊 Filtered down to", filteredAssignments.length, "assignments");
 
+  // Calculate stats from ALL assignments (not just filtered) to show true counts
+  const allAttendedCount = assignments.filter((a) => {
+    const current = attendanceChanges.get(a.id)?.attended ?? a.attended;
+    return current === true;
+  }).length;
+  const allNoShowCount = assignments.filter((a) => {
+    const current = attendanceChanges.get(a.id)?.attended ?? a.attended;
+    return current === false;
+  }).length;
+  const allPendingCount = assignments.filter((a) => {
+    const current = attendanceChanges.get(a.id)?.attended ?? a.attended;
+    return current === null;
+  }).length;
+
   // Group by session for better display
   const groupedAssignments = filteredAssignments.reduce((acc, assignment) => {
     const key = `${assignment.training_schedules.week_of}-${assignment.training_sessions.day}-${assignment.training_sessions.time_slot}-${assignment.training_sessions.location}`;
@@ -251,29 +265,7 @@ export function AttendanceTrackerEnhanced() {
     return a.time_slot.localeCompare(b.time_slot);
   });
 
-  // Calculate stats for filtered view (including pending changes)
-  const totalFiltered = filteredAssignments.length;
-  const attendedCount = filteredAssignments.filter((a) => {
-    const current = attendanceChanges.get(a.id)?.attended ?? a.attended;
-    return current === true;
-  }).length;
-  const noShowCount = filteredAssignments.filter((a) => {
-    const current = attendanceChanges.get(a.id)?.attended ?? a.attended;
-    return current === false;
-  }).length;
-  const pendingCount = filteredAssignments.filter((a) => {
-    const current = attendanceChanges.get(a.id)?.attended ?? a.attended;
-    return current === null;
-  }).length;
-  
-  // Debug: Log stats whenever they're calculated
-  console.log("📊 Attendance Stats:", {
-    total: totalFiltered,
-    attended: attendedCount,
-    noShow: noShowCount,
-    pending: pendingCount,
-    unsavedChanges: attendanceChanges.size
-  });
+  // Use the all-assignments stats (calculated before filtering)
 
   if (isLoading) {
     return (
