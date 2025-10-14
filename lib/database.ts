@@ -300,9 +300,12 @@ export async function bulkMarkAttendance(
   }>,
   markedBy: string
 ) {
+  console.log("💾 bulkMarkAttendance called with", assignments.length, "updates");
+  
   // Use individual updates instead of upsert to avoid insert attempts
-  const updatePromises = assignments.map((a) =>
-    supabase
+  const updatePromises = assignments.map((a) => {
+    console.log(`  Updating ${a.id}: attended=${a.attended}`);
+    return supabase
       .from("agent_assignments")
       .update({
         attended: a.attended,
@@ -310,20 +313,27 @@ export async function bulkMarkAttendance(
         attendance_marked_by: markedBy,
         no_show_reason: a.attended ? null : a.noShowReason || null,
       })
-      .eq("id", a.id)
-  );
+      .eq("id", a.id);
+  });
 
   const results = await Promise.all(updatePromises);
+  
+  console.log("📊 Update results:", results.map(r => ({ 
+    success: !r.error, 
+    error: r.error?.message 
+  })));
   
   // Check for any errors
   const errors = results.filter((r) => r.error);
   if (errors.length > 0) {
-    console.error("Error bulk marking attendance:", errors);
+    console.error("❌ Error bulk marking attendance:", errors);
     return { 
       success: false, 
-      error: `Failed to update ${errors.length} out of ${assignments.length} assignments` 
+      error: `Failed to update ${errors.length} out of ${assignments.length} assignments. First error: ${errors[0].error?.message}` 
     };
   }
+
+  console.log("✅ Successfully updated", assignments.length, "assignments in database");
 
   return {
     success: true,

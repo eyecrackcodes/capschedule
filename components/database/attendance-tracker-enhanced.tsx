@@ -119,6 +119,7 @@ export function AttendanceTrackerEnhanced() {
       return;
     }
 
+    console.log("💾 Saving", attendanceChanges.size, "attendance changes...");
     setIsSaving(true);
 
     const updates = Array.from(attendanceChanges.entries()).map(
@@ -128,15 +129,22 @@ export function AttendanceTrackerEnhanced() {
         noShowReason: data.reason,
       })
     );
+    
+    console.log("📝 Updates to save:", updates);
 
     const result = await bulkMarkAttendance(updates, "Manager");
+    
+    console.log("💾 Save result:", result);
 
     if (result.success) {
       alert(result.message);
       setAttendanceChanges(new Map());
+      console.log("🔄 Reloading assignments from database...");
       await loadAllAssignments();
+      console.log("✅ Reload complete!");
     } else {
       alert(`Error: ${result.error}`);
+      console.error("❌ Failed to save attendance:", result.error);
     }
 
     setIsSaving(false);
