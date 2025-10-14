@@ -466,23 +466,24 @@ export function AttendanceTrackerEnhanced() {
             </div>
           </div>
 
-          {/* Summary Stats */}
+          {/* Summary Stats - Always show totals from ALL assignments, not just filtered */}
           <div className="grid grid-cols-4 gap-4 mb-6">
             <div className="bg-gray-50 p-3 rounded-lg">
-              <p className="text-sm text-gray-600">Showing</p>
-              <p className="text-2xl font-bold">{totalFiltered}</p>
+              <p className="text-sm text-gray-600">Total</p>
+              <p className="text-2xl font-bold">{assignments.length}</p>
+              <p className="text-xs text-gray-500 mt-1">Showing: {filteredAssignments.length}</p>
             </div>
             <div className="bg-green-50 p-3 rounded-lg">
               <p className="text-sm text-green-600">Attended</p>
-              <p className="text-2xl font-bold text-green-700">{attendedCount}</p>
+              <p className="text-2xl font-bold text-green-700">{allAttendedCount}</p>
             </div>
             <div className="bg-red-50 p-3 rounded-lg">
               <p className="text-sm text-red-600">No-Show</p>
-              <p className="text-2xl font-bold text-red-700">{noShowCount}</p>
+              <p className="text-2xl font-bold text-red-700">{allNoShowCount}</p>
             </div>
             <div className="bg-yellow-50 p-3 rounded-lg">
               <p className="text-sm text-yellow-600">Pending</p>
-              <p className="text-2xl font-bold text-yellow-700">{pendingCount}</p>
+              <p className="text-2xl font-bold text-yellow-700">{allPendingCount}</p>
             </div>
           </div>
 
