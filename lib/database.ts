@@ -104,12 +104,28 @@ export async function saveTrainingSchedule(
       .select();
 
     if (sessionError) throw sessionError;
+    
+    if (!sessionData || sessionData.length === 0) {
+      throw new Error("No sessions were created. Cannot save agent assignments.");
+    }
+    
+    console.log(`✅ Created ${sessionData.length} training sessions`);
 
     // 5. Create agent assignments using the session IDs
     let sessionIndex = 0;
     for (const day of schedule) {
       for (const session of day.sessions) {
+        // Safety check: ensure we have a valid session ID
+        if (!sessionData[sessionIndex]) {
+          console.error(`❌ Missing session data at index ${sessionIndex}`);
+          throw new Error(`Session data mismatch at index ${sessionIndex}. Expected ${sessions.length} sessions, got ${sessionData.length}.`);
+        }
+        
         const sessionId = sessionData[sessionIndex].id;
+        
+        if (!sessionId) {
+          throw new Error(`Session ID is null/undefined at index ${sessionIndex}`);
+        }
 
         for (const agent of session.agents) {
           assignments.push({
@@ -134,13 +150,20 @@ export async function saveTrainingSchedule(
         sessionIndex++;
       }
     }
+    
+    console.log(`📝 Created ${assignments.length} agent assignments for ${sessionData.length} sessions`);
 
     // Insert all assignments
     const { error: assignmentError } = await supabase
       .from("agent_assignments")
       .insert(assignments);
 
-    if (assignmentError) throw assignmentError;
+    if (assignmentError) {
+      console.error("❌ Error inserting assignments:", assignmentError);
+      throw assignmentError;
+    }
+    
+    console.log(`✅ Successfully saved schedule with ${assignments.length} agent assignments`);
 
     return {
       success: true,
