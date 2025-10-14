@@ -61,7 +61,7 @@ export function calculateStats(agents: AgentRecord[]): Stats {
 
 export function createCohorts(
   agents: AgentRecord[],
-  maxSize: number = 5
+  maxSize: number = 3  // Changed from 5 to 3 for more intimate training
 ): Cohorts & { zeroCAPAgents: { clt: AgentRecord[][]; atx: AgentRecord[][] } } {
   // Filter out agents with 0 original CAP score - they are not eligible for training
   const eligibleAgents = agents.filter((agent) => agent.capScore > 0);
