@@ -224,6 +224,20 @@ export function AttendanceTrackerEnhanced() {
   
   console.log("📊 Filtered down to", filteredAssignments.length, "assignments");
 
+  // Calculate stats from ALL assignments (not just filtered) to show true counts
+  const allAttendedCount = assignments.filter((a) => {
+    const current = attendanceChanges.get(a.id)?.attended ?? a.attended;
+    return current === true;
+  }).length;
+  const allNoShowCount = assignments.filter((a) => {
+    const current = attendanceChanges.get(a.id)?.attended ?? a.attended;
+    return current === false;
+  }).length;
+  const allPendingCount = assignments.filter((a) => {
+    const current = attendanceChanges.get(a.id)?.attended ?? a.attended;
+    return current === null;
+  }).length;
+
   // Group by session for better display
   const groupedAssignments = filteredAssignments.reduce((acc, assignment) => {
     const key = `${assignment.training_schedules.week_of}-${assignment.training_sessions.day}-${assignment.training_sessions.time_slot}-${assignment.training_sessions.location}`;
@@ -251,29 +265,7 @@ export function AttendanceTrackerEnhanced() {
     return a.time_slot.localeCompare(b.time_slot);
   });
 
-  // Calculate stats for filtered view (including pending changes)
-  const totalFiltered = filteredAssignments.length;
-  const attendedCount = filteredAssignments.filter((a) => {
-    const current = attendanceChanges.get(a.id)?.attended ?? a.attended;
-    return current === true;
-  }).length;
-  const noShowCount = filteredAssignments.filter((a) => {
-    const current = attendanceChanges.get(a.id)?.attended ?? a.attended;
-    return current === false;
-  }).length;
-  const pendingCount = filteredAssignments.filter((a) => {
-    const current = attendanceChanges.get(a.id)?.attended ?? a.attended;
-    return current === null;
-  }).length;
-  
-  // Debug: Log stats whenever they're calculated
-  console.log("📊 Attendance Stats:", {
-    total: totalFiltered,
-    attended: attendedCount,
-    noShow: noShowCount,
-    pending: pendingCount,
-    unsavedChanges: attendanceChanges.size
-  });
+  // Use the all-assignments stats (calculated before filtering)
 
   if (isLoading) {
     return (
@@ -474,23 +466,24 @@ export function AttendanceTrackerEnhanced() {
             </div>
           </div>
 
-          {/* Summary Stats */}
+          {/* Summary Stats - Always show totals from ALL assignments, not just filtered */}
           <div className="grid grid-cols-4 gap-4 mb-6">
             <div className="bg-gray-50 p-3 rounded-lg">
-              <p className="text-sm text-gray-600">Showing</p>
-              <p className="text-2xl font-bold">{totalFiltered}</p>
+              <p className="text-sm text-gray-600">Total</p>
+              <p className="text-2xl font-bold">{assignments.length}</p>
+              <p className="text-xs text-gray-500 mt-1">Showing: {filteredAssignments.length}</p>
             </div>
             <div className="bg-green-50 p-3 rounded-lg">
               <p className="text-sm text-green-600">Attended</p>
-              <p className="text-2xl font-bold text-green-700">{attendedCount}</p>
+              <p className="text-2xl font-bold text-green-700">{allAttendedCount}</p>
             </div>
             <div className="bg-red-50 p-3 rounded-lg">
               <p className="text-sm text-red-600">No-Show</p>
-              <p className="text-2xl font-bold text-red-700">{noShowCount}</p>
+              <p className="text-2xl font-bold text-red-700">{allNoShowCount}</p>
             </div>
             <div className="bg-yellow-50 p-3 rounded-lg">
               <p className="text-sm text-yellow-600">Pending</p>
-              <p className="text-2xl font-bold text-yellow-700">{pendingCount}</p>
+              <p className="text-2xl font-bold text-yellow-700">{allPendingCount}</p>
             </div>
           </div>
 
