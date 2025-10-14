@@ -383,7 +383,7 @@ function scheduleFridayOverfill(
           item.location === "CLT" ? overfillCohort.clt : overfillCohort.atx;
 
         if (
-          targetCohort.length < 5 &&
+          targetCohort.length < 3 &&
           canScheduleAgent(
             item.agent,
             fridaySchedule.day,
@@ -590,7 +590,7 @@ function scheduleMetricSpecificTrainingNoConflicts(
         for (let i = 0; i < agentsNeedingTraining.length; i++) {
           const item = agentsNeedingTraining[i];
 
-          if (item.location === targetLocation && cohort.length < 5) {
+          if (item.location === targetLocation && cohort.length < 3) {
             if (
               canScheduleAgent(
                 item.agent,
@@ -713,9 +713,9 @@ export function validateSchedule(schedule: DaySchedule[]): {
         );
       }
 
-      if (session.agents.length > 5) {
+      if (session.agents.length > 3) {
         errors.push(
-          `Cohort exceeds maximum size (${session.agents.length} agents) in ${session.location} on ${day.day} at ${session.time}`
+          `Cohort exceeds maximum size (${session.agents.length} agents) in ${session.location} on ${day.day} at ${session.time}. Max is 3 for intimate training.`
         );
       }
 
@@ -803,7 +803,7 @@ export function getScheduleStats(schedule: DaySchedule[]): {
   });
 
   const totalAgentsScheduled = uniqueAgents.size;
-  const weeklyCapacity = totalSessions * 5; // Assuming max 5 agents per session
+  const weeklyCapacity = totalSessions * 3; // Assuming max 3 agents per session
 
   return {
     totalSessions,

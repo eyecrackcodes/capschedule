@@ -83,6 +83,7 @@ export interface TimeSlot {
 }
 
 // Time slots with CST as the base (ATX operates 8-5 CST, CLT operates 9-6 EST)
+// EXCLUDES 11:00 AM - 2:00 PM CST peak hours
 export const TIME_SLOTS: TimeSlot[] = [
   {
     time: "8:30-9:30 AM CST / 9:30-10:30 AM EST",
@@ -91,18 +92,15 @@ export const TIME_SLOTS: TimeSlot[] = [
   },
   {
     time: "9:30-10:30 AM CST / 10:30-11:30 AM EST",
-    priority: "MEDIUM",
+    priority: "HIGH",
     description: "Early morning",
   },
-  {
-    time: "10:30-11:30 AM CST / 11:30 AM-12:30 PM EST",
-    priority: "LOW",
-    description: "Approaching peak",
-  },
+  // REMOVED: 10:30-11:30 AM CST (peak time 11am-2pm)
+  // REMOVED: 11:00 AM - 2:00 PM CST (peak hours)
   {
     time: "2:00-3:00 PM CST / 3:00-4:00 PM EST",
     priority: "HIGH",
-    description: "Post-lunch lull",
+    description: "Post-lunch recovery",
   },
   {
     time: "3:00-4:00 PM CST / 4:00-5:00 PM EST",

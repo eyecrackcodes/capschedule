@@ -104,12 +104,28 @@ export async function saveTrainingSchedule(
       .select();
 
     if (sessionError) throw sessionError;
+    
+    if (!sessionData || sessionData.length === 0) {
+      throw new Error("No sessions were created. Cannot save agent assignments.");
+    }
+    
+    console.log(`✅ Created ${sessionData.length} training sessions`);
 
     // 5. Create agent assignments using the session IDs
     let sessionIndex = 0;
     for (const day of schedule) {
       for (const session of day.sessions) {
+        // Safety check: ensure we have a valid session ID
+        if (!sessionData[sessionIndex]) {
+          console.error(`❌ Missing session data at index ${sessionIndex}`);
+          throw new Error(`Session data mismatch at index ${sessionIndex}. Expected ${sessions.length} sessions, got ${sessionData.length}.`);
+        }
+        
         const sessionId = sessionData[sessionIndex].id;
+        
+        if (!sessionId) {
+          throw new Error(`Session ID is null/undefined at index ${sessionIndex}`);
+        }
 
         for (const agent of session.agents) {
           assignments.push({
@@ -134,13 +150,20 @@ export async function saveTrainingSchedule(
         sessionIndex++;
       }
     }
+    
+    console.log(`📝 Created ${assignments.length} agent assignments for ${sessionData.length} sessions`);
 
     // Insert all assignments
     const { error: assignmentError } = await supabase
       .from("agent_assignments")
       .insert(assignments);
 
-    if (assignmentError) throw assignmentError;
+    if (assignmentError) {
+      console.error("❌ Error inserting assignments:", assignmentError);
+      throw assignmentError;
+    }
+    
+    console.log(`✅ Successfully saved schedule with ${assignments.length} agent assignments`);
 
     return {
       success: true,
@@ -277,20 +300,40 @@ export async function bulkMarkAttendance(
   }>,
   markedBy: string
 ) {
-  const updates = assignments.map((a) => ({
-    id: a.id,
-    attended: a.attended,
-    attendance_marked_at: new Date().toISOString(),
-    attendance_marked_by: markedBy,
-    no_show_reason: a.attended ? null : a.noShowReason || null,
-  }));
+  console.log("💾 bulkMarkAttendance called with", assignments.length, "updates");
+  
+  // Use individual updates instead of upsert to avoid insert attempts
+  const updatePromises = assignments.map((a) => {
+    console.log(`  Updating ${a.id}: attended=${a.attended}`);
+    return supabase
+      .from("agent_assignments")
+      .update({
+        attended: a.attended,
+        attendance_marked_at: new Date().toISOString(),
+        attendance_marked_by: markedBy,
+        no_show_reason: a.attended ? null : a.noShowReason || null,
+      })
+      .eq("id", a.id);
+  });
 
-  const { error } = await supabase.from("agent_assignments").upsert(updates);
-
-  if (error) {
-    console.error("Error bulk marking attendance:", error);
-    return { success: false, error: error.message };
+  const results = await Promise.all(updatePromises);
+  
+  console.log("📊 Update results:", results.map(r => ({ 
+    success: !r.error, 
+    error: r.error?.message 
+  })));
+  
+  // Check for any errors
+  const errors = results.filter((r) => r.error);
+  if (errors.length > 0) {
+    console.error("❌ Error bulk marking attendance:", errors);
+    return { 
+      success: false, 
+      error: `Failed to update ${errors.length} out of ${assignments.length} assignments. First error: ${errors[0].error?.message}` 
+    };
   }
+
+  console.log("✅ Successfully updated", assignments.length, "assignments in database");
 
   return {
     success: true,

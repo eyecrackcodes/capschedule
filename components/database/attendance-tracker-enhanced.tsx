@@ -119,6 +119,7 @@ export function AttendanceTrackerEnhanced() {
       return;
     }
 
+    console.log("💾 Saving", attendanceChanges.size, "attendance changes...");
     setIsSaving(true);
 
     const updates = Array.from(attendanceChanges.entries()).map(
@@ -128,15 +129,22 @@ export function AttendanceTrackerEnhanced() {
         noShowReason: data.reason,
       })
     );
+    
+    console.log("📝 Updates to save:", updates);
 
     const result = await bulkMarkAttendance(updates, "Manager");
+    
+    console.log("💾 Save result:", result);
 
     if (result.success) {
       alert(result.message);
       setAttendanceChanges(new Map());
+      console.log("🔄 Reloading assignments from database...");
       await loadAllAssignments();
+      console.log("✅ Reload complete!");
     } else {
       alert(`Error: ${result.error}`);
+      console.error("❌ Failed to save attendance:", result.error);
     }
 
     setIsSaving(false);
@@ -243,7 +251,7 @@ export function AttendanceTrackerEnhanced() {
     return a.time_slot.localeCompare(b.time_slot);
   });
 
-  // Calculate stats for filtered view
+  // Calculate stats for filtered view (including pending changes)
   const totalFiltered = filteredAssignments.length;
   const attendedCount = filteredAssignments.filter((a) => {
     const current = attendanceChanges.get(a.id)?.attended ?? a.attended;
@@ -257,6 +265,15 @@ export function AttendanceTrackerEnhanced() {
     const current = attendanceChanges.get(a.id)?.attended ?? a.attended;
     return current === null;
   }).length;
+  
+  // Debug: Log stats whenever they're calculated
+  console.log("📊 Attendance Stats:", {
+    total: totalFiltered,
+    attended: attendedCount,
+    noShow: noShowCount,
+    pending: pendingCount,
+    unsavedChanges: attendanceChanges.size
+  });
 
   if (isLoading) {
     return (

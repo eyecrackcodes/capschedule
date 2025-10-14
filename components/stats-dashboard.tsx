@@ -171,7 +171,7 @@ export function StatsDashboard({ stats, percentiles }: StatsDashboardProps) {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">
-              50th Percentile Benchmarks by Tier
+              25th Percentile Benchmarks by Tier (Bottom Quartile)
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -227,7 +227,7 @@ export function StatsDashboard({ stats, percentiles }: StatsDashboardProps) {
               </div>
             </div>
             <p className="text-xs text-gray-500 mt-3">
-              Agents below their tier's benchmarks receive metric-specific training
+              These are 25th percentile benchmarks - only agents in the bottom quartile (worst 25%) receive metric-specific training
             </p>
           </CardContent>
         </Card>
