@@ -33,7 +33,7 @@ export function CohortSizeSummary({ schedule }: CohortSizeSummaryProps) {
       if (size < 2) {
         cohortStats.belowMinimum++;
         cohortStats.byLocation[location].belowMin++;
-      } else if (size === 5) {
+      } else if (size === 3) {
         cohortStats.atMaximum++;
         cohortStats.byLocation[location].atMax++;
       } else {
@@ -64,7 +64,7 @@ export function CohortSizeSummary({ schedule }: CohortSizeSummaryProps) {
             <p className="text-2xl font-bold text-green-600">{cohortStats.optimal}</p>
           </div>
           <div className="text-center">
-            <p className="text-sm text-gray-600">At Maximum (5)</p>
+            <p className="text-sm text-gray-600">At Maximum (3)</p>
             <p className="text-2xl font-bold text-blue-600">{cohortStats.atMaximum}</p>
           </div>
         </div>
@@ -131,8 +131,8 @@ export function CohortSizeSummary({ schedule }: CohortSizeSummaryProps) {
           <p className="text-xs font-semibold text-gray-700 mb-1">Cohort Size Guidelines:</p>
           <ul className="text-xs text-gray-600 space-y-1">
             <li>• <strong>Minimum:</strong> 2 agents per class (ensures peer interaction)</li>
-            <li>• <strong>Maximum:</strong> 5 agents per class (maintains personalized attention)</li>
-            <li>• <strong>Optimal:</strong> 3-4 agents (best balance of interaction and focus)</li>
+            <li>• <strong>Maximum:</strong> 3 agents per class (intimate, personalized coaching)</li>
+            <li>• <strong>Optimal:</strong> 2-3 agents (best balance of interaction and focus)</li>
           </ul>
         </div>
       </CardContent>
