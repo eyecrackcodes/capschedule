@@ -192,16 +192,18 @@ export function getLocationTime(
   }
 }
 
-// Calculate 50th percentile (median) for each metric by tier
+// Calculate 25th percentile (bottom quartile) for each metric by tier
+// This targets only the lowest 25% of performers in each metric
 export function calculateMetricPercentiles(agents: AgentRecord[]) {
   // Separate agents by tier
   const performanceAgents = agents.filter((a) => a.tier === "P");
   const standardAgents = agents.filter((a) => a.tier === "S");
 
-  const getMedian = (arr: number[]) => {
+  // Calculate 25th percentile (bottom quartile)
+  const get25thPercentile = (arr: number[]) => {
     if (arr.length === 0) return 0;
-    const mid = Math.floor(arr.length / 2);
-    return arr.length % 2 !== 0 ? arr[mid] : (arr[mid - 1] + arr[mid]) / 2;
+    const index = Math.floor(arr.length * 0.25);
+    return arr[index];
   };
 
   // Calculate percentiles for Performance tier
@@ -238,14 +240,14 @@ export function calculateMetricPercentiles(agents: AgentRecord[]) {
 
   return {
     performance: {
-      closeRate50th: getMedian(perfCloseRates),
-      annualPremium50th: getMedian(perfAnnualPremiums),
-      placeRate50th: getMedian(perfPlaceRates),
+      closeRate50th: get25thPercentile(perfCloseRates),
+      annualPremium50th: get25thPercentile(perfAnnualPremiums),
+      placeRate50th: get25thPercentile(perfPlaceRates),
     },
     standard: {
-      closeRate50th: getMedian(stdCloseRates),
-      annualPremium50th: getMedian(stdAnnualPremiums),
-      placeRate50th: getMedian(stdPlaceRates),
+      closeRate50th: get25thPercentile(stdCloseRates),
+      annualPremium50th: get25thPercentile(stdAnnualPremiums),
+      placeRate50th: get25thPercentile(stdPlaceRates),
     },
   };
 }
@@ -272,7 +274,8 @@ export function assignTrainingRecommendations(
       ? percentiles.performance 
       : percentiles.standard;
 
-    // Check each metric against tier-specific 50th percentile
+    // Check each metric against tier-specific 25th percentile (bottom quartile)
+    // Only the worst 25% of performers in each metric get targeted training
     const belowCloseRate =
       agent.closeRate !== undefined &&
       agent.closeRate < tierPercentiles.closeRate50th;
