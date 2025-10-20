@@ -139,10 +139,10 @@ export function exportToPDF(
   if (weekOf) {
     subtitle += ` | Week of ${new Date(weekOf).toLocaleDateString()}`;
   }
-  if (filters?.location !== "all") {
+  if (filters && filters.location !== "all") {
     subtitle += ` | ${filters.location} Only`;
   }
-  if (filters?.tier !== "all") {
+  if (filters && filters.tier !== "all") {
     subtitle += ` | ${filters.tier.charAt(0).toUpperCase() + filters.tier.slice(1)} Tier`;
   }
   pdf.text(subtitle, pageWidth / 2, yPosition, { align: "center" });
