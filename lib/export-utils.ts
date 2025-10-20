@@ -84,10 +84,10 @@ export function exportToCSV(
   if (weekOf) {
     filename += `-${weekOf}`;
   }
-  if (filters?.location !== "all") {
+  if (filters && filters.location !== "all") {
     filename += `-${filters.location}`;
   }
-  if (filters?.tier !== "all") {
+  if (filters && filters.tier !== "all") {
     filename += `-${filters.tier}`;
   }
   filename += `.csv`;
