@@ -56,10 +56,13 @@ export function WeeklyDataUploader({ onUploadComplete }: WeeklyDataUploaderProps
 
       setStatus({ type: "info", message: "Saving to database..." });
 
+      // Fix timezone issue: parse as local date at noon to avoid UTC shifts
+      const weekDate = new Date(weekOf + 'T12:00:00');
+
       // 3. Save everything to database
       const saveResult = await saveTrainingSchedule(
         schedule,
-        new Date(weekOf),
+        weekDate,
         stats.avgCAPScore,
         stats.avgCAPScore // Using same for both since we're using adjusted
       );
@@ -69,7 +72,7 @@ export function WeeklyDataUploader({ onUploadComplete }: WeeklyDataUploaderProps
       }
 
       // 4. Save CAP history
-      await saveCAPScoreHistory(agentsWithRecommendations, new Date(weekOf));
+      await saveCAPScoreHistory(agentsWithRecommendations, weekDate);
 
       setStatus({
         type: "success",
