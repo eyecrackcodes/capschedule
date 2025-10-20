@@ -467,23 +467,39 @@ export function AttendanceTrackerEnhanced() {
           </div>
 
           {/* Summary Stats - Always show totals from ALL assignments, not just filtered */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <p className="text-sm font-semibold text-blue-900 mb-1">
+              📊 Overall Attendance Tracking (All Weeks, All Locations)
+            </p>
+            <p className="text-xs text-blue-700">
+              These counts include all saved training sessions. Use filters below to focus on specific locations, days, or weeks.
+            </p>
+          </div>
+          
           <div className="grid grid-cols-4 gap-4 mb-6">
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <p className="text-sm text-gray-600">Total</p>
+            <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+              <p className="text-sm text-gray-600 font-medium">Total Sessions</p>
               <p className="text-2xl font-bold">{assignments.length}</p>
-              <p className="text-xs text-gray-500 mt-1">Showing: {filteredAssignments.length}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {filteredAssignments.length < assignments.length 
+                  ? `Showing ${filteredAssignments.length} filtered`
+                  : "All sessions visible"}
+              </p>
             </div>
-            <div className="bg-green-50 p-3 rounded-lg">
-              <p className="text-sm text-green-600">Attended</p>
+            <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+              <p className="text-sm text-green-600 font-medium">✓ Attended</p>
               <p className="text-2xl font-bold text-green-700">{allAttendedCount}</p>
+              <p className="text-xs text-green-600 mt-1">Showed up for training</p>
             </div>
-            <div className="bg-red-50 p-3 rounded-lg">
-              <p className="text-sm text-red-600">No-Show</p>
+            <div className="bg-red-50 p-3 rounded-lg border border-red-200">
+              <p className="text-sm text-red-600 font-medium">✗ No-Show</p>
               <p className="text-2xl font-bold text-red-700">{allNoShowCount}</p>
+              <p className="text-xs text-red-600 mt-1">Missed training</p>
             </div>
-            <div className="bg-yellow-50 p-3 rounded-lg">
-              <p className="text-sm text-yellow-600">Pending</p>
+            <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+              <p className="text-sm text-yellow-600 font-medium">⏳ Pending</p>
               <p className="text-2xl font-bold text-yellow-700">{allPendingCount}</p>
+              <p className="text-xs text-yellow-600 mt-1">Needs to be marked</p>
             </div>
           </div>
 

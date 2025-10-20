@@ -103,10 +103,9 @@ function parseAgentRow(row: string[], rowNumber: number): AgentRecord {
     console.log(`Row ${rowNumber} data:`, row);
   }
 
-  // Column mapping based on your file structure:
-  // 0: Tenure, 1: Q (tier), 2: Site, 3: MANAGER, 4: (empty), 5: WoW Delta,
-  // 6: Prior Rank, 7: Current Rank, 8: Sales Agent, 9: CAP Score, 10: (empty),
-  // 11: Close Rate, 12: Annual Premium, 13: Place Rate, 14: Leads Per Day
+  // Column mapping - UPDATED for new 13-column format
+  // 0: Tenure, 1: Q (tier), 2: Site, 3: MANAGER, 4-6: Rankings,
+  // 7: Sales Agent, 8: CAP Score, 9: Close Rate, 10: Annual Premium, 11: Place Rate, 12: Leads Per Day
   const tenure = parseFloat(row[0]?.trim() || "0");
   const tier = row[1]?.trim() as "P" | "S";
   const siteRaw = row[2]?.trim().toUpperCase() || "";
@@ -122,21 +121,26 @@ function parseAgentRow(row: string[], rowNumber: number): AgentRecord {
     site = siteRaw as "CHA" | "AUS";
   }
   const manager = row[3]?.trim() || "";
-  const wowDelta = parseInt(row[5]?.trim() || "0", 10); // Skip column 4 (empty)
-  const priorRank = parseInt(row[6]?.trim() || "0", 10);
-  const currentRank = parseInt(row[7]?.trim() || "0", 10);
-  const name = row[8]?.trim() || ""; // Sales Agent is in column 8, not 7
+  const wowDelta = parseInt(row[4]?.trim() || "0", 10);
+  const priorRank = parseInt(row[5]?.trim() || "0", 10);
+  const currentRank = parseInt(row[6]?.trim() || "0", 10);
+  const name = row[7]?.trim() || ""; // Sales Agent is NOW in column 7
 
-  // Handle CAP score - it might be in a different column or have special formatting
+  // Handle CAP score - NOW in column 8
   let capScore = 0;
-
-  // CAP score is in column 9
-  let capScoreStr = row[9]?.trim() || "";
+  let capScoreStr = row[8]?.trim() || "";
   
-  // Leads Per Day is in column 15 (last column after Place Rate)
-  // Note: Column 14 is empty in the current file format
+  if (capScoreStr && capScoreStr !== "") {
+    const cleanedScore = capScoreStr.replace(/[^0-9.-]/g, "");
+    capScore = parseInt(cleanedScore, 10);
+    if (isNaN(capScore)) {
+      capScore = 0;
+    }
+  }
+  
+  // Leads Per Day is NOW in column 12 (last column in 13-column format)
   let leadsPerDay = 0;
-  const leadsPerDayStr = row[15]?.trim() || row[14]?.trim() || ""; // Try 15 first, fallback to 14
+  const leadsPerDayStr = row[12]?.trim() || "";
   
   if (leadsPerDayStr) {
     const cleanedLeads = leadsPerDayStr.replace(/[^0-9.-]/g, "");
@@ -148,22 +152,22 @@ function parseAgentRow(row: string[], rowNumber: number): AgentRecord {
   let annualPremium = 0;
   let placeRate = 0;
 
-  // Close Rate (column 11) - remove % sign
-  const closeRateStr = row[11]?.trim() || "";
+  // Close Rate is NOW column 9 - remove % sign
+  const closeRateStr = row[9]?.trim() || "";
   if (closeRateStr) {
     const cleanedRate = closeRateStr.replace(/[^0-9.-]/g, "");
     closeRate = parseFloat(cleanedRate) || 0;
   }
 
-  // Annual Premium per Sale (column 12) - remove $ sign
-  const apStr = row[12]?.trim() || "";
+  // Annual Premium per Sale is NOW column 10 - remove $ sign
+  const apStr = row[10]?.trim() || "";
   if (apStr) {
     const cleanedAP = apStr.replace(/[^0-9.-]/g, "");
     annualPremium = parseFloat(cleanedAP) || 0;
   }
 
-  // Place Rate (column 13) - remove % sign
-  const placeRateStr = row[13]?.trim() || "";
+  // Place Rate is NOW column 11 - remove % sign
+  const placeRateStr = row[11]?.trim() || "";
   if (placeRateStr) {
     const cleanedPlace = placeRateStr.replace(/[^0-9.-]/g, "");
     placeRate = parseFloat(cleanedPlace) || 0;
