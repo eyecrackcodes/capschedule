@@ -326,11 +326,11 @@ export default function HomePage() {
   };
 
   const handleExportPDF = () => {
-    exportToPDF(appState.schedule);
+    exportToPDF(appState.schedule, appState.filters, loadedWeekOf);
   };
 
   const handleExportCSV = () => {
-    exportToCSV(appState.schedule);
+    exportToCSV(appState.schedule, appState.filters, loadedWeekOf);
   };
 
   const handleExportManager = () => {

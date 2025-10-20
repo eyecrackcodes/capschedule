@@ -1,7 +1,28 @@
 import { DaySchedule, AgentRecord } from "@/types";
 import jsPDF from "jspdf";
 
-export function exportToCSV(schedule: DaySchedule[]): void {
+export function exportToCSV(
+  schedule: DaySchedule[],
+  filters?: { location: string; tier: string },
+  weekOf?: string
+): void {
+  // Filter schedule if filters provided
+  const filteredSchedule = schedule
+    .map((day) => ({
+      ...day,
+      sessions: day.sessions.filter((session) => {
+        if (filters?.location !== "all" && session.location !== filters?.location)
+          return false;
+        if (
+          filters?.tier !== "all" &&
+          session.tier.toLowerCase() !== filters?.tier
+        )
+          return false;
+        return true;
+      }),
+    }))
+    .filter((day) => day.sessions.length > 0);
+
   const csvData: string[][] = [];
 
   // Headers
@@ -24,7 +45,7 @@ export function exportToCSV(schedule: DaySchedule[]): void {
   ]);
 
   // Data rows
-  schedule.forEach((day) => {
+  filteredSchedule.forEach((day) => {
     day.sessions.forEach((session) => {
       session.agents.forEach((agent) => {
         csvData.push([
@@ -53,21 +74,53 @@ export function exportToCSV(schedule: DaySchedule[]): void {
     .map((row) => row.map((cell) => `"${cell}"`).join(","))
     .join("\n");
 
-  // Download
+  // Download with filter info in filename
   const blob = new Blob([csvString], { type: "text/csv" });
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `cap-training-schedule-${
-    new Date().toISOString().split("T")[0]
-  }.csv`;
+  
+  let filename = `cap-training-schedule`;
+  if (weekOf) {
+    filename += `-${weekOf}`;
+  }
+  if (filters && filters.location !== "all") {
+    filename += `-${filters.location}`;
+  }
+  if (filters && filters.tier !== "all") {
+    filename += `-${filters.tier}`;
+  }
+  filename += `.csv`;
+  
+  link.download = filename;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
   window.URL.revokeObjectURL(url);
 }
 
-export function exportToPDF(schedule: DaySchedule[]): void {
+export function exportToPDF(
+  schedule: DaySchedule[],
+  filters?: { location: string; tier: string },
+  weekOf?: string
+): void {
+  // Filter schedule if filters provided
+  const filteredSchedule = schedule
+    .map((day) => ({
+      ...day,
+      sessions: day.sessions.filter((session) => {
+        if (filters?.location !== "all" && session.location !== filters?.location)
+          return false;
+        if (
+          filters?.tier !== "all" &&
+          session.tier.toLowerCase() !== filters?.tier
+        )
+          return false;
+        return true;
+      }),
+    }))
+    .filter((day) => day.sessions.length > 0);
+
   const pdf = new jsPDF();
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
@@ -80,18 +133,23 @@ export function exportToPDF(schedule: DaySchedule[]): void {
   });
   yPosition += 20;
 
-  // Date
+  // Week and filters info
   pdf.setFontSize(12);
-  pdf.text(
-    `Generated: ${new Date().toLocaleDateString()}`,
-    pageWidth / 2,
-    yPosition,
-    { align: "center" }
-  );
+  let subtitle = `Generated: ${new Date().toLocaleDateString()}`;
+  if (weekOf) {
+    subtitle += ` | Week of ${new Date(weekOf).toLocaleDateString()}`;
+  }
+  if (filters && filters.location !== "all") {
+    subtitle += ` | ${filters.location} Only`;
+  }
+  if (filters && filters.tier !== "all") {
+    subtitle += ` | ${filters.tier.charAt(0).toUpperCase() + filters.tier.slice(1)} Tier`;
+  }
+  pdf.text(subtitle, pageWidth / 2, yPosition, { align: "center" });
   yPosition += 30;
 
   // Schedule
-  schedule.forEach((day) => {
+  filteredSchedule.forEach((day) => {
     if (yPosition > pageHeight - 50) {
       pdf.addPage();
       yPosition = 20;
