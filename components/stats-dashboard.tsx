@@ -185,69 +185,88 @@ export function StatsDashboard({ stats, weekOf, percentiles }: StatsDashboardPro
         </Card>
       </div>
 
-      {/* Metric Percentiles */}
+      {/* Metric Percentiles - ALWAYS SHOW with prominence */}
       {percentiles && (
-        <Card>
+        <Card className="border-2 border-purple-200 bg-purple-50">
           <CardHeader>
-            <CardTitle className="text-lg">
-              25th Percentile Benchmarks by Tier (Bottom Quartile)
+            <CardTitle className="text-lg flex items-center gap-2">
+              <span className="text-xl">🎯</span>
+              25th Percentile Training Thresholds (Bottom Quartile)
             </CardTitle>
+            <p className="text-sm text-purple-800 mt-2">
+              Only agents below these thresholds receive metric-specific training on Tuesday (Close Rate), Wednesday (Annual Premium), or Thursday (Place Rate)
+            </p>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {/* Performance Tier Benchmarks */}
-              <div>
-                <h4 className="font-semibold text-purple-700 mb-2">Performance Tier</h4>
+              <div className="bg-white p-4 rounded-lg border-2 border-purple-300">
+                <h4 className="font-semibold text-purple-700 mb-3 flex items-center gap-2">
+                  Performance Tier (P)
+                  <Badge className="bg-purple-600 text-white">Bottom 25%</Badge>
+                </h4>
                 <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-600">Close Rate</p>
-                    <p className="text-xl font-bold text-blue-600">
+                  <div className="text-center">
+                    <p className="text-xs text-gray-600 mb-1">Close Rate Threshold</p>
+                    <p className="text-2xl font-bold text-blue-600">
                       {percentiles.performance.closeRate50th.toFixed(1)}%
                     </p>
+                    <p className="text-xs text-gray-500 mt-1">→ Tuesday Training</p>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Annual Premium</p>
-                    <p className="text-xl font-bold text-green-600">
+                  <div className="text-center">
+                    <p className="text-xs text-gray-600 mb-1">Annual Premium Threshold</p>
+                    <p className="text-2xl font-bold text-green-600">
                       ${percentiles.performance.annualPremium50th.toFixed(0)}
                     </p>
+                    <p className="text-xs text-gray-500 mt-1">→ Wednesday Training</p>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Place Rate</p>
-                    <p className="text-xl font-bold text-purple-600">
+                  <div className="text-center">
+                    <p className="text-xs text-gray-600 mb-1">Place Rate Threshold</p>
+                    <p className="text-2xl font-bold text-purple-600">
                       {percentiles.performance.placeRate50th.toFixed(1)}%
                     </p>
+                    <p className="text-xs text-gray-500 mt-1">→ Thursday Training</p>
                   </div>
                 </div>
               </div>
               
               {/* Standard Tier Benchmarks */}
-              <div>
-                <h4 className="font-semibold text-orange-700 mb-2">Standard Tier</h4>
+              <div className="bg-white p-4 rounded-lg border-2 border-orange-300">
+                <h4 className="font-semibold text-orange-700 mb-3 flex items-center gap-2">
+                  Standard Tier (S)
+                  <Badge className="bg-orange-600 text-white">Bottom 25%</Badge>
+                </h4>
                 <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-600">Close Rate</p>
-                    <p className="text-xl font-bold text-blue-600">
+                  <div className="text-center">
+                    <p className="text-xs text-gray-600 mb-1">Close Rate Threshold</p>
+                    <p className="text-2xl font-bold text-blue-600">
                       {percentiles.standard.closeRate50th.toFixed(1)}%
                     </p>
+                    <p className="text-xs text-gray-500 mt-1">→ Tuesday Training</p>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Annual Premium</p>
-                    <p className="text-xl font-bold text-green-600">
+                  <div className="text-center">
+                    <p className="text-xs text-gray-600 mb-1">Annual Premium Threshold</p>
+                    <p className="text-2xl font-bold text-green-600">
                       ${percentiles.standard.annualPremium50th.toFixed(0)}
                     </p>
+                    <p className="text-xs text-gray-500 mt-1">→ Wednesday Training</p>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Place Rate</p>
-                    <p className="text-xl font-bold text-purple-600">
+                  <div className="text-center">
+                    <p className="text-xs text-gray-600 mb-1">Place Rate Threshold</p>
+                    <p className="text-2xl font-bold text-purple-600">
                       {percentiles.standard.placeRate50th.toFixed(1)}%
                     </p>
+                    <p className="text-xs text-gray-500 mt-1">→ Thursday Training</p>
                   </div>
                 </div>
               </div>
             </div>
-            <p className="text-xs text-gray-500 mt-3">
-              These are 25th percentile benchmarks - only agents in the bottom quartile (worst 25%) receive metric-specific training
-            </p>
+            <div className="mt-4 p-3 bg-purple-100 rounded-lg border border-purple-300">
+              <p className="text-xs font-semibold text-purple-900">
+                💡 How it works: Agents are eligible for training if their Adjusted CAP is below company average ({stats.avgCAPScore}). 
+                The specific training day (Tue/Wed/Thu) depends on which metrics they're in the bottom 25% for.
+              </p>
+            </div>
           </CardContent>
         </Card>
       )}

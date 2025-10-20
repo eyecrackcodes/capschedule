@@ -60,19 +60,33 @@ export function ScheduleDisplay({
     setExpandedSessions(newExpanded);
   };
 
+  // Helper function to extract hour from time string for sorting
+  const getTimeValue = (timeStr: string): number => {
+    // Extract first time (e.g., "8:30" from "8:30-9:30 AM CST")
+    const match = timeStr.match(/(\d+):(\d+)/);
+    if (match) {
+      const hours = parseInt(match[1]);
+      const minutes = parseInt(match[2]);
+      return hours * 60 + minutes; // Convert to minutes for comparison
+    }
+    return 0;
+  };
+
   const filteredSchedule = schedule
     .map((day) => ({
       ...day,
-      sessions: day.sessions.filter((session) => {
-        if (filters.location !== "all" && session.location !== filters.location)
-          return false;
-        if (
-          filters.tier !== "all" &&
-          session.tier.toLowerCase() !== filters.tier
-        )
-          return false;
-        return true;
-      }),
+      sessions: day.sessions
+        .filter((session) => {
+          if (filters.location !== "all" && session.location !== filters.location)
+            return false;
+          if (
+            filters.tier !== "all" &&
+            session.tier.toLowerCase() !== filters.tier
+          )
+            return false;
+          return true;
+        })
+        .sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time)), // Sort chronologically
     }))
     .filter((day) => day.sessions.length > 0);
 
