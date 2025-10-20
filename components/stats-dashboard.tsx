@@ -7,6 +7,7 @@ import { Stats } from "@/types";
 
 interface StatsDashboardProps {
   stats: Stats;
+  weekOf?: string; // Optional week date for context
   percentiles?: {
     performance: {
       closeRate50th: number;
@@ -21,7 +22,7 @@ interface StatsDashboardProps {
   };
 }
 
-export function StatsDashboard({ stats, percentiles }: StatsDashboardProps) {
+export function StatsDashboard({ stats, weekOf, percentiles }: StatsDashboardProps) {
   const getCAPScoreColor = (score: number) => {
     if (score >= 80) return "text-green-600";
     if (score >= 60) return "text-yellow-600";
@@ -35,6 +36,18 @@ export function StatsDashboard({ stats, percentiles }: StatsDashboardProps) {
 
   return (
     <div className="space-y-6">
+      {/* Week Context Banner */}
+      {weekOf && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <p className="text-sm font-semibold text-blue-900">
+            📅 Viewing Schedule for Week of {new Date(weekOf).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+          </p>
+          <p className="text-xs text-blue-700 mt-1">
+            All metrics below are specific to this week's scheduled training sessions
+          </p>
+        </div>
+      )}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Agents */}
         <Card>
@@ -116,6 +129,9 @@ export function StatsDashboard({ stats, percentiles }: StatsDashboardProps) {
               <Badge variant="info">CLT</Badge>
               <span>Charlotte</span>
             </CardTitle>
+            <p className="text-xs text-gray-500 mt-1">
+              Agents scheduled for training {weekOf ? 'this week' : ''}
+            </p>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between items-center">
@@ -144,6 +160,9 @@ export function StatsDashboard({ stats, percentiles }: StatsDashboardProps) {
               <Badge variant="success">ATX</Badge>
               <span>Austin</span>
             </CardTitle>
+            <p className="text-xs text-gray-500 mt-1">
+              Agents scheduled for training {weekOf ? 'this week' : ''}
+            </p>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between items-center">

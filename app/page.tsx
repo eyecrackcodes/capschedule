@@ -73,6 +73,8 @@ export default function HomePage() {
       tier: "all",
     },
   });
+  
+  const [loadedWeekOf, setLoadedWeekOf] = useState<string | undefined>();
 
   // Load latest schedule from database on mount
   useEffect(() => {
@@ -112,6 +114,7 @@ export default function HomePage() {
               schedule: dbSchedule.schedule,
               stats: dbSchedule.stats,
             }));
+            setLoadedWeekOf(dbSchedule.weekOf);
           } else {
             console.warn("⚠️ Failed to convert database schedule to app format");
           }
@@ -128,7 +131,7 @@ export default function HomePage() {
     }
   }
 
-  function convertDatabaseScheduleToAppFormat(data: any): { schedule: DaySchedule[], stats: any } | null {
+  function convertDatabaseScheduleToAppFormat(data: any): { schedule: DaySchedule[], stats: any, weekOf?: string } | null {
     try {
       const { schedule: scheduleData, sessions } = data;
       
@@ -230,7 +233,7 @@ export default function HomePage() {
       
       console.log("Final stats:", stats);
       
-      return { schedule, stats };
+      return { schedule, stats, weekOf: scheduleData.week_of };
     } catch (error) {
       console.error("Error converting database schedule:", error);
       return null;
@@ -393,6 +396,7 @@ export default function HomePage() {
               {/* Stats Dashboard */}
               <StatsDashboard
                 stats={appState.stats}
+                weekOf={loadedWeekOf}
                 percentiles={appState.percentiles}
               />
 
