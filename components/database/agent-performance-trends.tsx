@@ -50,7 +50,8 @@ export function AgentPerformanceTrends() {
   const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
   const [availableAgents, setAvailableAgents] = useState<string[]>([]);
   const [metricData, setMetricData] = useState<ChartData[]>([]);
-  const [selectedMetric, setSelectedMetric] = useState<string>("adjusted_cap_score");
+  const [selectedMetric, setSelectedMetric] =
+    useState<string>("adjusted_cap_score");
   const [isLoading, setIsLoading] = useState(false);
   const [dateRange, setDateRange] = useState<number>(12); // weeks
 
@@ -70,9 +71,11 @@ export function AgentPerformanceTrends() {
       const result = await getAgentMetricsTrends([], dateRange);
       if (result.success && result.data) {
         // Extract unique agent names
-        const uniqueAgents = [...new Set(result.data.map((d: any) => d.agent_name))];
+        const uniqueAgents = [
+          ...new Set(result.data.map((d: any) => d.agent_name)),
+        ];
         setAvailableAgents(uniqueAgents.sort());
-        
+
         // Auto-select first 3 agents
         if (uniqueAgents.length > 0) {
           setSelectedAgents(uniqueAgents.slice(0, 3));
@@ -96,12 +99,14 @@ export function AgentPerformanceTrends() {
           if (!acc[weekKey]) {
             acc[weekKey] = { week: weekKey };
           }
-          acc[weekKey][`${item.agent_name}_${selectedMetric}`] = item[selectedMetric];
+          acc[weekKey][`${item.agent_name}_${selectedMetric}`] =
+            item[selectedMetric];
           return acc;
         }, {});
 
-        const chartData = Object.values(groupedData).sort((a: any, b: any) => 
-          new Date(a.week).getTime() - new Date(b.week).getTime()
+        const chartData = Object.values(groupedData).sort(
+          (a: any, b: any) =>
+            new Date(a.week).getTime() - new Date(b.week).getTime()
         ) as ChartData[];
 
         setMetricData(chartData);
@@ -115,7 +120,7 @@ export function AgentPerformanceTrends() {
 
   const handleAgentToggle = (agentName: string) => {
     if (selectedAgents.includes(agentName)) {
-      setSelectedAgents(selectedAgents.filter(a => a !== agentName));
+      setSelectedAgents(selectedAgents.filter((a) => a !== agentName));
     } else if (selectedAgents.length < 5) {
       setSelectedAgents([...selectedAgents, agentName]);
     }
@@ -138,16 +143,22 @@ export function AgentPerformanceTrends() {
 
   const calculateTrend = (agentName: string) => {
     if (metricData.length < 2) return null;
-    
+
     const firstWeek = metricData[0];
     const lastWeek = metricData[metricData.length - 1];
     const key = `${agentName}_${selectedMetric}`;
-    
+
     const firstValue = firstWeek[key];
     const lastValue = lastWeek[key];
-    
-    if (!firstValue || !lastValue) return null;
-    
+
+    if (
+      typeof firstValue !== "number" || 
+      typeof lastValue !== "number" || 
+      firstValue === 0
+    ) {
+      return null;
+    }
+
     const change = ((lastValue - firstValue) / firstValue) * 100;
     return {
       value: change,
@@ -187,8 +198,13 @@ export function AgentPerformanceTrends() {
 
             {/* Date Range */}
             <div>
-              <label className="text-sm font-medium mb-2 block">Time Period</label>
-              <Select value={dateRange.toString()} onValueChange={(v) => setDateRange(parseInt(v))}>
+              <label className="text-sm font-medium mb-2 block">
+                Time Period
+              </label>
+              <Select
+                value={dateRange.toString()}
+                onValueChange={(v) => setDateRange(parseInt(v))}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -204,8 +220,8 @@ export function AgentPerformanceTrends() {
 
             {/* Refresh Button */}
             <div className="flex items-end">
-              <Button 
-                onClick={loadAgentTrends} 
+              <Button
+                onClick={loadAgentTrends}
                 disabled={isLoading || selectedAgents.length === 0}
                 className="w-full"
               >
@@ -230,7 +246,9 @@ export function AgentPerformanceTrends() {
               {availableAgents.map((agent) => (
                 <Badge
                   key={agent}
-                  variant={selectedAgents.includes(agent) ? "default" : "outline"}
+                  variant={
+                    selectedAgents.includes(agent) ? "default" : "outline"
+                  }
                   className="cursor-pointer"
                   onClick={() => handleAgentToggle(agent)}
                 >
@@ -265,9 +283,11 @@ export function AgentPerformanceTrends() {
                       </p>
                     </div>
                     {trend && (
-                      <div className={`flex items-center ${
-                        trend.isPositive ? "text-green-600" : "text-red-600"
-                      }`}>
+                      <div
+                        className={`flex items-center ${
+                          trend.isPositive ? "text-green-600" : "text-red-600"
+                        }`}
+                      >
                         {trend.isPositive ? (
                           <TrendingUp className="h-4 w-4 mr-1" />
                         ) : (
@@ -294,7 +314,8 @@ export function AgentPerformanceTrends() {
             <div className="flex items-center gap-2 mt-2">
               <Info className="h-4 w-4 text-blue-500" />
               <p className="text-sm text-gray-600">
-                Training sessions are marked with vertical lines. Hover over data points for details.
+                Training sessions are marked with vertical lines. Hover over
+                data points for details.
               </p>
             </div>
           </CardHeader>
@@ -302,19 +323,19 @@ export function AgentPerformanceTrends() {
             <ResponsiveContainer width="100%" height={400}>
               <LineChart data={metricData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="week" 
+                <XAxis
+                  dataKey="week"
                   angle={-45}
                   textAnchor="end"
                   height={80}
                 />
                 <YAxis />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: "white", 
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "white",
                     border: "1px solid #e5e7eb",
                     borderRadius: "8px",
-                    padding: "8px"
+                    padding: "8px",
                   }}
                 />
                 <Legend />
