@@ -64,7 +64,7 @@ interface TrainingImpact {
   metricBeforeTraining: number | null;
   metricAfterTraining: number | null;
   percentageChange: number | null;
-  impactDirection: 'positive' | 'negative' | 'neutral';
+  impactDirection: "positive" | "negative" | "neutral";
 }
 
 export function AgentPerformanceTrendsV2() {
@@ -125,9 +125,11 @@ export function AgentPerformanceTrendsV2() {
             acc[weekKey] = { week: weekKey };
           }
           // Store all metrics for each agent
-          acc[weekKey][`${item.agent_name}_adjusted_cap_score`] = item.adjusted_cap_score;
+          acc[weekKey][`${item.agent_name}_adjusted_cap_score`] =
+            item.adjusted_cap_score;
           acc[weekKey][`${item.agent_name}_close_rate`] = item.close_rate;
-          acc[weekKey][`${item.agent_name}_annual_premium`] = item.annual_premium;
+          acc[weekKey][`${item.agent_name}_annual_premium`] =
+            item.annual_premium;
           acc[weekKey][`${item.agent_name}_place_rate`] = item.place_rate;
           return acc;
         }, {});
@@ -149,30 +151,23 @@ export function AgentPerformanceTrendsV2() {
   async function loadTrainingHistory() {
     try {
       const events: TrainingEvent[] = [];
-      const endDate = new Date();
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - dateRange * 7);
-      
+
       for (const agent of selectedAgents) {
-        const result = await getAgentTrainingHistory(
-          agent,
-          startDate.toISOString(),
-          endDate.toISOString()
-        );
-        
+        const result = await getAgentTrainingHistory(agent, dateRange);
+
         if (result.success && result.data) {
           result.data.forEach((training: any) => {
             events.push({
               agentName: agent,
               date: training.created_at,
               week: new Date(training.created_at).toLocaleDateString(),
-              trainingType: training.training_type || 'Unknown',
+              trainingType: training.training_type || "Unknown",
             });
           });
         }
       }
       setTrainingEvents(events);
-      
+
       // Wait for metric data to be loaded before analyzing impact
       if (metricData.length > 0) {
         analyzeTrainingImpact(events);
@@ -184,19 +179,24 @@ export function AgentPerformanceTrendsV2() {
 
   function analyzeTrainingImpact(events: TrainingEvent[]) {
     const impacts: TrainingImpact[] = [];
-    
-    events.forEach(event => {
+
+    events.forEach((event) => {
       const trainingWeekIndex = metricData.findIndex(
-        d => d.week === event.week
+        (d) => d.week === event.week
       );
-      
+
       // Check if we have data for the week after training (impact week)
       if (trainingWeekIndex >= 0 && trainingWeekIndex < metricData.length - 1) {
-        const beforeValue = metricData[trainingWeekIndex][`${event.agentName}_${selectedMetric}`];
-        const afterValue = metricData[trainingWeekIndex + 1][`${event.agentName}_${selectedMetric}`];
-        
-        if (typeof beforeValue === 'number' && typeof afterValue === 'number') {
-          const percentageChange = ((afterValue - beforeValue) / beforeValue) * 100;
+        const beforeValue =
+          metricData[trainingWeekIndex][`${event.agentName}_${selectedMetric}`];
+        const afterValue =
+          metricData[trainingWeekIndex + 1][
+            `${event.agentName}_${selectedMetric}`
+          ];
+
+        if (typeof beforeValue === "number" && typeof afterValue === "number") {
+          const percentageChange =
+            ((afterValue - beforeValue) / beforeValue) * 100;
           impacts.push({
             agentName: event.agentName,
             trainingType: event.trainingType,
@@ -205,12 +205,17 @@ export function AgentPerformanceTrendsV2() {
             metricBeforeTraining: beforeValue,
             metricAfterTraining: afterValue,
             percentageChange,
-            impactDirection: percentageChange > 0 ? 'positive' : percentageChange < 0 ? 'negative' : 'neutral',
+            impactDirection:
+              percentageChange > 0
+                ? "positive"
+                : percentageChange < 0
+                ? "negative"
+                : "neutral",
           });
         }
       }
     });
-    
+
     setTrainingImpacts(impacts);
   }
 
@@ -272,8 +277,8 @@ export function AgentPerformanceTrendsV2() {
   // Custom tooltip to show training information
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
-      const trainingForWeek = trainingEvents.filter(e => e.week === label);
-      
+      const trainingForWeek = trainingEvents.filter((e) => e.week === label);
+
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
           <p className="font-semibold mb-2">{label}</p>
@@ -284,7 +289,9 @@ export function AgentPerformanceTrendsV2() {
           ))}
           {trainingForWeek.length > 0 && (
             <div className="mt-2 pt-2 border-t border-gray-200">
-              <p className="text-xs font-semibold text-blue-600">Training This Week:</p>
+              <p className="text-xs font-semibold text-blue-600">
+                Training This Week:
+              </p>
               {trainingForWeek.map((t, i) => (
                 <p key={i} className="text-xs text-gray-600">
                   • {t.agentName}: {t.trainingType}
@@ -308,10 +315,14 @@ export function AgentPerformanceTrendsV2() {
         <CardHeader>
           <CardTitle>Agent Performance Trends</CardTitle>
           <div className="text-sm text-gray-600 space-y-1">
-            <p>Track performance metrics over time and measure training effectiveness.</p>
+            <p>
+              Track performance metrics over time and measure training
+              effectiveness.
+            </p>
             <p className="font-medium text-blue-600">
               <Info className="inline h-4 w-4 mr-1" />
-              Training impact is measured in the week following training attendance
+              Training impact is measured in the week following training
+              attendance
             </p>
           </div>
         </CardHeader>
@@ -379,9 +390,7 @@ export function AgentPerformanceTrendsV2() {
                     selectedAgents.includes(agent) ? "default" : "outline"
                   }
                   className={`cursor-pointer transition-all ${
-                    selectedAgents.includes(agent)
-                      ? ""
-                      : "hover:bg-gray-100"
+                    selectedAgents.includes(agent) ? "" : "hover:bg-gray-100"
                   }`}
                   onClick={() => handleAgentToggle(agent)}
                 >
@@ -399,32 +408,51 @@ export function AgentPerformanceTrendsV2() {
           <CardHeader>
             <CardTitle>Training Impact Analysis</CardTitle>
             <p className="text-sm text-gray-600">
-              Showing {getMetricLabel(selectedMetric)} changes one week after training
+              Showing {getMetricLabel(selectedMetric)} changes one week after
+              training
             </p>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {selectedAgents.map(agent => {
-                const agentImpacts = trainingImpacts.filter(i => i.agentName === agent);
-                
+              {selectedAgents.map((agent) => {
+                const agentImpacts = trainingImpacts.filter(
+                  (i) => i.agentName === agent
+                );
+
                 if (agentImpacts.length === 0) {
                   return (
                     <div key={agent} className="p-4 bg-gray-50 rounded-lg">
                       <h4 className="font-medium">{agent}</h4>
-                      <p className="text-sm text-gray-600">No training data in selected period</p>
+                      <p className="text-sm text-gray-600">
+                        No training data in selected period
+                      </p>
                     </div>
                   );
                 }
-                
+
                 return (
-                  <div key={agent} className="p-4 bg-gray-50 rounded-lg space-y-3">
+                  <div
+                    key={agent}
+                    className="p-4 bg-gray-50 rounded-lg space-y-3"
+                  >
                     <h4 className="font-medium text-lg">{agent}</h4>
                     {agentImpacts.map((impact, idx) => (
-                      <div key={idx} className="bg-white p-3 rounded border border-gray-200">
+                      <div
+                        key={idx}
+                        className="bg-white p-3 rounded border border-gray-200"
+                      >
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium">{impact.trainingType}</span>
-                          <Badge variant={impact.impactDirection === 'positive' ? 'default' : 'destructive'}>
-                            {impact.impactDirection === 'positive' ? (
+                          <span className="text-sm font-medium">
+                            {impact.trainingType}
+                          </span>
+                          <Badge
+                            variant={
+                              impact.impactDirection === "positive"
+                                ? "default"
+                                : "destructive"
+                            }
+                          >
+                            {impact.impactDirection === "positive" ? (
                               <TrendingUp className="h-3 w-3 mr-1" />
                             ) : (
                               <TrendingDown className="h-3 w-3 mr-1" />
@@ -439,11 +467,15 @@ export function AgentPerformanceTrendsV2() {
                           </div>
                           <div>
                             <p className="text-gray-500">Pre-Training</p>
-                            <p className="font-medium">{impact.metricBeforeTraining?.toFixed(2)}</p>
+                            <p className="font-medium">
+                              {impact.metricBeforeTraining?.toFixed(2)}
+                            </p>
                           </div>
                           <div>
                             <p className="text-gray-500">Post-Training</p>
-                            <p className="font-medium">{impact.metricAfterTraining?.toFixed(2)}</p>
+                            <p className="font-medium">
+                              {impact.metricAfterTraining?.toFixed(2)}
+                            </p>
                           </div>
                         </div>
                         <div className="mt-2 text-xs text-gray-600 flex items-center">
@@ -461,123 +493,130 @@ export function AgentPerformanceTrendsV2() {
       )}
 
       {/* Trend Summary Cards */}
-      {!showImpactView && selectedAgents.length > 0 && metricData.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {selectedAgents.map((agent) => {
-            const trend = calculateTrend(agent);
-            const agentTrainings = trainingEvents.filter(e => e.agentName === agent);
-            const latestValue =
-              metricData[metricData.length - 1][
-                `${agent}_${selectedMetric}`
-              ];
+      {!showImpactView &&
+        selectedAgents.length > 0 &&
+        metricData.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {selectedAgents.map((agent) => {
+              const trend = calculateTrend(agent);
+              const agentTrainings = trainingEvents.filter(
+                (e) => e.agentName === agent
+              );
+              const latestValue =
+                metricData[metricData.length - 1][`${agent}_${selectedMetric}`];
 
-            return (
-              <Card key={agent}>
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-medium">{agent}</h4>
-                      <p className="text-2xl font-bold mt-1">
-                        {typeof latestValue === "number"
-                          ? latestValue.toFixed(2)
-                          : "N/A"}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {getMetricLabel(selectedMetric)}
-                      </p>
-                      {agentTrainings.length > 0 && (
-                        <div className="mt-2">
-                          <p className="text-xs text-blue-600 font-medium">
-                            <GraduationCap className="inline h-3 w-3 mr-1" />
-                            {agentTrainings.length} training(s)
-                          </p>
+              return (
+                <Card key={agent}>
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-medium">{agent}</h4>
+                        <p className="text-2xl font-bold mt-1">
+                          {typeof latestValue === "number"
+                            ? latestValue.toFixed(2)
+                            : "N/A"}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {getMetricLabel(selectedMetric)}
+                        </p>
+                        {agentTrainings.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-xs text-blue-600 font-medium">
+                              <GraduationCap className="inline h-3 w-3 mr-1" />
+                              {agentTrainings.length} training(s)
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      {trend && (
+                        <div
+                          className={`flex items-center ${
+                            trend.isPositive ? "text-green-600" : "text-red-600"
+                          }`}
+                        >
+                          {trend.isPositive ? (
+                            <TrendingUp className="h-4 w-4 mr-1" />
+                          ) : (
+                            <TrendingDown className="h-4 w-4 mr-1" />
+                          )}
+                          <span className="text-sm font-medium">
+                            {Math.abs(trend.value).toFixed(1)}%
+                          </span>
                         </div>
                       )}
                     </div>
-                    {trend && (
-                      <div
-                        className={`flex items-center ${
-                          trend.isPositive ? "text-green-600" : "text-red-600"
-                        }`}
-                      >
-                        {trend.isPositive ? (
-                          <TrendingUp className="h-4 w-4 mr-1" />
-                        ) : (
-                          <TrendingDown className="h-4 w-4 mr-1" />
-                        )}
-                        <span className="text-sm font-medium">
-                          {Math.abs(trend.value).toFixed(1)}%
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
 
       {/* Chart */}
-      {!showImpactView && selectedAgents.length > 0 && metricData.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{getMetricLabel(selectedMetric)} Over Time</CardTitle>
-            <div className="flex items-center gap-2 mt-2">
-              <Info className="h-4 w-4 text-blue-500" />
-              <p className="text-sm text-gray-600">
-                Blue vertical lines indicate training weeks. Impact is measured the following week.
-              </p>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={400}>
-              <LineChart data={metricData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="week"
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
-                />
-                <YAxis />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                
-                {/* Add vertical lines for training events */}
-                {trainingEvents.map((event, idx) => {
-                  const weekData = metricData.find(d => d.week === event.week);
-                  if (weekData) {
-                    return (
-                      <ReferenceLine
-                        key={idx}
-                        x={event.week}
-                        stroke="#3b82f6"
-                        strokeDasharray="5 5"
-                        strokeWidth={1}
-                      />
-                    );
-                  }
-                  return null;
-                })}
-                
-                {selectedAgents.map((agent, index) => (
-                  <Line
-                    key={agent}
-                    type="monotone"
-                    dataKey={`${agent}_${selectedMetric}`}
-                    stroke={getMetricColor(index)}
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
-                    name={agent}
+      {!showImpactView &&
+        selectedAgents.length > 0 &&
+        metricData.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{getMetricLabel(selectedMetric)} Over Time</CardTitle>
+              <div className="flex items-center gap-2 mt-2">
+                <Info className="h-4 w-4 text-blue-500" />
+                <p className="text-sm text-gray-600">
+                  Blue vertical lines indicate training weeks. Impact is
+                  measured the following week.
+                </p>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart data={metricData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="week"
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
                   />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      )}
+                  <YAxis />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend />
+
+                  {/* Add vertical lines for training events */}
+                  {trainingEvents.map((event, idx) => {
+                    const weekData = metricData.find(
+                      (d) => d.week === event.week
+                    );
+                    if (weekData) {
+                      return (
+                        <ReferenceLine
+                          key={idx}
+                          x={event.week}
+                          stroke="#3b82f6"
+                          strokeDasharray="5 5"
+                          strokeWidth={1}
+                        />
+                      );
+                    }
+                    return null;
+                  })}
+
+                  {selectedAgents.map((agent, index) => (
+                    <Line
+                      key={agent}
+                      type="monotone"
+                      dataKey={`${agent}_${selectedMetric}`}
+                      stroke={getMetricColor(index)}
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                      activeDot={{ r: 6 }}
+                      name={agent}
+                    />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
 
       {/* Loading State */}
       {isLoading && (
