@@ -17,7 +17,7 @@ import { SaveScheduleDialog } from "@/components/database/save-schedule-dialog";
 import { SavedSchedulesView } from "@/components/database/saved-schedules-view";
 import { AttendanceTrackerEnhanced } from "@/components/database/attendance-tracker-enhanced";
 import { AnalyticsDashboard } from "@/components/database/analytics-dashboard";
-import { AgentPerformanceTrends } from "@/components/database/agent-performance-trends";
+import { AgentPerformanceTrendsV2 } from "@/components/database/agent-performance-trends-v2";
 import { WeeklyDataUploader } from "@/components/database/weekly-data-uploader";
 import {
   calculateStats,
@@ -36,7 +36,13 @@ import {
   exportEmailFormat,
   copyEmailToClipboard,
 } from "@/lib/export-utils";
-import { AppState, Filters, DaySchedule, TrainingSession, AgentRecord } from "@/types";
+import {
+  AppState,
+  Filters,
+  DaySchedule,
+  TrainingSession,
+  AgentRecord,
+} from "@/types";
 import { ParseResult } from "@/lib/file-parser";
 import { getTrainingSchedules, getScheduleById } from "@/lib/database";
 import { useEffect } from "react";
@@ -74,7 +80,7 @@ export default function HomePage() {
       tier: "all",
     },
   });
-  
+
   const [loadedWeekOf, setLoadedWeekOf] = useState<string | undefined>();
 
   // Load latest schedule from database on mount
@@ -84,32 +90,44 @@ export default function HomePage() {
 
   async function loadLatestSchedule() {
     setIsLoadingFromDB(true);
-    
+
     try {
       console.log("🔍 Attempting to load schedule from database...");
-      
+
       const schedulesResult = await getTrainingSchedules();
-      
+
       console.log("📊 Schedules query result:", schedulesResult);
-      
-      if (schedulesResult.success && schedulesResult.data && schedulesResult.data.length > 0) {
-        console.log(`✅ Found ${schedulesResult.data.length} schedules in database`);
-        
+
+      if (
+        schedulesResult.success &&
+        schedulesResult.data &&
+        schedulesResult.data.length > 0
+      ) {
+        console.log(
+          `✅ Found ${schedulesResult.data.length} schedules in database`
+        );
+
         // Get the most recent schedule
         const latestSchedule = schedulesResult.data[0];
         console.log("📅 Loading latest schedule:", latestSchedule.week_of);
-        
+
         // Load full schedule details
         const detailsResult = await getScheduleById(latestSchedule.id);
-        
+
         console.log("📋 Schedule details result:", detailsResult);
-        
+
         if (detailsResult.success && detailsResult.data) {
           // Convert database format to app format
-          const dbSchedule = convertDatabaseScheduleToAppFormat(detailsResult.data);
-          
+          const dbSchedule = convertDatabaseScheduleToAppFormat(
+            detailsResult.data
+          );
+
           if (dbSchedule) {
-            console.log("✨ Successfully loaded schedule with", dbSchedule.schedule.length, "days");
+            console.log(
+              "✨ Successfully loaded schedule with",
+              dbSchedule.schedule.length,
+              "days"
+            );
             setAppState((prev) => ({
               ...prev,
               schedule: dbSchedule.schedule,
@@ -117,10 +135,15 @@ export default function HomePage() {
             }));
             setLoadedWeekOf(dbSchedule.weekOf);
           } else {
-            console.warn("⚠️ Failed to convert database schedule to app format");
+            console.warn(
+              "⚠️ Failed to convert database schedule to app format"
+            );
           }
         } else {
-          console.warn("⚠️ Failed to load schedule details:", detailsResult.error);
+          console.warn(
+            "⚠️ Failed to load schedule details:",
+            detailsResult.error
+          );
         }
       } else {
         console.log("📭 No schedules found in database - showing file upload");
@@ -132,22 +155,24 @@ export default function HomePage() {
     }
   }
 
-  function convertDatabaseScheduleToAppFormat(data: any): { schedule: DaySchedule[], stats: any, weekOf?: string } | null {
+  function convertDatabaseScheduleToAppFormat(
+    data: any
+  ): { schedule: DaySchedule[]; stats: any; weekOf?: string } | null {
     try {
       const { schedule: scheduleData, sessions } = data;
-      
+
       // Collect all unique agents from all sessions
       const allAgents: AgentRecord[] = [];
       const agentMap = new Map<string, AgentRecord>();
-      
+
       // Group sessions by day
       const dayMap = new Map<string, TrainingSession[]>();
-      
+
       sessions.forEach((session: any) => {
         if (!dayMap.has(session.day)) {
           dayMap.set(session.day, []);
         }
-        
+
         const agents = session.agent_assignments.map((a: any) => {
           const agent: AgentRecord = {
             name: a.agent_name,
@@ -167,16 +192,16 @@ export default function HomePage() {
             priorRank: 0,
             currentRank: 0,
           };
-          
+
           // Store unique agents
           if (!agentMap.has(agent.name)) {
             agentMap.set(agent.name, agent);
             allAgents.push(agent);
           }
-          
+
           return agent;
         });
-        
+
         const trainingSession: TrainingSession = {
           time: session.time_slot,
           location: session.location,
@@ -185,35 +210,54 @@ export default function HomePage() {
           priority: session.priority,
           cohortNumber: session.cohort_number,
         };
-        
+
         dayMap.get(session.day)!.push(trainingSession);
       });
-      
+
       // Convert to DaySchedule array
-      const schedule: DaySchedule[] = Array.from(dayMap.entries()).map(([day, sessions]) => ({
-        day,
-        sessions,
-      }));
-      
+      const schedule: DaySchedule[] = Array.from(dayMap.entries()).map(
+        ([day, sessions]) => ({
+          day,
+          sessions,
+        })
+      );
+
       // Sort by day order
       const dayOrder = ["Tuesday", "Wednesday", "Thursday", "Friday"];
-      schedule.sort((a, b) => dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day));
-      
+      schedule.sort(
+        (a, b) => dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day)
+      );
+
       // Calculate stats from actual loaded agents
-      console.log("📊 Calculating stats from", allAgents.length, "unique agents");
-      console.log("Sample agents:", allAgents.slice(0, 3).map(a => ({ name: a.name, site: a.site, tier: a.tier })));
-      
+      console.log(
+        "📊 Calculating stats from",
+        allAgents.length,
+        "unique agents"
+      );
+      console.log(
+        "Sample agents:",
+        allAgents
+          .slice(0, 3)
+          .map((a) => ({ name: a.name, site: a.site, tier: a.tier }))
+      );
+
       const cltAgents = allAgents.filter((a) => a.site === "CHA");
       const atxAgents = allAgents.filter((a) => a.site === "AUS");
-      
-      console.log("CLT agents:", cltAgents.length, "ATX agents:", atxAgents.length);
-      
+
+      console.log(
+        "CLT agents:",
+        cltAgents.length,
+        "ATX agents:",
+        atxAgents.length
+      );
+
       // Extract full dataset info from metadata if available
       const metadata = scheduleData.metadata || {};
-      const totalCompanyAgents = metadata.total_company_agents || allAgents.length;
+      const totalCompanyAgents =
+        metadata.total_company_agents || allAgents.length;
       const excludedCount = metadata.excluded_by_tenure || 0;
       const eligibleCount = metadata.eligible_agents || allAgents.length;
-      
+
       const stats = {
         totalAgents: totalCompanyAgents, // Full company count from metadata
         eligibleCount: eligibleCount, // Eligible after tenure filter
@@ -231,9 +275,9 @@ export default function HomePage() {
           total: atxAgents.length,
         },
       };
-      
+
       console.log("Final stats:", stats);
-      
+
       return { schedule, stats, weekOf: scheduleData.week_of };
     } catch (error) {
       console.error("Error converting database schedule:", error);
@@ -347,7 +391,8 @@ export default function HomePage() {
   };
 
   // Check if we have data from either file upload OR database
-  const hasData = appState.eligibleAgents.length > 0 || appState.schedule.length > 0;
+  const hasData =
+    appState.eligibleAgents.length > 0 || appState.schedule.length > 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -381,7 +426,7 @@ export default function HomePage() {
             </div>
           </div>
         )}
-        
+
         {/* Loading State */}
         {isLoadingFromDB && (
           <div className="mb-8 text-center py-12">
@@ -584,8 +629,9 @@ export default function HomePage() {
                                 (appState.eligibleAgents
                                   .filter((a) => a.capScore > 0)
                                   .reduce((sum, a) => sum + a.capScore, 0) /
-                                  appState.eligibleAgents.filter((a) => a.capScore > 0)
-                                    .length) *
+                                  appState.eligibleAgents.filter(
+                                    (a) => a.capScore > 0
+                                  ).length) *
                                   10
                               ) / 10
                             : 0
@@ -599,30 +645,35 @@ export default function HomePage() {
                         }}
                       />
                       <p className="text-gray-500 mt-4">
-                        Save this schedule to track attendance and view analytics
+                        Save this schedule to track attendance and view
+                        analytics
                       </p>
                     </div>
                   )}
 
-                  {databaseView === "save" && appState.schedule.length === 0 && (
-                    <div className="text-center py-12 bg-gray-50 rounded-lg">
-                      <p className="text-gray-500">
-                        Generate a schedule first, then you can save it to the database
-                      </p>
-                    </div>
-                  )}
+                  {databaseView === "save" &&
+                    appState.schedule.length === 0 && (
+                      <div className="text-center py-12 bg-gray-50 rounded-lg">
+                        <p className="text-gray-500">
+                          Generate a schedule first, then you can save it to the
+                          database
+                        </p>
+                      </div>
+                    )}
 
                   {/* Saved Schedules View */}
                   {databaseView === "history" && <SavedSchedulesView />}
 
                   {/* Attendance Tracking View */}
-                  {databaseView === "attendance" && <AttendanceTrackerEnhanced />}
+                  {databaseView === "attendance" && (
+                    <AttendanceTrackerEnhanced />
+                  )}
 
                   {/* Analytics Dashboard View */}
                   {databaseView === "analytics" && <AnalyticsDashboard />}
 
                   {/* Performance Trends View */}
-                  {databaseView === "trends" && <AgentPerformanceTrends />}
+                  {databaseView === "trends" && <AgentPerformanceTrendsV2 />}
                 </div>
               )}
             </div>

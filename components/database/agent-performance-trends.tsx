@@ -152,8 +152,8 @@ export function AgentPerformanceTrends() {
     const lastValue = lastWeek[key];
 
     if (
-      typeof firstValue !== "number" || 
-      typeof lastValue !== "number" || 
+      typeof firstValue !== "number" ||
+      typeof lastValue !== "number" ||
       firstValue === 0
     ) {
       return null;
