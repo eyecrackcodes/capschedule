@@ -152,6 +152,93 @@ export function StatsDashboard({
         </Card>
       </div>
 
+      {/* Tier-Specific Averages */}
+      {stats.byTier && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Performance Tier */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center space-x-2">
+                <Badge variant="default">Performance Tier</Badge>
+                <span className="text-sm text-gray-500">
+                  ({stats.byTier.performance.agentCount} agents)
+                </span>
+              </CardTitle>
+              <p className="text-xs text-gray-500 mt-1">
+                Averages for Performance queue {weekOf ? `week of ${new Date(weekOf).toLocaleDateString()}` : ""}
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">
+                  Avg CAP Score
+                </span>
+                <span className={`font-bold ${getCAPScoreColor(stats.byTier.performance.avgCAPScore)}`}>
+                  {stats.byTier.performance.avgCAPScore}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">
+                  Avg Adjusted CAP
+                </span>
+                <span className={`font-bold ${getCAPScoreColor(stats.byTier.performance.avgAdjustedCAPScore)}`}>
+                  {stats.byTier.performance.avgAdjustedCAPScore}
+                </span>
+              </div>
+              {stats.byTier.performance.avgCAPScore > 0 && (
+                <div className="pt-2 border-t">
+                  <p className="text-xs text-gray-600">
+                    Lead Attainment Impact: -
+                    {(stats.byTier.performance.avgCAPScore - stats.byTier.performance.avgAdjustedCAPScore).toFixed(1)} points
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Standard Tier */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center space-x-2">
+                <Badge variant="secondary">Standard Tier</Badge>
+                <span className="text-sm text-gray-500">
+                  ({stats.byTier.standard.agentCount} agents)
+                </span>
+              </CardTitle>
+              <p className="text-xs text-gray-500 mt-1">
+                Averages for Standard queue {weekOf ? `week of ${new Date(weekOf).toLocaleDateString()}` : ""}
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">
+                  Avg CAP Score
+                </span>
+                <span className={`font-bold ${getCAPScoreColor(stats.byTier.standard.avgCAPScore)}`}>
+                  {stats.byTier.standard.avgCAPScore}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">
+                  Avg Adjusted CAP
+                </span>
+                <span className={`font-bold ${getCAPScoreColor(stats.byTier.standard.avgAdjustedCAPScore)}`}>
+                  {stats.byTier.standard.avgAdjustedCAPScore}
+                </span>
+              </div>
+              {stats.byTier.standard.avgCAPScore > 0 && (
+                <div className="pt-2 border-t">
+                  <p className="text-xs text-gray-600">
+                    Lead Attainment Impact: -
+                    {(stats.byTier.standard.avgCAPScore - stats.byTier.standard.avgAdjustedCAPScore).toFixed(1)} points
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Location Breakdown */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* CLT Breakdown */}

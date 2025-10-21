@@ -164,7 +164,12 @@ export default function HomePage() {
 
   function convertDatabaseScheduleToAppFormat(
     data: any
-  ): { schedule: DaySchedule[]; stats: any; weekOf?: string; percentiles?: any } | null {
+  ): {
+    schedule: DaySchedule[];
+    stats: any;
+    weekOf?: string;
+    percentiles?: any;
+  } | null {
     try {
       const { schedule: scheduleData, sessions } = data;
 
@@ -267,12 +272,15 @@ export default function HomePage() {
 
       // Filter out agents with zero CAP scores for averages
       const nonZeroCAPAgents = allAgents.filter((a) => a.capScore > 0);
-      
+
       // Calculate averages excluding zero CAP scores
       const avgCAPScore =
         nonZeroCAPAgents.length > 0
           ? Math.round(
-              (nonZeroCAPAgents.reduce((sum, agent) => sum + agent.capScore, 0) /
+              (nonZeroCAPAgents.reduce(
+                (sum, agent) => sum + agent.capScore,
+                0
+              ) /
                 nonZeroCAPAgents.length) *
                 10
             ) / 10
@@ -294,33 +302,50 @@ export default function HomePage() {
       const performanceAgents = nonZeroCAPAgents.filter((a) => a.tier === "P");
       const standardAgents = nonZeroCAPAgents.filter((a) => a.tier === "S");
 
-      const performanceAvgCAP = performanceAgents.length > 0
-        ? Math.round(
-            (performanceAgents.reduce((sum, agent) => sum + agent.capScore, 0) /
-              performanceAgents.length) * 10
-          ) / 10
-        : 0;
+      const performanceAvgCAP =
+        performanceAgents.length > 0
+          ? Math.round(
+              (performanceAgents.reduce(
+                (sum, agent) => sum + agent.capScore,
+                0
+              ) /
+                performanceAgents.length) *
+                10
+            ) / 10
+          : 0;
 
-      const performanceAvgAdjustedCAP = performanceAgents.length > 0
-        ? Math.round(
-            (performanceAgents.reduce((sum, agent) => sum + agent.adjustedCAPScore, 0) /
-              performanceAgents.length) * 10
-          ) / 10
-        : 0;
+      const performanceAvgAdjustedCAP =
+        performanceAgents.length > 0
+          ? Math.round(
+              (performanceAgents.reduce(
+                (sum, agent) => sum + agent.adjustedCAPScore,
+                0
+              ) /
+                performanceAgents.length) *
+                10
+            ) / 10
+          : 0;
 
-      const standardAvgCAP = standardAgents.length > 0
-        ? Math.round(
-            (standardAgents.reduce((sum, agent) => sum + agent.capScore, 0) /
-              standardAgents.length) * 10
-          ) / 10
-        : 0;
+      const standardAvgCAP =
+        standardAgents.length > 0
+          ? Math.round(
+              (standardAgents.reduce((sum, agent) => sum + agent.capScore, 0) /
+                standardAgents.length) *
+                10
+            ) / 10
+          : 0;
 
-      const standardAvgAdjustedCAP = standardAgents.length > 0
-        ? Math.round(
-            (standardAgents.reduce((sum, agent) => sum + agent.adjustedCAPScore, 0) /
-              standardAgents.length) * 10
-          ) / 10
-        : 0;
+      const standardAvgAdjustedCAP =
+        standardAgents.length > 0
+          ? Math.round(
+              (standardAgents.reduce(
+                (sum, agent) => sum + agent.adjustedCAPScore,
+                0
+              ) /
+                standardAgents.length) *
+                10
+            ) / 10
+          : 0;
 
       const stats = {
         totalAgents: totalCompanyAgents, // Full company count from metadata
@@ -372,13 +397,17 @@ export default function HomePage() {
         "(should be positive)"
       );
       console.log("\nTier-specific averages:");
-      console.log(`  Performance - Raw: ${performanceAvgCAP}, Adjusted: ${performanceAvgAdjustedCAP} (${performanceAgents.length} agents)`);
-      console.log(`  Standard - Raw: ${standardAvgCAP}, Adjusted: ${standardAvgAdjustedCAP} (${standardAgents.length} agents)`);
-      
+      console.log(
+        `  Performance - Raw: ${performanceAvgCAP}, Adjusted: ${performanceAvgAdjustedCAP} (${performanceAgents.length} agents)`
+      );
+      console.log(
+        `  Standard - Raw: ${standardAvgCAP}, Adjusted: ${standardAvgAdjustedCAP} (${standardAgents.length} agents)`
+      );
+
       // Calculate percentiles for the loaded agents
       const percentiles = calculateMetricPercentiles(allAgents);
       console.log("Percentiles calculated:", percentiles);
-      
+
       console.log("Final stats:", stats);
 
       return { schedule, stats, weekOf: scheduleData.week_of, percentiles };

@@ -5,7 +5,7 @@ export function calculateStats(agents: AgentRecord[]): Stats {
 
   // Filter out agents with 0 CAP score for average calculations
   const nonZeroCAPAgents = agents.filter((agent) => agent.capScore > 0);
-  
+
   // Calculate average of RAW CAP scores (excluding zero scores)
   const avgCAPScore =
     nonZeroCAPAgents.length > 0
@@ -20,7 +20,10 @@ export function calculateStats(agents: AgentRecord[]): Stats {
   const avgAdjustedCAPScore =
     nonZeroCAPAgents.length > 0
       ? Math.round(
-          (nonZeroCAPAgents.reduce((sum, agent) => sum + agent.adjustedCAPScore, 0) /
+          (nonZeroCAPAgents.reduce(
+            (sum, agent) => sum + agent.adjustedCAPScore,
+            0
+          ) /
             nonZeroCAPAgents.length) *
             10
         ) / 10
@@ -54,42 +57,66 @@ export function calculateStats(agents: AgentRecord[]): Stats {
   const performanceAgents = nonZeroCAPAgents.filter((a) => a.tier === "P");
   const standardAgents = nonZeroCAPAgents.filter((a) => a.tier === "S");
 
-  const performanceAvgCAP = performanceAgents.length > 0
-    ? Math.round(
-        (performanceAgents.reduce((sum, agent) => sum + agent.capScore, 0) /
-          performanceAgents.length) * 10
-      ) / 10
-    : 0;
+  const performanceAvgCAP =
+    performanceAgents.length > 0
+      ? Math.round(
+          (performanceAgents.reduce((sum, agent) => sum + agent.capScore, 0) /
+            performanceAgents.length) *
+            10
+        ) / 10
+      : 0;
 
-  const performanceAvgAdjustedCAP = performanceAgents.length > 0
-    ? Math.round(
-        (performanceAgents.reduce((sum, agent) => sum + agent.adjustedCAPScore, 0) /
-          performanceAgents.length) * 10
-      ) / 10
-    : 0;
+  const performanceAvgAdjustedCAP =
+    performanceAgents.length > 0
+      ? Math.round(
+          (performanceAgents.reduce(
+            (sum, agent) => sum + agent.adjustedCAPScore,
+            0
+          ) /
+            performanceAgents.length) *
+            10
+        ) / 10
+      : 0;
 
-  const standardAvgCAP = standardAgents.length > 0
-    ? Math.round(
-        (standardAgents.reduce((sum, agent) => sum + agent.capScore, 0) /
-          standardAgents.length) * 10
-      ) / 10
-    : 0;
+  const standardAvgCAP =
+    standardAgents.length > 0
+      ? Math.round(
+          (standardAgents.reduce((sum, agent) => sum + agent.capScore, 0) /
+            standardAgents.length) *
+            10
+        ) / 10
+      : 0;
 
-  const standardAvgAdjustedCAP = standardAgents.length > 0
-    ? Math.round(
-        (standardAgents.reduce((sum, agent) => sum + agent.adjustedCAPScore, 0) /
-          standardAgents.length) * 10
-      ) / 10
-    : 0;
+  const standardAvgAdjustedCAP =
+    standardAgents.length > 0
+      ? Math.round(
+          (standardAgents.reduce(
+            (sum, agent) => sum + agent.adjustedCAPScore,
+            0
+          ) /
+            standardAgents.length) *
+            10
+        ) / 10
+      : 0;
 
   // Debug logging to verify adjusted is typically lower than raw
   console.log("Company-wide CAP averages:");
-  console.log(`  Raw CAP: ${avgCAPScore} (from ${nonZeroCAPAgents.length} agents)`);
+  console.log(
+    `  Raw CAP: ${avgCAPScore} (from ${nonZeroCAPAgents.length} agents)`
+  );
   console.log(`  Adjusted CAP: ${avgAdjustedCAPScore}`);
-  console.log(`  Difference: ${(avgCAPScore - avgAdjustedCAPScore).toFixed(1)} (should be positive)`);
+  console.log(
+    `  Difference: ${(avgCAPScore - avgAdjustedCAPScore).toFixed(
+      1
+    )} (should be positive)`
+  );
   console.log("\nTier-specific averages:");
-  console.log(`  Performance - Raw: ${performanceAvgCAP}, Adjusted: ${performanceAvgAdjustedCAP} (${performanceAgents.length} agents)`);
-  console.log(`  Standard - Raw: ${standardAvgCAP}, Adjusted: ${standardAvgAdjustedCAP} (${standardAgents.length} agents)`);
+  console.log(
+    `  Performance - Raw: ${performanceAvgCAP}, Adjusted: ${performanceAvgAdjustedCAP} (${performanceAgents.length} agents)`
+  );
+  console.log(
+    `  Standard - Raw: ${standardAvgCAP}, Adjusted: ${standardAvgAdjustedCAP} (${standardAgents.length} agents)`
+  );
 
   return {
     totalAgents,
@@ -211,14 +238,18 @@ export function getTrainingEligibleAgents(
 ): AgentRecord[] {
   // Filter out zero CAP scores for fair comparison
   const nonZeroCAPAgents = agents.filter((agent) => agent.capScore > 0);
-  
+
   const avgAdjustedCAPScore =
     nonZeroCAPAgents.length > 0
-      ? nonZeroCAPAgents.reduce((sum, agent) => sum + agent.adjustedCAPScore, 0) /
-        nonZeroCAPAgents.length
+      ? nonZeroCAPAgents.reduce(
+          (sum, agent) => sum + agent.adjustedCAPScore,
+          0
+        ) / nonZeroCAPAgents.length
       : 0;
 
-  return nonZeroCAPAgents.filter((agent) => agent.adjustedCAPScore < avgAdjustedCAPScore);
+  return nonZeroCAPAgents.filter(
+    (agent) => agent.adjustedCAPScore < avgAdjustedCAPScore
+  );
 }
 
 export function getPriorityLevel(
@@ -239,12 +270,17 @@ export function getSiteDisplayName(site: "CHA" | "AUS"): "CLT" | "ATX" {
 // Calculate percentiles for metrics by tier
 export function calculatePercentilesByTier(agents: AgentRecord[]) {
   // Separate by tier
-  const performanceAgents = agents.filter((a) => a.tier === "P" && a.capScore > 0);
+  const performanceAgents = agents.filter(
+    (a) => a.tier === "P" && a.capScore > 0
+  );
   const standardAgents = agents.filter((a) => a.tier === "S" && a.capScore > 0);
 
-  const calculatePercentile = (values: number[], percentile: number): number => {
+  const calculatePercentile = (
+    values: number[],
+    percentile: number
+  ): number => {
     if (values.length === 0) return 0;
-    
+
     const sorted = [...values].sort((a, b) => a - b);
     const index = Math.floor((percentile / 100) * (sorted.length - 1));
     return sorted[index] || 0;
@@ -253,32 +289,44 @@ export function calculatePercentilesByTier(agents: AgentRecord[]) {
   // Calculate 25th percentile (bottom quartile) for each metric
   const performanceMetrics = {
     closeRate25th: calculatePercentile(
-      performanceAgents.map((a) => a.closeRate).filter((v): v is number => v !== undefined && v !== null && v > 0),
+      performanceAgents
+        .map((a) => a.closeRate)
+        .filter((v): v is number => v !== undefined && v !== null && v > 0),
       25
     ),
     annualPremium25th: calculatePercentile(
-      performanceAgents.map((a) => a.annualPremium).filter((v): v is number => v !== undefined && v !== null && v > 0),
+      performanceAgents
+        .map((a) => a.annualPremium)
+        .filter((v): v is number => v !== undefined && v !== null && v > 0),
       25
     ),
     placeRate25th: calculatePercentile(
       // Include 0 values for place rate but only from agents who have attempted placements
-      performanceAgents.map((a) => a.placeRate).filter((v): v is number => v !== undefined && v !== null),
+      performanceAgents
+        .map((a) => a.placeRate)
+        .filter((v): v is number => v !== undefined && v !== null),
       25
     ),
   };
 
   const standardMetrics = {
     closeRate25th: calculatePercentile(
-      standardAgents.map((a) => a.closeRate).filter((v): v is number => v !== undefined && v !== null && v > 0),
+      standardAgents
+        .map((a) => a.closeRate)
+        .filter((v): v is number => v !== undefined && v !== null && v > 0),
       25
     ),
     annualPremium25th: calculatePercentile(
-      standardAgents.map((a) => a.annualPremium).filter((v): v is number => v !== undefined && v !== null && v > 0),
+      standardAgents
+        .map((a) => a.annualPremium)
+        .filter((v): v is number => v !== undefined && v !== null && v > 0),
       25
     ),
     placeRate25th: calculatePercentile(
       // Include 0 values for place rate but only from agents who have attempted placements
-      standardAgents.map((a) => a.placeRate).filter((v): v is number => v !== undefined && v !== null),
+      standardAgents
+        .map((a) => a.placeRate)
+        .filter((v): v is number => v !== undefined && v !== null),
       25
     ),
   };
