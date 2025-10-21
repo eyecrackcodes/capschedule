@@ -488,23 +488,27 @@ export function AttendancePerformanceCorrelation() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={400}>
-              <ScatterChart>
+              <ScatterChart
+                margin={{ top: 20, right: 20, bottom: 60, left: 60 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
                   dataKey="attendanceRate"
                   name="Attendance Rate"
                   unit="%"
                   domain={[0, 100]}
+                  ticks={[0, 20, 40, 60, 80, 100]}
                   label={{
                     value: "Attendance Rate (%)",
                     position: "insideBottom",
-                    offset: -10,
+                    offset: -5,
                   }}
                 />
                 <YAxis
                   dataKey="improvementRate"
                   name="CAP Score Improvement"
                   unit="%"
+                  ticks={[-20, -10, 0, 10, 20, 30]}
                   label={{
                     value: "CAP Score Improvement (%)",
                     angle: -90,
@@ -512,8 +516,20 @@ export function AttendancePerformanceCorrelation() {
                   }}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <ReferenceLine x={70} stroke="#666" strokeDasharray="5 5" />
-                <ReferenceLine y={5} stroke="#666" strokeDasharray="5 5" />
+                <ReferenceLine 
+                  x={70} 
+                  stroke="#666" 
+                  strokeDasharray="5 5" 
+                  strokeWidth={2}
+                  label={{ value: "70% Attendance", position: "top" }}
+                />
+                <ReferenceLine 
+                  y={5} 
+                  stroke="#666" 
+                  strokeDasharray="5 5"
+                  strokeWidth={2}
+                  label={{ value: "5% Improvement", position: "right" }}
+                />
                 <Scatter
                   name="Agents"
                   data={agents}
