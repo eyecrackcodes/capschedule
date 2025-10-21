@@ -487,6 +487,22 @@ export function AttendancePerformanceCorrelation() {
             </p>
           </CardHeader>
           <CardContent>
+            {/* Chart explanation box */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <div className="flex items-start gap-2">
+                <Info className="h-4 w-4 text-blue-600 mt-0.5" />
+                <div className="text-sm text-blue-900">
+                  <p className="font-medium mb-1">How to read this chart:</p>
+                  <ul className="space-y-1 text-xs">
+                    <li>• <strong>Y-axis:</strong> Percentage change in CAP score from start to end of period</li>
+                    <li className="ml-3">→ Above 0%: CAP score improved | Below 0%: CAP score declined</li>
+                    <li>• <strong>X-axis:</strong> Percentage of scheduled training sessions attended</li>
+                    <li>• <strong>Horizontal line (5%):</strong> Threshold for meaningful improvement</li>
+                    <li>• <strong>Vertical line (70%):</strong> Threshold for high attendance rate</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
             <ResponsiveContainer width="100%" height={350}>
               <ScatterChart
                 margin={{ top: 10, right: 80, bottom: 50, left: 80 }}
@@ -502,7 +518,7 @@ export function AttendancePerformanceCorrelation() {
                     value: "Attendance Rate (%)",
                     position: "insideBottom",
                     offset: -5,
-                    style: { fontSize: 14 }
+                    style: { fontSize: 14 },
                   }}
                 />
                 <YAxis
@@ -511,33 +527,43 @@ export function AttendancePerformanceCorrelation() {
                   unit="%"
                   ticks={[-20, -10, 0, 10, 20, 30]}
                   label={{
-                    value: "CAP Score Improvement (%)",
+                    value: "CAP Score Change (% from baseline)",
                     angle: -90,
                     position: "insideLeft",
-                    style: { fontSize: 14 }
+                    style: { fontSize: 14 },
                   }}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <ReferenceLine 
-                  x={70} 
-                  stroke="#666" 
-                  strokeDasharray="5 5" 
-                  strokeWidth={1.5}
-                  label={{ 
-                    value: "70%", 
-                    position: "top",
-                    style: { fontSize: 12, fill: "#666" }
+                <ReferenceLine
+                  y={0}
+                  stroke="#333"
+                  strokeWidth={2}
+                  label={{
+                    value: "No Change",
+                    position: "left",
+                    style: { fontSize: 11, fill: "#333", fontWeight: "bold" },
                   }}
                 />
-                <ReferenceLine 
-                  y={5} 
-                  stroke="#666" 
+                <ReferenceLine
+                  x={70}
+                  stroke="#666"
                   strokeDasharray="5 5"
                   strokeWidth={1.5}
-                  label={{ 
-                    value: "5%", 
+                  label={{
+                    value: "70%",
+                    position: "top",
+                    style: { fontSize: 12, fill: "#666" },
+                  }}
+                />
+                <ReferenceLine
+                  y={5}
+                  stroke="#666"
+                  strokeDasharray="5 5"
+                  strokeWidth={1.5}
+                  label={{
+                    value: "5%",
                     position: "right",
-                    style: { fontSize: 12, fill: "#666" }
+                    style: { fontSize: 12, fill: "#666" },
                   }}
                 />
                 <Scatter
