@@ -62,11 +62,20 @@ export function ScheduleDisplay({
 
   // Helper function to extract hour from time string for sorting
   const getTimeValue = (timeStr: string): number => {
-    // Extract first time (e.g., "8:30" from "8:30-9:30 AM CST")
-    const match = timeStr.match(/(\d+):(\d+)/);
+    // Extract first time and AM/PM (e.g., "8:30 AM" from "8:30-9:30 AM CST")
+    const match = timeStr.match(/(\d+):(\d+)[^\d]*(AM|PM)/i);
     if (match) {
-      const hours = parseInt(match[1]);
+      let hours = parseInt(match[1]);
       const minutes = parseInt(match[2]);
+      const isPM = match[3].toUpperCase() === 'PM';
+      
+      // Convert to 24-hour format
+      if (isPM && hours !== 12) {
+        hours += 12;
+      } else if (!isPM && hours === 12) {
+        hours = 0;
+      }
+      
       return hours * 60 + minutes; // Convert to minutes for comparison
     }
     return 0;
@@ -403,6 +412,21 @@ export function ScheduleDisplay({
 
                         {isExpanded && (
                           <div className="mt-4 space-y-3">
+                            {/* Training Focus Info */}
+                            {TRAINING_FOCUS[day.day as keyof typeof TRAINING_FOCUS] && (
+                              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                                <h4 className="font-medium text-sm text-blue-900 mb-1">
+                                  {TRAINING_FOCUS[day.day as keyof typeof TRAINING_FOCUS]}
+                                </h4>
+                                <p className="text-xs text-blue-700">
+                                  {day.day === "Tuesday" && "Agents below the 25th percentile in Close Rate for their tier"}
+                                  {day.day === "Wednesday" && "Agents below the 25th percentile in Annual Premium for their tier"}
+                                  {day.day === "Thursday" && "Agents below the 25th percentile in Place Rate for their tier"}
+                                  {day.day === "Friday" && "Agents with Zero CAP Score or needing additional support"}
+                                </p>
+                              </div>
+                            )}
+                            
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
                                 <h4 className="font-medium text-sm text-gray-700 mb-2">
@@ -439,21 +463,69 @@ export function ScheduleDisplay({
                                         <p className="text-xs text-gray-500">
                                           Tenure: {agent.tenure}y
                                         </p>
+                                        
+                                        {/* Display agent metrics */}
+                                        <div className="mt-1 space-y-1">
+                                          {agent.closeRate !== undefined && (
+                                            <div className="text-xs">
+                                              <span className="text-gray-600">Close Rate:</span>
+                                              <span className={`ml-1 font-medium ${
+                                                agent.recommendedTraining?.includes("Close Rate Training") 
+                                                  ? "text-red-600" 
+                                                  : "text-gray-700"
+                                              }`}>
+                                                {agent.closeRate}%
+                                                {agent.recommendedTraining?.includes("Close Rate Training") && 
+                                                  " ⚠️"}
+                                              </span>
+                                            </div>
+                                          )}
+                                          {agent.annualPremium !== undefined && (
+                                            <div className="text-xs">
+                                              <span className="text-gray-600">Annual Premium:</span>
+                                              <span className={`ml-1 font-medium ${
+                                                agent.recommendedTraining?.includes("Annual Premium Training") 
+                                                  ? "text-red-600" 
+                                                  : "text-gray-700"
+                                              }`}>
+                                                ${agent.annualPremium}
+                                                {agent.recommendedTraining?.includes("Annual Premium Training") && 
+                                                  " ⚠️"}
+                                              </span>
+                                            </div>
+                                          )}
+                                          {agent.placeRate !== undefined && (
+                                            <div className="text-xs">
+                                              <span className="text-gray-600">Place Rate:</span>
+                                              <span className={`ml-1 font-medium ${
+                                                agent.recommendedTraining?.includes("Place Rate Training") 
+                                                  ? "text-red-600" 
+                                                  : "text-gray-700"
+                                              }`}>
+                                                {agent.placeRate}%
+                                                {agent.recommendedTraining?.includes("Place Rate Training") && 
+                                                  " ⚠️"}
+                                              </span>
+                                            </div>
+                                          )}
+                                        </div>
+
                                         {agent.adjustedCAPScore === 0 && (
-                                          <p className="text-xs text-red-600 font-medium">
+                                          <p className="text-xs text-red-600 font-medium mt-1">
                                             Zero CAP - Critical
                                           </p>
                                         )}
                                         {agent.adjustedCAPScore > 0 &&
                                           agent.adjustedCAPScore < avgCAPScore && (
-                                            <p className="text-xs text-orange-600">
+                                            <p className="text-xs text-orange-600 mt-1">
                                               Below avg ({avgCAPScore})
                                             </p>
                                           )}
                                         {agent.recommendedTraining &&
                                           agent.recommendedTraining.length >
                                             0 && (
-                                            <div className="mt-1">
+                                            <div className="mt-2">
+                                              <p className="text-xs text-gray-600 mb-1">Needs Training:</p>
                                               {agent.recommendedTraining.map(
                                                 (training, idx) => (
                                                   <Badge
