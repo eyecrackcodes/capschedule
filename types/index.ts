@@ -36,7 +36,8 @@ export interface Stats {
   totalAgents: number;
   eligibleCount: number;
   excludedCount: number;
-  avgCAPScore: number;
+  avgCAPScore: number; // Average of raw CAP scores
+  avgAdjustedCAPScore: number; // Average of adjusted CAP scores
   needsTraining: number;
   clt: { performance: number; standard: number; total: number };
   atx: { performance: number; standard: number; total: number };

@@ -64,6 +64,7 @@ export default function HomePage() {
       eligibleCount: 0,
       excludedCount: 0,
       avgCAPScore: 0,
+      avgAdjustedCAPScore: 0,
       needsTraining: 0,
       clt: { performance: 0, standard: 0, total: 0 },
       atx: { performance: 0, standard: 0, total: 0 },
@@ -262,7 +263,8 @@ export default function HomePage() {
         totalAgents: totalCompanyAgents, // Full company count from metadata
         eligibleCount: eligibleCount, // Eligible after tenure filter
         excludedCount: excludedCount, // Excluded by tenure
-        avgCAPScore: scheduleData.avg_adjusted_cap_score,
+        avgCAPScore: 0, // Will be calculated from raw data
+        avgAdjustedCAPScore: scheduleData.avg_adjusted_cap_score,
         needsTraining: allAgents.length, // Agents scheduled for training
         clt: {
           performance: cltAgents.filter((a) => a.tier === "P").length,
@@ -342,7 +344,7 @@ export default function HomePage() {
     );
 
     const cohorts = createCohorts(agentsWithRecommendations);
-    const schedule = generateSchedule(cohorts, stats.avgCAPScore);
+    const schedule = generateSchedule(cohorts, stats.avgAdjustedCAPScore);
 
     // Validate the generated schedule
     const validation = validateSchedule(schedule);
@@ -527,7 +529,7 @@ export default function HomePage() {
                   schedule={appState.schedule}
                   filters={appState.filters}
                   onFiltersChange={handleFiltersChange}
-                  avgCAPScore={appState.stats.avgCAPScore}
+                  avgAdjustedCAPScore={appState.stats.avgAdjustedCAPScore}
                 />
               )}
 
@@ -538,7 +540,7 @@ export default function HomePage() {
               {activeView === "manager" && (
                 <ManagerAgentView
                   schedule={appState.schedule}
-                  avgCAPScore={appState.stats.avgCAPScore}
+                  avgAdjustedCAPScore={appState.stats.avgAdjustedCAPScore}
                 />
               )}
 
@@ -636,7 +638,7 @@ export default function HomePage() {
                               ) / 10
                             : 0
                         }
-                        avgAdjustedCAPScore={appState.stats.avgCAPScore}
+                        avgAdjustedCAPScore={appState.stats.avgAdjustedCAPScore}
                         eligibleAgents={appState.eligibleAgents}
                         fullStats={appState.stats}
                         onSaveComplete={() => {

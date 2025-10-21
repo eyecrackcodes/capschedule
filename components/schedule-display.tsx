@@ -24,14 +24,14 @@ interface ScheduleDisplayProps {
   schedule: DaySchedule[];
   filters: Filters;
   onFiltersChange: (filters: Filters) => void;
-  avgCAPScore?: number;
+  avgAdjustedCAPScore?: number;
 }
 
 export function ScheduleDisplay({
   schedule,
   filters,
   onFiltersChange,
-  avgCAPScore = 0,
+  avgAdjustedCAPScore = 0,
 }: ScheduleDisplayProps) {
   const [expandedDays, setExpandedDays] = useState<Set<string>>(
     new Set(["Tuesday"])
@@ -194,7 +194,7 @@ export function ScheduleDisplay({
             </p>
             <div className="text-sm text-yellow-700 mt-1">
               <p>
-                • <strong>Company Average Adjusted CAP:</strong> {avgCAPScore}{" "}
+                • <strong>Company Average Adjusted CAP:</strong> {avgAdjustedCAPScore}{" "}
                 (with Lead Attainment)
               </p>
               <p>
@@ -554,9 +554,9 @@ export function ScheduleDisplay({
                                         )}
                                         {agent.adjustedCAPScore > 0 &&
                                           agent.adjustedCAPScore <
-                                            avgCAPScore && (
+                                            avgAdjustedCAPScore && (
                                             <p className="text-xs text-orange-600 mt-1">
-                                              Below avg ({avgCAPScore})
+                                              Below avg ({avgAdjustedCAPScore})
                                             </p>
                                           )}
                                         {agent.recommendedTraining &&

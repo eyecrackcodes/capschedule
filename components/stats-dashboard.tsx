@@ -48,7 +48,7 @@ export function StatsDashboard({ stats, weekOf, percentiles }: StatsDashboardPro
         </div>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Total Agents */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -67,10 +67,10 @@ export function StatsDashboard({ stats, weekOf, percentiles }: StatsDashboardPro
           </CardContent>
         </Card>
 
-        {/* Average CAP Score */}
+        {/* Average Raw CAP Score */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Adjusted CAP</CardTitle>
+            <CardTitle className="text-sm font-medium">Avg CAP Score</CardTitle>
             <Badge variant="secondary">{stats.avgCAPScore}</Badge>
           </CardHeader>
           <CardContent>
@@ -80,6 +80,24 @@ export function StatsDashboard({ stats, weekOf, percentiles }: StatsDashboardPro
               )}`}
             >
               {stats.avgCAPScore}
+            </div>
+            <p className="text-xs text-muted-foreground">Raw CAP Score</p>
+          </CardContent>
+        </Card>
+
+        {/* Average Adjusted CAP Score */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Avg Adjusted CAP</CardTitle>
+            <Badge variant="secondary">{stats.avgAdjustedCAPScore}</Badge>
+          </CardHeader>
+          <CardContent>
+            <div
+              className={`text-2xl font-bold ${getCAPScoreColor(
+                stats.avgAdjustedCAPScore
+              )}`}
+            >
+              {stats.avgAdjustedCAPScore}
             </div>
             <p className="text-xs text-muted-foreground">With Lead Attainment</p>
           </CardContent>
@@ -263,7 +281,7 @@ export function StatsDashboard({ stats, weekOf, percentiles }: StatsDashboardPro
             </div>
             <div className="mt-4 p-3 bg-purple-100 rounded-lg border border-purple-300">
               <p className="text-xs font-semibold text-purple-900">
-                💡 How it works: Agents are eligible for training if their Adjusted CAP is below company average ({stats.avgCAPScore}). 
+                💡 How it works: Agents are eligible for training if their Adjusted CAP is below company average ({stats.avgAdjustedCAPScore}). 
                 The specific training day (Tue/Wed/Thu) depends on which metrics they're in the bottom 25% for.
               </p>
             </div>

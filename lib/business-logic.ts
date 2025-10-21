@@ -6,13 +6,23 @@ export function calculateStats(agents: AgentRecord[]): Stats {
   // Filter out agents with 0 original CAP score - they are not eligible for training
   const eligibleAgents = agents.filter((agent) => agent.capScore > 0);
 
-  // Calculate company average CAP score using ONLY eligible agents with non-zero ADJUSTED CAP scores
+  // Calculate average of RAW CAP scores (excluding zero scores)
+  const avgCAPScore =
+    eligibleAgents.length > 0
+      ? Math.round(
+          (eligibleAgents.reduce((sum, agent) => sum + agent.capScore, 0) /
+            eligibleAgents.length) *
+            10
+        ) / 10
+      : 0;
+
+  // Calculate average of ADJUSTED CAP scores
   // Also exclude agents with 0 or missing leads per day (they can't have valid adjusted scores)
   const agentsWithNonZeroAdjustedCAP = eligibleAgents.filter(
     (agent) => agent.adjustedCAPScore > 0 && agent.leadsPerDay > 0
   );
   
-  const avgCAPScore =
+  const avgAdjustedCAPScore =
     agentsWithNonZeroAdjustedCAP.length > 0
       ? Math.round(
           (agentsWithNonZeroAdjustedCAP.reduce(
@@ -24,11 +34,11 @@ export function calculateStats(agents: AgentRecord[]): Stats {
         ) / 10
       : 0;
 
-  // Count agents needing training (Adjusted CAP Score < Company Average ONLY)
+  // Count agents needing training (Adjusted CAP Score < Company Average Adjusted CAP ONLY)
   // Exclude agents with 0 original CAP score
   // Metric-specific recommendations just determine WHICH DAY they train, not WHETHER they train
   const needsTraining = eligibleAgents.filter(
-    (agent) => agent.adjustedCAPScore < avgCAPScore
+    (agent) => agent.adjustedCAPScore < avgAdjustedCAPScore
   ).length;
 
   // Breakdown by location and tier
@@ -45,6 +55,7 @@ export function calculateStats(agents: AgentRecord[]): Stats {
     eligibleCount: totalAgents, // All agents passed tenure filter
     excludedCount: 0, // Will be set by caller
     avgCAPScore,
+    avgAdjustedCAPScore,
     needsTraining,
     clt: {
       performance: cltPerformance,
@@ -70,7 +81,7 @@ export function createCohorts(
   const agentsWithNonZeroCAP = eligibleAgents.filter(
     (agent) => agent.adjustedCAPScore > 0
   );
-  const avgCAPScore =
+  const avgAdjustedCAPScore =
     agentsWithNonZeroCAP.length > 0
       ? agentsWithNonZeroCAP.reduce((sum, agent) => sum + agent.adjustedCAPScore, 0) /
         agentsWithNonZeroCAP.length
@@ -81,10 +92,10 @@ export function createCohorts(
   const zeroCAPCLT: AgentRecord[] = [];
   const zeroCAPATX: AgentRecord[] = [];
 
-  // Filter agents needing training (Adjusted CAP Score < Company Average ONLY)
+  // Filter agents needing training (Adjusted CAP Score < Company Average Adjusted CAP ONLY)
   // Metric recommendations just determine which day/type of training, not eligibility
   const trainingAgents = eligibleAgents.filter(
-    (agent) => agent.adjustedCAPScore > 0 && agent.adjustedCAPScore < avgCAPScore
+    (agent) => agent.adjustedCAPScore > 0 && agent.adjustedCAPScore < avgAdjustedCAPScore
   );
 
   // Group by location and tier
@@ -142,12 +153,12 @@ export function createCohorts(
 export function getTrainingEligibleAgents(
   agents: AgentRecord[]
 ): AgentRecord[] {
-  const avgCAPScore =
+  const avgAdjustedCAPScore =
     agents.length > 0
       ? agents.reduce((sum, agent) => sum + agent.adjustedCAPScore, 0) / agents.length
       : 0;
 
-  return agents.filter((agent) => agent.adjustedCAPScore < avgCAPScore);
+  return agents.filter((agent) => agent.adjustedCAPScore < avgAdjustedCAPScore);
 }
 
 export function getPriorityLevel(
