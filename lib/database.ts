@@ -426,6 +426,89 @@ export async function getAgentHistory(agentName: string) {
   return { success: true, data };
 }
 
+/**
+ * Get agent metrics trends for multiple agents
+ * @param agentNames Array of agent names to fetch (empty array = all agents)
+ * @param weeks Number of weeks to fetch
+ */
+export async function getAgentMetricsTrends(
+  agentNames: string[] = [],
+  weeks: number = 12
+) {
+  try {
+    // Calculate date range
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - (weeks * 7));
+
+    let query = supabase
+      .from("cap_score_history")
+      .select("*")
+      .gte("week_of", startDate.toISOString().split("T")[0])
+      .lte("week_of", endDate.toISOString().split("T")[0])
+      .order("week_of", { ascending: true });
+
+    // Filter by agent names if provided
+    if (agentNames.length > 0) {
+      query = query.in("agent_name", agentNames);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Error fetching agent trends:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: data || [] };
+  } catch (error: any) {
+    console.error("Error in getAgentMetricsTrends:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Get agent training history to correlate with performance
+ */
+export async function getAgentTrainingHistory(
+  agentName: string,
+  weeks: number = 12
+) {
+  try {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - (weeks * 7));
+
+    const { data, error } = await supabase
+      .from("agent_assignments")
+      .select(`
+        agent_name,
+        attended,
+        training_sessions (
+          day,
+          training_type,
+          training_schedules (
+            week_of
+          )
+        )
+      `)
+      .eq("agent_name", agentName)
+      .eq("attended", true)
+      .gte("training_sessions.training_schedules.week_of", startDate.toISOString().split("T")[0])
+      .order("training_sessions.training_schedules.week_of", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching training history:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: data || [] };
+  } catch (error: any) {
+    console.error("Error in getAgentTrainingHistory:", error);
+    return { success: false, error: error.message };
+  }
+}
+
 // ============================================================================
 // ANALYTICS
 // ============================================================================
