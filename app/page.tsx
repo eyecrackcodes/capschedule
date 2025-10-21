@@ -17,6 +17,7 @@ import { SaveScheduleDialog } from "@/components/database/save-schedule-dialog";
 import { SavedSchedulesView } from "@/components/database/saved-schedules-view";
 import { AttendanceTrackerEnhanced } from "@/components/database/attendance-tracker-enhanced";
 import { AnalyticsDashboard } from "@/components/database/analytics-dashboard";
+import { AgentPerformanceTrends } from "@/components/database/agent-performance-trends";
 import { WeeklyDataUploader } from "@/components/database/weekly-data-uploader";
 import {
   calculateStats,
@@ -550,6 +551,16 @@ export default function HomePage() {
                     >
                       Analytics
                     </button>
+                    <button
+                      onClick={() => setDatabaseView("trends")}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        databaseView === "trends"
+                          ? "bg-white text-blue-600 shadow-sm"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      Performance Trends
+                    </button>
                   </div>
 
                   {/* Upload New Week View */}
@@ -609,6 +620,9 @@ export default function HomePage() {
 
                   {/* Analytics Dashboard View */}
                   {databaseView === "analytics" && <AnalyticsDashboard />}
+
+                  {/* Performance Trends View */}
+                  {databaseView === "trends" && <AgentPerformanceTrends />}
                 </div>
               )}
             </div>
