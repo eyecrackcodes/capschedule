@@ -36,11 +36,24 @@ export interface Stats {
   totalAgents: number;
   eligibleCount: number;
   excludedCount: number;
-  avgCAPScore: number; // Average of raw CAP scores
-  avgAdjustedCAPScore: number; // Average of adjusted CAP scores
+  avgCAPScore: number; // Company-wide average of raw CAP scores
+  avgAdjustedCAPScore: number; // Company-wide average of adjusted CAP scores
   needsTraining: number;
   clt: { performance: number; standard: number; total: number };
   atx: { performance: number; standard: number; total: number };
+  // Tier-specific averages
+  byTier?: {
+    performance: {
+      avgCAPScore: number;
+      avgAdjustedCAPScore: number;
+      agentCount: number;
+    };
+    standard: {
+      avgCAPScore: number;
+      avgAdjustedCAPScore: number;
+      agentCount: number;
+    };
+  };
 }
 
 export interface Cohorts {

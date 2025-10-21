@@ -25,6 +25,7 @@ import {
   getTrainingEligibleAgents,
   calculateMetricPercentiles,
   assignTrainingRecommendations,
+  calculatePercentilesByTier,
 } from "@/lib/business-logic";
 import {
   generateSchedule,
@@ -68,6 +69,10 @@ export default function HomePage() {
       needsTraining: 0,
       clt: { performance: 0, standard: 0, total: 0 },
       atx: { performance: 0, standard: 0, total: 0 },
+      byTier: {
+        performance: { avgCAPScore: 0, avgAdjustedCAPScore: 0, agentCount: 0 },
+        standard: { avgCAPScore: 0, avgAdjustedCAPScore: 0, agentCount: 0 },
+      },
     },
     cohorts: {
       cltPerformance: [],
@@ -133,6 +138,7 @@ export default function HomePage() {
               ...prev,
               schedule: dbSchedule.schedule,
               stats: dbSchedule.stats,
+              percentiles: dbSchedule.percentiles,
             }));
             setLoadedWeekOf(dbSchedule.weekOf);
           } else {
@@ -158,7 +164,7 @@ export default function HomePage() {
 
   function convertDatabaseScheduleToAppFormat(
     data: any
-  ): { schedule: DaySchedule[]; stats: any; weekOf?: string } | null {
+  ): { schedule: DaySchedule[]; stats: any; weekOf?: string; percentiles?: any } | null {
     try {
       const { schedule: scheduleData, sessions } = data;
 
@@ -259,27 +265,62 @@ export default function HomePage() {
       const excludedCount = metadata.excluded_by_tenure || 0;
       const eligibleCount = metadata.eligible_agents || allAgents.length;
 
-      // Calculate COMPANY-WIDE average raw CAP score (including ALL agents)
-      // This gives true company performance picture for dashboard
+      // Filter out agents with zero CAP scores for averages
+      const nonZeroCAPAgents = allAgents.filter((a) => a.capScore > 0);
+      
+      // Calculate averages excluding zero CAP scores
       const avgCAPScore =
-        allAgents.length > 0
+        nonZeroCAPAgents.length > 0
           ? Math.round(
-              (allAgents.reduce((sum, agent) => sum + agent.capScore, 0) /
-                allAgents.length) *
+              (nonZeroCAPAgents.reduce((sum, agent) => sum + agent.capScore, 0) /
+                nonZeroCAPAgents.length) *
                 10
             ) / 10
           : 0;
 
-      // Calculate COMPANY-WIDE average adjusted CAP score from actual agent data
-      // Don't trust the database value as it may have been calculated differently
       const avgAdjustedCAPScore =
-        allAgents.length > 0
+        nonZeroCAPAgents.length > 0
           ? Math.round(
-              (allAgents.reduce((sum, agent) => sum + agent.adjustedCAPScore, 0) /
-                allAgents.length) *
+              (nonZeroCAPAgents.reduce(
+                (sum, agent) => sum + agent.adjustedCAPScore,
+                0
+              ) /
+                nonZeroCAPAgents.length) *
                 10
             ) / 10
           : 0;
+
+      // Calculate tier-specific averages
+      const performanceAgents = nonZeroCAPAgents.filter((a) => a.tier === "P");
+      const standardAgents = nonZeroCAPAgents.filter((a) => a.tier === "S");
+
+      const performanceAvgCAP = performanceAgents.length > 0
+        ? Math.round(
+            (performanceAgents.reduce((sum, agent) => sum + agent.capScore, 0) /
+              performanceAgents.length) * 10
+          ) / 10
+        : 0;
+
+      const performanceAvgAdjustedCAP = performanceAgents.length > 0
+        ? Math.round(
+            (performanceAgents.reduce((sum, agent) => sum + agent.adjustedCAPScore, 0) /
+              performanceAgents.length) * 10
+          ) / 10
+        : 0;
+
+      const standardAvgCAP = standardAgents.length > 0
+        ? Math.round(
+            (standardAgents.reduce((sum, agent) => sum + agent.capScore, 0) /
+              standardAgents.length) * 10
+          ) / 10
+        : 0;
+
+      const standardAvgAdjustedCAP = standardAgents.length > 0
+        ? Math.round(
+            (standardAgents.reduce((sum, agent) => sum + agent.adjustedCAPScore, 0) /
+              standardAgents.length) * 10
+          ) / 10
+        : 0;
 
       const stats = {
         totalAgents: totalCompanyAgents, // Full company count from metadata
@@ -298,25 +339,49 @@ export default function HomePage() {
           standard: atxAgents.filter((a) => a.tier === "S").length,
           total: atxAgents.length,
         },
+        byTier: {
+          performance: {
+            avgCAPScore: performanceAvgCAP,
+            avgAdjustedCAPScore: performanceAvgAdjustedCAP,
+            agentCount: performanceAgents.length,
+          },
+          standard: {
+            avgCAPScore: standardAvgCAP,
+            avgAdjustedCAPScore: standardAvgAdjustedCAP,
+            agentCount: standardAgents.length,
+          },
+        },
       };
 
       console.log(
         "Calculated avgCAPScore:",
         avgCAPScore,
         "from",
-        allAgents.length,
-        "agents (including zero scores)"
+        nonZeroCAPAgents.length,
+        "agents (excluding zero scores)"
       );
       console.log("Recalculated avgAdjustedCAPScore:", avgAdjustedCAPScore);
-      console.log("DB stored adjusted CAP:", scheduleData.avg_adjusted_cap_score, "(ignoring this value)");
+      console.log(
+        "DB stored adjusted CAP:",
+        scheduleData.avg_adjusted_cap_score,
+        "(ignoring this value)"
+      );
       console.log(
         "Difference (Raw - Adjusted):",
         (avgCAPScore - avgAdjustedCAPScore).toFixed(1),
         "(should be positive)"
       );
+      console.log("\nTier-specific averages:");
+      console.log(`  Performance - Raw: ${performanceAvgCAP}, Adjusted: ${performanceAvgAdjustedCAP} (${performanceAgents.length} agents)`);
+      console.log(`  Standard - Raw: ${standardAvgCAP}, Adjusted: ${standardAvgAdjustedCAP} (${standardAgents.length} agents)`);
+      
+      // Calculate percentiles for the loaded agents
+      const percentiles = calculateMetricPercentiles(allAgents);
+      console.log("Percentiles calculated:", percentiles);
+      
       console.log("Final stats:", stats);
 
-      return { schedule, stats, weekOf: scheduleData.week_of };
+      return { schedule, stats, weekOf: scheduleData.week_of, percentiles };
     } catch (error) {
       console.error("Error converting database schedule:", error);
       return null;
