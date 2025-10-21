@@ -41,10 +41,15 @@ interface MetricData {
   training_attended?: string[];
 }
 
+interface ChartData {
+  week: string;
+  [key: string]: string | number | undefined;
+}
+
 export function AgentPerformanceTrends() {
   const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
   const [availableAgents, setAvailableAgents] = useState<string[]>([]);
-  const [metricData, setMetricData] = useState<MetricData[]>([]);
+  const [metricData, setMetricData] = useState<ChartData[]>([]);
   const [selectedMetric, setSelectedMetric] = useState<string>("adjusted_cap_score");
   const [isLoading, setIsLoading] = useState(false);
   const [dateRange, setDateRange] = useState<number>(12); // weeks
@@ -97,9 +102,9 @@ export function AgentPerformanceTrends() {
 
         const chartData = Object.values(groupedData).sort((a: any, b: any) => 
           new Date(a.week).getTime() - new Date(b.week).getTime()
-        );
+        ) as ChartData[];
 
-        setMetricData(chartData as any);
+        setMetricData(chartData);
       }
     } catch (error) {
       console.error("Error loading trends:", error);
