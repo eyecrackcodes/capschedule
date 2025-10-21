@@ -259,14 +259,19 @@ export default function HomePage() {
       const excludedCount = metadata.excluded_by_tenure || 0;
       const eligibleCount = metadata.eligible_agents || allAgents.length;
 
-      // Calculate average raw CAP score from agents (excluding zero scores)
-      const agentsWithNonZeroCAP = allAgents.filter((a) => a.capScore > 0);
-      const avgCAPScore = agentsWithNonZeroCAP.length > 0
-        ? Math.round(
-            (agentsWithNonZeroCAP.reduce((sum, agent) => sum + agent.capScore, 0) /
-              agentsWithNonZeroCAP.length) * 10
-          ) / 10
-        : 0;
+      // Calculate COMPANY-WIDE average raw CAP score (including ALL agents)
+      // This gives true company performance picture for dashboard
+      const avgCAPScore =
+        allAgents.length > 0
+          ? Math.round(
+              (allAgents.reduce(
+                (sum, agent) => sum + agent.capScore,
+                0
+              ) /
+                allAgents.length) *
+                10
+            ) / 10
+          : 0;
 
       const stats = {
         totalAgents: totalCompanyAgents, // Full company count from metadata
@@ -287,7 +292,15 @@ export default function HomePage() {
         },
       };
 
-      console.log("Calculated avgCAPScore:", avgCAPScore, "from", agentsWithNonZeroCAP.length, "agents");
+      console.log(
+        "Calculated avgCAPScore:",
+        avgCAPScore,
+        "from",
+        allAgents.length,
+        "agents (including zero scores)"
+      );
+      console.log("Adjusted CAP from DB:", scheduleData.avg_adjusted_cap_score);
+      console.log("Expected: Adjusted CAP should be ≤ Raw CAP due to lead attainment penalties");
       console.log("Final stats:", stats);
 
       return { schedule, stats, weekOf: scheduleData.week_of };
