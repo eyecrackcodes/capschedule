@@ -264,10 +264,18 @@ export default function HomePage() {
       const avgCAPScore =
         allAgents.length > 0
           ? Math.round(
-              (allAgents.reduce(
-                (sum, agent) => sum + agent.capScore,
-                0
-              ) /
+              (allAgents.reduce((sum, agent) => sum + agent.capScore, 0) /
+                allAgents.length) *
+                10
+            ) / 10
+          : 0;
+
+      // Calculate COMPANY-WIDE average adjusted CAP score from actual agent data
+      // Don't trust the database value as it may have been calculated differently
+      const avgAdjustedCAPScore =
+        allAgents.length > 0
+          ? Math.round(
+              (allAgents.reduce((sum, agent) => sum + agent.adjustedCAPScore, 0) /
                 allAgents.length) *
                 10
             ) / 10
@@ -278,7 +286,7 @@ export default function HomePage() {
         eligibleCount: eligibleCount, // Eligible after tenure filter
         excludedCount: excludedCount, // Excluded by tenure
         avgCAPScore: avgCAPScore, // Calculated from raw agent data
-        avgAdjustedCAPScore: scheduleData.avg_adjusted_cap_score,
+        avgAdjustedCAPScore: avgAdjustedCAPScore, // Recalculated from agent data
         needsTraining: allAgents.length, // Agents scheduled for training
         clt: {
           performance: cltAgents.filter((a) => a.tier === "P").length,
@@ -299,8 +307,13 @@ export default function HomePage() {
         allAgents.length,
         "agents (including zero scores)"
       );
-      console.log("Adjusted CAP from DB:", scheduleData.avg_adjusted_cap_score);
-      console.log("Expected: Adjusted CAP should be ≤ Raw CAP due to lead attainment penalties");
+      console.log("Recalculated avgAdjustedCAPScore:", avgAdjustedCAPScore);
+      console.log("DB stored adjusted CAP:", scheduleData.avg_adjusted_cap_score, "(ignoring this value)");
+      console.log(
+        "Difference (Raw - Adjusted):",
+        (avgCAPScore - avgAdjustedCAPScore).toFixed(1),
+        "(should be positive)"
+      );
       console.log("Final stats:", stats);
 
       return { schedule, stats, weekOf: scheduleData.week_of };
