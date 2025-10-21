@@ -8,12 +8,12 @@ import { User, Calendar, MapPin, TrendingDown } from "lucide-react";
 
 interface ManagerAgentViewProps {
   schedule: DaySchedule[];
-  avgCAPScore: number;
+  avgAdjustedCAPScore: number;
 }
 
 export function ManagerAgentView({
   schedule,
-  avgCAPScore,
+  avgAdjustedCAPScore,
 }: ManagerAgentViewProps) {
   // Group agents by manager
   const managerMap = new Map<
@@ -102,7 +102,7 @@ export function ManagerAgentView({
             </div>
             <div>
               <p className="text-sm text-gray-600">Avg Adjusted CAP</p>
-              <p className="text-2xl font-bold">{avgCAPScore}</p>
+              <p className="text-2xl font-bold">{avgAdjustedCAPScore}</p>
             </div>
           </div>
         </CardContent>
@@ -114,7 +114,8 @@ export function ManagerAgentView({
             (a) => a.adjustedCAPScore === 0
           ).length;
           const belowAvgCount = data.agents.filter(
-            (a) => a.adjustedCAPScore > 0 && a.adjustedCAPScore < avgCAPScore
+            (a) =>
+              a.adjustedCAPScore > 0 && a.adjustedCAPScore < avgAdjustedCAPScore
           ).length;
 
           return (
@@ -161,14 +162,17 @@ export function ManagerAgentView({
                           <div className="flex items-center gap-2 mt-1">
                             <Badge
                               variant={
-                                agent.adjustedCAPScore === 0 ? "destructive" : "outline"
+                                agent.adjustedCAPScore === 0
+                                  ? "destructive"
+                                  : "outline"
                               }
                               className="text-xs"
                             >
                               Adj CAP: {agent.adjustedCAPScore}
                             </Badge>
                             <span className="text-xs text-gray-500">
-                              (Orig: {agent.originalCAPScore} | {agent.leadAttainment.toFixed(0)}%)
+                              (Orig: {agent.originalCAPScore} |{" "}
+                              {agent.leadAttainment.toFixed(0)}%)
                             </span>
                             <Badge
                               className={`text-xs ${
@@ -207,11 +211,12 @@ export function ManagerAgentView({
                           ⚠️ Critical - Immediate intervention required
                         </p>
                       )}
-                      {agent.adjustedCAPScore > 0 && agent.adjustedCAPScore < avgCAPScore && (
-                        <p className="text-xs text-orange-600 mt-2">
-                          Below company average ({avgCAPScore})
-                        </p>
-                      )}
+                      {agent.adjustedCAPScore > 0 &&
+                        agent.adjustedCAPScore < avgAdjustedCAPScore && (
+                          <p className="text-xs text-orange-600 mt-2">
+                            Below company average ({avgAdjustedCAPScore})
+                          </p>
+                        )}
                     </div>
                   ))}
                 </div>

@@ -22,7 +22,11 @@ interface StatsDashboardProps {
   };
 }
 
-export function StatsDashboard({ stats, weekOf, percentiles }: StatsDashboardProps) {
+export function StatsDashboard({
+  stats,
+  weekOf,
+  percentiles,
+}: StatsDashboardProps) {
   const getCAPScoreColor = (score: number) => {
     if (score >= 80) return "text-green-600";
     if (score >= 60) return "text-yellow-600";
@@ -40,15 +44,21 @@ export function StatsDashboard({ stats, weekOf, percentiles }: StatsDashboardPro
       {weekOf && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <p className="text-sm font-semibold text-blue-900">
-            📅 Viewing Schedule for Week of {new Date(weekOf).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            📅 Viewing Schedule for Week of{" "}
+            {new Date(weekOf).toLocaleDateString("en-US", {
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            })}
           </p>
           <p className="text-xs text-blue-700 mt-1">
-            All metrics below are specific to this week's scheduled training sessions
+            All metrics below are specific to this week's scheduled training
+            sessions
           </p>
         </div>
       )}
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Total Agents */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -60,17 +70,17 @@ export function StatsDashboard({ stats, weekOf, percentiles }: StatsDashboardPro
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalAgents}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.excludedCount > 0 
-                ? "Eligible for analysis" 
+              {stats.excludedCount > 0
+                ? "Eligible for analysis"
                 : "Scheduled this week"}
             </p>
           </CardContent>
         </Card>
 
-        {/* Average CAP Score */}
+        {/* Average Raw CAP Score */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Adjusted CAP</CardTitle>
+            <CardTitle className="text-sm font-medium">Avg CAP Score</CardTitle>
             <Badge variant="secondary">{stats.avgCAPScore}</Badge>
           </CardHeader>
           <CardContent>
@@ -81,7 +91,29 @@ export function StatsDashboard({ stats, weekOf, percentiles }: StatsDashboardPro
             >
               {stats.avgCAPScore}
             </div>
-            <p className="text-xs text-muted-foreground">With Lead Attainment</p>
+            <p className="text-xs text-muted-foreground">Raw CAP Score</p>
+          </CardContent>
+        </Card>
+
+        {/* Average Adjusted CAP Score */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Avg Adjusted CAP
+            </CardTitle>
+            <Badge variant="secondary">{stats.avgAdjustedCAPScore}</Badge>
+          </CardHeader>
+          <CardContent>
+            <div
+              className={`text-2xl font-bold ${getCAPScoreColor(
+                stats.avgAdjustedCAPScore
+              )}`}
+            >
+              {stats.avgAdjustedCAPScore}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              With Lead Attainment
+            </p>
           </CardContent>
         </Card>
 
@@ -98,7 +130,7 @@ export function StatsDashboard({ stats, weekOf, percentiles }: StatsDashboardPro
               {stats.needsTraining}
             </div>
             <p className="text-xs text-muted-foreground">
-              {stats.excludedCount > 0 
+              {stats.excludedCount > 0
                 ? `${getTrainingPercentage()}% of eligible agents`
                 : "Below company average"}
             </p>
@@ -120,6 +152,131 @@ export function StatsDashboard({ stats, weekOf, percentiles }: StatsDashboardPro
         </Card>
       </div>
 
+      {/* Tier-Specific Averages */}
+      {stats.byTier && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Performance Tier */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center space-x-2">
+                <Badge variant="default">Performance Tier</Badge>
+                <span className="text-sm text-gray-500">
+                  {stats.byTier.performance.totalAgentCount !== undefined &&
+                  stats.byTier.performance.totalAgentCount !==
+                    stats.byTier.performance.agentCount
+                    ? `(${stats.byTier.performance.agentCount} of ${stats.byTier.performance.totalAgentCount} scheduled)`
+                    : `(${stats.byTier.performance.agentCount} scheduled for training)`}
+                </span>
+              </CardTitle>
+              <p className="text-xs text-gray-500 mt-1">
+                Averages for Performance agents in training{" "}
+                {weekOf
+                  ? `week of ${new Date(weekOf).toLocaleDateString()}`
+                  : ""}
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">
+                  Avg CAP Score
+                </span>
+                <span
+                  className={`font-bold ${getCAPScoreColor(
+                    stats.byTier.performance.avgCAPScore
+                  )}`}
+                >
+                  {stats.byTier.performance.avgCAPScore}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">
+                  Avg Adjusted CAP
+                </span>
+                <span
+                  className={`font-bold ${getCAPScoreColor(
+                    stats.byTier.performance.avgAdjustedCAPScore
+                  )}`}
+                >
+                  {stats.byTier.performance.avgAdjustedCAPScore}
+                </span>
+              </div>
+              {stats.byTier.performance.avgCAPScore > 0 && (
+                <div className="pt-2 border-t">
+                  <p className="text-xs text-gray-600">
+                    Lead Attainment Impact: -
+                    {(
+                      stats.byTier.performance.avgCAPScore -
+                      stats.byTier.performance.avgAdjustedCAPScore
+                    ).toFixed(1)}{" "}
+                    points
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Standard Tier */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center space-x-2">
+                <Badge variant="secondary">Standard Tier</Badge>
+                <span className="text-sm text-gray-500">
+                  {stats.byTier.standard.totalAgentCount !== undefined &&
+                  stats.byTier.standard.totalAgentCount !==
+                    stats.byTier.standard.agentCount
+                    ? `(${stats.byTier.standard.agentCount} of ${stats.byTier.standard.totalAgentCount} scheduled)`
+                    : `(${stats.byTier.standard.agentCount} scheduled for training)`}
+                </span>
+              </CardTitle>
+              <p className="text-xs text-gray-500 mt-1">
+                Averages for Standard agents in training{" "}
+                {weekOf
+                  ? `week of ${new Date(weekOf).toLocaleDateString()}`
+                  : ""}
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">
+                  Avg CAP Score
+                </span>
+                <span
+                  className={`font-bold ${getCAPScoreColor(
+                    stats.byTier.standard.avgCAPScore
+                  )}`}
+                >
+                  {stats.byTier.standard.avgCAPScore}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">
+                  Avg Adjusted CAP
+                </span>
+                <span
+                  className={`font-bold ${getCAPScoreColor(
+                    stats.byTier.standard.avgAdjustedCAPScore
+                  )}`}
+                >
+                  {stats.byTier.standard.avgAdjustedCAPScore}
+                </span>
+              </div>
+              {stats.byTier.standard.avgCAPScore > 0 && (
+                <div className="pt-2 border-t">
+                  <p className="text-xs text-gray-600">
+                    Lead Attainment Impact: -
+                    {(
+                      stats.byTier.standard.avgCAPScore -
+                      stats.byTier.standard.avgAdjustedCAPScore
+                    ).toFixed(1)}{" "}
+                    points
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Location Breakdown */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* CLT Breakdown */}
@@ -130,7 +287,7 @@ export function StatsDashboard({ stats, weekOf, percentiles }: StatsDashboardPro
               <span>Charlotte</span>
             </CardTitle>
             <p className="text-xs text-gray-500 mt-1">
-              Agents scheduled for training {weekOf ? 'this week' : ''}
+              Agents scheduled for training {weekOf ? "this week" : ""}
             </p>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -161,7 +318,7 @@ export function StatsDashboard({ stats, weekOf, percentiles }: StatsDashboardPro
               <span>Austin</span>
             </CardTitle>
             <p className="text-xs text-gray-500 mt-1">
-              Agents scheduled for training {weekOf ? 'this week' : ''}
+              Agents scheduled for training {weekOf ? "this week" : ""}
             </p>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -194,7 +351,9 @@ export function StatsDashboard({ stats, weekOf, percentiles }: StatsDashboardPro
               25th Percentile Training Thresholds (Bottom Quartile)
             </CardTitle>
             <p className="text-sm text-purple-800 mt-2">
-              Only agents below these thresholds receive metric-specific training on Tuesday (Close Rate), Wednesday (Annual Premium), or Thursday (Place Rate)
+              Only agents below these thresholds receive metric-specific
+              training on Tuesday (Close Rate), Wednesday (Annual Premium), or
+              Thursday (Place Rate)
             </p>
           </CardHeader>
           <CardContent>
@@ -207,29 +366,41 @@ export function StatsDashboard({ stats, weekOf, percentiles }: StatsDashboardPro
                 </h4>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="text-center">
-                    <p className="text-xs text-gray-600 mb-1">Close Rate Threshold</p>
+                    <p className="text-xs text-gray-600 mb-1">
+                      Close Rate Threshold
+                    </p>
                     <p className="text-2xl font-bold text-blue-600">
                       {percentiles.performance.closeRate50th.toFixed(1)}%
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">→ Tuesday Training</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      → Tuesday Training
+                    </p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xs text-gray-600 mb-1">Annual Premium Threshold</p>
+                    <p className="text-xs text-gray-600 mb-1">
+                      Annual Premium Threshold
+                    </p>
                     <p className="text-2xl font-bold text-green-600">
                       ${percentiles.performance.annualPremium50th.toFixed(0)}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">→ Wednesday Training</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      → Wednesday Training
+                    </p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xs text-gray-600 mb-1">Place Rate Threshold</p>
+                    <p className="text-xs text-gray-600 mb-1">
+                      Place Rate Threshold
+                    </p>
                     <p className="text-2xl font-bold text-purple-600">
                       {percentiles.performance.placeRate50th.toFixed(1)}%
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">→ Thursday Training</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      → Thursday Training
+                    </p>
                   </div>
                 </div>
               </div>
-              
+
               {/* Standard Tier Benchmarks */}
               <div className="bg-white p-4 rounded-lg border-2 border-orange-300">
                 <h4 className="font-semibold text-orange-700 mb-3 flex items-center gap-2">
@@ -238,33 +409,48 @@ export function StatsDashboard({ stats, weekOf, percentiles }: StatsDashboardPro
                 </h4>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="text-center">
-                    <p className="text-xs text-gray-600 mb-1">Close Rate Threshold</p>
+                    <p className="text-xs text-gray-600 mb-1">
+                      Close Rate Threshold
+                    </p>
                     <p className="text-2xl font-bold text-blue-600">
                       {percentiles.standard.closeRate50th.toFixed(1)}%
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">→ Tuesday Training</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      → Tuesday Training
+                    </p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xs text-gray-600 mb-1">Annual Premium Threshold</p>
+                    <p className="text-xs text-gray-600 mb-1">
+                      Annual Premium Threshold
+                    </p>
                     <p className="text-2xl font-bold text-green-600">
                       ${percentiles.standard.annualPremium50th.toFixed(0)}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">→ Wednesday Training</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      → Wednesday Training
+                    </p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xs text-gray-600 mb-1">Place Rate Threshold</p>
+                    <p className="text-xs text-gray-600 mb-1">
+                      Place Rate Threshold
+                    </p>
                     <p className="text-2xl font-bold text-purple-600">
                       {percentiles.standard.placeRate50th.toFixed(1)}%
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">→ Thursday Training</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      → Thursday Training
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
             <div className="mt-4 p-3 bg-purple-100 rounded-lg border border-purple-300">
               <p className="text-xs font-semibold text-purple-900">
-                💡 How it works: Agents are eligible for training if their Adjusted CAP is below company average ({stats.avgCAPScore}). 
-                The specific training day (Tue/Wed/Thu) depends on which metrics they're in the bottom 25% for.
+                💡 How it works: Agents are eligible for training if their
+                Adjusted CAP is below company average (
+                {stats.avgAdjustedCAPScore}). The specific training day
+                (Tue/Wed/Thu) depends on which metrics they're in the bottom 25%
+                for.
               </p>
             </div>
           </CardContent>

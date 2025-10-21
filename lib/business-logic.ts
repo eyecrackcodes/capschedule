@@ -3,32 +3,45 @@ import { AgentRecord, Stats, Cohorts } from "@/types";
 export function calculateStats(agents: AgentRecord[]): Stats {
   const totalAgents = agents.length;
 
-  // Filter out agents with 0 original CAP score - they are not eligible for training
-  const eligibleAgents = agents.filter((agent) => agent.capScore > 0);
+  // Filter out agents with 0 CAP score for average calculations
+  const nonZeroCAPAgents = agents.filter((agent) => agent.capScore > 0);
 
-  // Calculate company average CAP score using ONLY eligible agents with non-zero ADJUSTED CAP scores
-  // Also exclude agents with 0 or missing leads per day (they can't have valid adjusted scores)
-  const agentsWithNonZeroAdjustedCAP = eligibleAgents.filter(
-    (agent) => agent.adjustedCAPScore > 0 && agent.leadsPerDay > 0
-  );
-  
+  // Calculate average of RAW CAP scores (excluding zero scores)
   const avgCAPScore =
-    agentsWithNonZeroAdjustedCAP.length > 0
+    nonZeroCAPAgents.length > 0
       ? Math.round(
-          (agentsWithNonZeroAdjustedCAP.reduce(
-            (sum, agent) => sum + agent.adjustedCAPScore,
-            0
-          ) /
-            agentsWithNonZeroAdjustedCAP.length) *
+          (nonZeroCAPAgents.reduce((sum, agent) => sum + agent.capScore, 0) /
+            nonZeroCAPAgents.length) *
             10
         ) / 10
       : 0;
 
-  // Count agents needing training (Adjusted CAP Score < Company Average ONLY)
-  // Exclude agents with 0 original CAP score
-  // Metric-specific recommendations just determine WHICH DAY they train, not WHETHER they train
+  // Calculate average of ADJUSTED CAP scores (excluding zero scores)
+  const avgAdjustedCAPScore =
+    nonZeroCAPAgents.length > 0
+      ? Math.round(
+          (nonZeroCAPAgents.reduce(
+            (sum, agent) => sum + agent.adjustedCAPScore,
+            0
+          ) /
+            nonZeroCAPAgents.length) *
+            10
+        ) / 10
+      : 0;
+
+  // For training eligibility, use the same non-zero CAP agents
+  const eligibleAgents = nonZeroCAPAgents;
+
+  // Count agents needing training
+  // Use training-specific average (excluding zero CAP agents) for fair comparison
+  const trainingAvgAdjustedCAP =
+    eligibleAgents.length > 0
+      ? eligibleAgents.reduce((sum, agent) => sum + agent.adjustedCAPScore, 0) /
+        eligibleAgents.length
+      : 0;
+
   const needsTraining = eligibleAgents.filter(
-    (agent) => agent.adjustedCAPScore < avgCAPScore
+    (agent) => agent.adjustedCAPScore < trainingAvgAdjustedCAP
   ).length;
 
   // Breakdown by location and tier
@@ -40,11 +53,81 @@ export function calculateStats(agents: AgentRecord[]): Stats {
   const atxPerformance = atxAgents.filter((agent) => agent.tier === "P").length;
   const atxStandard = atxAgents.filter((agent) => agent.tier === "S").length;
 
+  // Calculate tier-specific totals from ALL agents (including zero CAP)
+  const allPerformanceAgents = agents.filter((a) => a.tier === "P");
+  const allStandardAgents = agents.filter((a) => a.tier === "S");
+  
+  // Calculate tier-specific averages from non-zero CAP agents only
+  const performanceAgents = nonZeroCAPAgents.filter((a) => a.tier === "P");
+  const standardAgents = nonZeroCAPAgents.filter((a) => a.tier === "S");
+
+  const performanceAvgCAP =
+    performanceAgents.length > 0
+      ? Math.round(
+          (performanceAgents.reduce((sum, agent) => sum + agent.capScore, 0) /
+            performanceAgents.length) *
+            10
+        ) / 10
+      : 0;
+
+  const performanceAvgAdjustedCAP =
+    performanceAgents.length > 0
+      ? Math.round(
+          (performanceAgents.reduce(
+            (sum, agent) => sum + agent.adjustedCAPScore,
+            0
+          ) /
+            performanceAgents.length) *
+            10
+        ) / 10
+      : 0;
+
+  const standardAvgCAP =
+    standardAgents.length > 0
+      ? Math.round(
+          (standardAgents.reduce((sum, agent) => sum + agent.capScore, 0) /
+            standardAgents.length) *
+            10
+        ) / 10
+      : 0;
+
+  const standardAvgAdjustedCAP =
+    standardAgents.length > 0
+      ? Math.round(
+          (standardAgents.reduce(
+            (sum, agent) => sum + agent.adjustedCAPScore,
+            0
+          ) /
+            standardAgents.length) *
+            10
+        ) / 10
+      : 0;
+
+  // Debug logging to verify adjusted is typically lower than raw
+  console.log("Company-wide CAP averages:");
+  console.log(
+    `  Raw CAP: ${avgCAPScore} (from ${nonZeroCAPAgents.length} agents)`
+  );
+  console.log(`  Adjusted CAP: ${avgAdjustedCAPScore}`);
+  console.log(
+    `  Difference: ${(avgCAPScore - avgAdjustedCAPScore).toFixed(
+      1
+    )} (should be positive)`
+  );
+  console.log("\nTier-specific averages:");
+  console.log(
+    `  Performance - Raw: ${performanceAvgCAP}, Adjusted: ${performanceAvgAdjustedCAP} (${performanceAgents.length} agents)`
+  );
+  console.log(
+    `  Standard - Raw: ${standardAvgCAP}, Adjusted: ${standardAvgAdjustedCAP} (${standardAgents.length} agents)`
+  );
+
   return {
     totalAgents,
     eligibleCount: totalAgents, // All agents passed tenure filter
     excludedCount: 0, // Will be set by caller
     avgCAPScore,
+    avgAdjustedCAPScore,
     needsTraining,
     clt: {
       performance: cltPerformance,
@@ -56,12 +139,26 @@ export function calculateStats(agents: AgentRecord[]): Stats {
       standard: atxStandard,
       total: atxAgents.length,
     },
+    byTier: {
+      performance: {
+        avgCAPScore: performanceAvgCAP,
+        avgAdjustedCAPScore: performanceAvgAdjustedCAP,
+        agentCount: performanceAgents.length, // Non-zero CAP agents for training
+        totalAgentCount: allPerformanceAgents.length, // All agents in tier
+      },
+      standard: {
+        avgCAPScore: standardAvgCAP,
+        avgAdjustedCAPScore: standardAvgAdjustedCAP,
+        agentCount: standardAgents.length, // Non-zero CAP agents for training
+        totalAgentCount: allStandardAgents.length, // All agents in tier
+      },
+    },
   };
 }
 
 export function createCohorts(
   agents: AgentRecord[],
-  maxSize: number = 3  // Changed from 5 to 3 for more intimate training
+  maxSize: number = 3 // Changed from 5 to 3 for more intimate training
 ): Cohorts & { zeroCAPAgents: { clt: AgentRecord[][]; atx: AgentRecord[][] } } {
   // Filter out agents with 0 original CAP score - they are not eligible for training
   const eligibleAgents = agents.filter((agent) => agent.capScore > 0);
@@ -70,10 +167,12 @@ export function createCohorts(
   const agentsWithNonZeroCAP = eligibleAgents.filter(
     (agent) => agent.adjustedCAPScore > 0
   );
-  const avgCAPScore =
+  const avgAdjustedCAPScore =
     agentsWithNonZeroCAP.length > 0
-      ? agentsWithNonZeroCAP.reduce((sum, agent) => sum + agent.adjustedCAPScore, 0) /
-        agentsWithNonZeroCAP.length
+      ? agentsWithNonZeroCAP.reduce(
+          (sum, agent) => sum + agent.adjustedCAPScore,
+          0
+        ) / agentsWithNonZeroCAP.length
       : 0;
 
   // No more zero CAP agents in training - they are excluded
@@ -81,10 +180,11 @@ export function createCohorts(
   const zeroCAPCLT: AgentRecord[] = [];
   const zeroCAPATX: AgentRecord[] = [];
 
-  // Filter agents needing training (Adjusted CAP Score < Company Average ONLY)
+  // Filter agents needing training (Adjusted CAP Score < Company Average Adjusted CAP ONLY)
   // Metric recommendations just determine which day/type of training, not eligibility
   const trainingAgents = eligibleAgents.filter(
-    (agent) => agent.adjustedCAPScore > 0 && agent.adjustedCAPScore < avgCAPScore
+    (agent) =>
+      agent.adjustedCAPScore > 0 && agent.adjustedCAPScore < avgAdjustedCAPScore
   );
 
   // Group by location and tier
@@ -142,12 +242,20 @@ export function createCohorts(
 export function getTrainingEligibleAgents(
   agents: AgentRecord[]
 ): AgentRecord[] {
-  const avgCAPScore =
-    agents.length > 0
-      ? agents.reduce((sum, agent) => sum + agent.adjustedCAPScore, 0) / agents.length
+  // Filter out zero CAP scores for fair comparison
+  const nonZeroCAPAgents = agents.filter((agent) => agent.capScore > 0);
+
+  const avgAdjustedCAPScore =
+    nonZeroCAPAgents.length > 0
+      ? nonZeroCAPAgents.reduce(
+          (sum, agent) => sum + agent.adjustedCAPScore,
+          0
+        ) / nonZeroCAPAgents.length
       : 0;
 
-  return agents.filter((agent) => agent.adjustedCAPScore < avgCAPScore);
+  return nonZeroCAPAgents.filter(
+    (agent) => agent.adjustedCAPScore < avgAdjustedCAPScore
+  );
 }
 
 export function getPriorityLevel(
@@ -163,6 +271,76 @@ export function getPriorityLevel(
 
 export function getSiteDisplayName(site: "CHA" | "AUS"): "CLT" | "ATX" {
   return site === "CHA" ? "CLT" : "ATX";
+}
+
+// Calculate percentiles for metrics by tier
+export function calculatePercentilesByTier(agents: AgentRecord[]) {
+  // Separate by tier
+  const performanceAgents = agents.filter(
+    (a) => a.tier === "P" && a.capScore > 0
+  );
+  const standardAgents = agents.filter((a) => a.tier === "S" && a.capScore > 0);
+
+  const calculatePercentile = (
+    values: number[],
+    percentile: number
+  ): number => {
+    if (values.length === 0) return 0;
+
+    const sorted = [...values].sort((a, b) => a - b);
+    const index = Math.floor((percentile / 100) * (sorted.length - 1));
+    return sorted[index] || 0;
+  };
+
+  // Calculate 25th percentile (bottom quartile) for each metric
+  const performanceMetrics = {
+    closeRate25th: calculatePercentile(
+      performanceAgents
+        .map((a) => a.closeRate)
+        .filter((v): v is number => v !== undefined && v !== null && v > 0),
+      25
+    ),
+    annualPremium25th: calculatePercentile(
+      performanceAgents
+        .map((a) => a.annualPremium)
+        .filter((v): v is number => v !== undefined && v !== null && v > 0),
+      25
+    ),
+    placeRate25th: calculatePercentile(
+      // Include 0 values for place rate but only from agents who have attempted placements
+      performanceAgents
+        .map((a) => a.placeRate)
+        .filter((v): v is number => v !== undefined && v !== null),
+      25
+    ),
+  };
+
+  const standardMetrics = {
+    closeRate25th: calculatePercentile(
+      standardAgents
+        .map((a) => a.closeRate)
+        .filter((v): v is number => v !== undefined && v !== null && v > 0),
+      25
+    ),
+    annualPremium25th: calculatePercentile(
+      standardAgents
+        .map((a) => a.annualPremium)
+        .filter((v): v is number => v !== undefined && v !== null && v > 0),
+      25
+    ),
+    placeRate25th: calculatePercentile(
+      // Include 0 values for place rate but only from agents who have attempted placements
+      standardAgents
+        .map((a) => a.placeRate)
+        .filter((v): v is number => v !== undefined && v !== null),
+      25
+    ),
+  };
+
+  return {
+    performance: performanceMetrics,
+    standard: standardMetrics,
+  };
 }
 
 export function getTierDisplayName(
@@ -217,8 +395,9 @@ export function calculateMetricPercentiles(agents: AgentRecord[]) {
     .map((a) => a.annualPremium!)
     .sort((a, b) => a - b);
 
+  // Include 0 values for place rate but don't penalize agents
   const perfPlaceRates = performanceAgents
-    .filter((a) => a.placeRate && a.placeRate > 0)
+    .filter((a) => a.placeRate !== undefined && a.placeRate !== null)
     .map((a) => a.placeRate!)
     .sort((a, b) => a - b);
 
@@ -233,8 +412,9 @@ export function calculateMetricPercentiles(agents: AgentRecord[]) {
     .map((a) => a.annualPremium!)
     .sort((a, b) => a - b);
 
+  // Include 0 values for place rate but don't penalize agents
   const stdPlaceRates = standardAgents
-    .filter((a) => a.placeRate && a.placeRate > 0)
+    .filter((a) => a.placeRate !== undefined && a.placeRate !== null)
     .map((a) => a.placeRate!)
     .sort((a, b) => a - b);
 
@@ -270,9 +450,8 @@ export function assignTrainingRecommendations(
 
     // For agents with valid original CAP scores, check their metrics
     // Get the appropriate percentiles based on agent's tier
-    const tierPercentiles = agent.tier === "P" 
-      ? percentiles.performance 
-      : percentiles.standard;
+    const tierPercentiles =
+      agent.tier === "P" ? percentiles.performance : percentiles.standard;
 
     // Check each metric against tier-specific 25th percentile (bottom quartile)
     // Only the worst 25% of performers in each metric get targeted training

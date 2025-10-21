@@ -25,6 +25,7 @@ import {
   getTrainingEligibleAgents,
   calculateMetricPercentiles,
   assignTrainingRecommendations,
+  calculatePercentilesByTier,
 } from "@/lib/business-logic";
 import {
   generateSchedule,
@@ -64,9 +65,14 @@ export default function HomePage() {
       eligibleCount: 0,
       excludedCount: 0,
       avgCAPScore: 0,
+      avgAdjustedCAPScore: 0,
       needsTraining: 0,
       clt: { performance: 0, standard: 0, total: 0 },
       atx: { performance: 0, standard: 0, total: 0 },
+      byTier: {
+        performance: { avgCAPScore: 0, avgAdjustedCAPScore: 0, agentCount: 0, totalAgentCount: 0 },
+        standard: { avgCAPScore: 0, avgAdjustedCAPScore: 0, agentCount: 0, totalAgentCount: 0 },
+      },
     },
     cohorts: {
       cltPerformance: [],
@@ -132,6 +138,7 @@ export default function HomePage() {
               ...prev,
               schedule: dbSchedule.schedule,
               stats: dbSchedule.stats,
+              percentiles: dbSchedule.percentiles,
             }));
             setLoadedWeekOf(dbSchedule.weekOf);
           } else {
@@ -157,7 +164,12 @@ export default function HomePage() {
 
   function convertDatabaseScheduleToAppFormat(
     data: any
-  ): { schedule: DaySchedule[]; stats: any; weekOf?: string } | null {
+  ): {
+    schedule: DaySchedule[];
+    stats: any;
+    weekOf?: string;
+    percentiles?: any;
+  } | null {
     try {
       const { schedule: scheduleData, sessions } = data;
 
@@ -258,11 +270,89 @@ export default function HomePage() {
       const excludedCount = metadata.excluded_by_tenure || 0;
       const eligibleCount = metadata.eligible_agents || allAgents.length;
 
+      // Filter out agents with zero CAP scores for averages
+      const nonZeroCAPAgents = allAgents.filter((a) => a.capScore > 0);
+
+      // Calculate averages excluding zero CAP scores
+      const avgCAPScore =
+        nonZeroCAPAgents.length > 0
+          ? Math.round(
+              (nonZeroCAPAgents.reduce(
+                (sum, agent) => sum + agent.capScore,
+                0
+              ) /
+                nonZeroCAPAgents.length) *
+                10
+            ) / 10
+          : 0;
+
+      const avgAdjustedCAPScore =
+        nonZeroCAPAgents.length > 0
+          ? Math.round(
+              (nonZeroCAPAgents.reduce(
+                (sum, agent) => sum + agent.adjustedCAPScore,
+                0
+              ) /
+                nonZeroCAPAgents.length) *
+                10
+            ) / 10
+          : 0;
+
+      // Calculate tier-specific averages
+      const performanceAgents = nonZeroCAPAgents.filter((a) => a.tier === "P");
+      const standardAgents = nonZeroCAPAgents.filter((a) => a.tier === "S");
+
+      const performanceAvgCAP =
+        performanceAgents.length > 0
+          ? Math.round(
+              (performanceAgents.reduce(
+                (sum, agent) => sum + agent.capScore,
+                0
+              ) /
+                performanceAgents.length) *
+                10
+            ) / 10
+          : 0;
+
+      const performanceAvgAdjustedCAP =
+        performanceAgents.length > 0
+          ? Math.round(
+              (performanceAgents.reduce(
+                (sum, agent) => sum + agent.adjustedCAPScore,
+                0
+              ) /
+                performanceAgents.length) *
+                10
+            ) / 10
+          : 0;
+
+      const standardAvgCAP =
+        standardAgents.length > 0
+          ? Math.round(
+              (standardAgents.reduce((sum, agent) => sum + agent.capScore, 0) /
+                standardAgents.length) *
+                10
+            ) / 10
+          : 0;
+
+      const standardAvgAdjustedCAP =
+        standardAgents.length > 0
+          ? Math.round(
+              (standardAgents.reduce(
+                (sum, agent) => sum + agent.adjustedCAPScore,
+                0
+              ) /
+                standardAgents.length) *
+                10
+            ) / 10
+          : 0;
+
       const stats = {
         totalAgents: totalCompanyAgents, // Full company count from metadata
         eligibleCount: eligibleCount, // Eligible after tenure filter
         excludedCount: excludedCount, // Excluded by tenure
-        avgCAPScore: scheduleData.avg_adjusted_cap_score,
+        avgCAPScore: avgCAPScore, // Calculated from raw agent data
+        avgAdjustedCAPScore: avgAdjustedCAPScore, // Recalculated from agent data
         needsTraining: allAgents.length, // Agents scheduled for training
         clt: {
           performance: cltAgents.filter((a) => a.tier === "P").length,
@@ -274,11 +364,59 @@ export default function HomePage() {
           standard: atxAgents.filter((a) => a.tier === "S").length,
           total: atxAgents.length,
         },
+        byTier: {
+          performance: {
+            avgCAPScore: performanceAvgCAP,
+            avgAdjustedCAPScore: performanceAvgAdjustedCAP,
+            agentCount: performanceAgents.length,
+            // Note: When loading from DB, we only have agents scheduled for training
+            // not the full company roster, so totalAgentCount equals agentCount
+            totalAgentCount: performanceAgents.length,
+          },
+          standard: {
+            avgCAPScore: standardAvgCAP,
+            avgAdjustedCAPScore: standardAvgAdjustedCAP,
+            agentCount: standardAgents.length,
+            // Note: When loading from DB, we only have agents scheduled for training
+            // not the full company roster, so totalAgentCount equals agentCount
+            totalAgentCount: standardAgents.length,
+          },
+        },
       };
+
+      console.log(
+        "Calculated avgCAPScore:",
+        avgCAPScore,
+        "from",
+        nonZeroCAPAgents.length,
+        "agents (excluding zero scores)"
+      );
+      console.log("Recalculated avgAdjustedCAPScore:", avgAdjustedCAPScore);
+      console.log(
+        "DB stored adjusted CAP:",
+        scheduleData.avg_adjusted_cap_score,
+        "(ignoring this value)"
+      );
+      console.log(
+        "Difference (Raw - Adjusted):",
+        (avgCAPScore - avgAdjustedCAPScore).toFixed(1),
+        "(should be positive)"
+      );
+      console.log("\nTier-specific averages:");
+      console.log(
+        `  Performance - Raw: ${performanceAvgCAP}, Adjusted: ${performanceAvgAdjustedCAP} (${performanceAgents.length} agents)`
+      );
+      console.log(
+        `  Standard - Raw: ${standardAvgCAP}, Adjusted: ${standardAvgAdjustedCAP} (${standardAgents.length} agents)`
+      );
+
+      // Calculate percentiles for the loaded agents
+      const percentiles = calculateMetricPercentiles(allAgents);
+      console.log("Percentiles calculated:", percentiles);
 
       console.log("Final stats:", stats);
 
-      return { schedule, stats, weekOf: scheduleData.week_of };
+      return { schedule, stats, weekOf: scheduleData.week_of, percentiles };
     } catch (error) {
       console.error("Error converting database schedule:", error);
       return null;
@@ -342,7 +480,7 @@ export default function HomePage() {
     );
 
     const cohorts = createCohorts(agentsWithRecommendations);
-    const schedule = generateSchedule(cohorts, stats.avgCAPScore);
+    const schedule = generateSchedule(cohorts, stats.avgAdjustedCAPScore);
 
     // Validate the generated schedule
     const validation = validateSchedule(schedule);
@@ -527,7 +665,7 @@ export default function HomePage() {
                   schedule={appState.schedule}
                   filters={appState.filters}
                   onFiltersChange={handleFiltersChange}
-                  avgCAPScore={appState.stats.avgCAPScore}
+                  avgAdjustedCAPScore={appState.stats.avgAdjustedCAPScore}
                 />
               )}
 
@@ -538,7 +676,7 @@ export default function HomePage() {
               {activeView === "manager" && (
                 <ManagerAgentView
                   schedule={appState.schedule}
-                  avgCAPScore={appState.stats.avgCAPScore}
+                  avgAdjustedCAPScore={appState.stats.avgAdjustedCAPScore}
                 />
               )}
 
@@ -636,7 +774,7 @@ export default function HomePage() {
                               ) / 10
                             : 0
                         }
-                        avgAdjustedCAPScore={appState.stats.avgCAPScore}
+                        avgAdjustedCAPScore={appState.stats.avgAdjustedCAPScore}
                         eligibleAgents={appState.eligibleAgents}
                         fullStats={appState.stats}
                         onSaveComplete={() => {
