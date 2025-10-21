@@ -46,12 +46,14 @@ export interface Stats {
     performance: {
       avgCAPScore: number;
       avgAdjustedCAPScore: number;
-      agentCount: number;
+      agentCount: number; // Agents scheduled for training
+      totalAgentCount?: number; // Total agents in tier (all company)
     };
     standard: {
       avgCAPScore: number;
       avgAdjustedCAPScore: number;
-      agentCount: number;
+      agentCount: number; // Agents scheduled for training
+      totalAgentCount?: number; // Total agents in tier (all company)
     };
   };
 }

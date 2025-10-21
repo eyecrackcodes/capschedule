@@ -161,11 +161,18 @@ export function StatsDashboard({
               <CardTitle className="text-lg flex items-center space-x-2">
                 <Badge variant="default">Performance Tier</Badge>
                 <span className="text-sm text-gray-500">
-                  ({stats.byTier.performance.agentCount} agents)
+                  {stats.byTier.performance.totalAgentCount !== undefined &&
+                  stats.byTier.performance.totalAgentCount !==
+                    stats.byTier.performance.agentCount
+                    ? `(${stats.byTier.performance.agentCount} of ${stats.byTier.performance.totalAgentCount} scheduled)`
+                    : `(${stats.byTier.performance.agentCount} scheduled for training)`}
                 </span>
               </CardTitle>
               <p className="text-xs text-gray-500 mt-1">
-                Averages for Performance queue {weekOf ? `week of ${new Date(weekOf).toLocaleDateString()}` : ""}
+                Averages for Performance agents in training{" "}
+                {weekOf
+                  ? `week of ${new Date(weekOf).toLocaleDateString()}`
+                  : ""}
               </p>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -173,7 +180,11 @@ export function StatsDashboard({
                 <span className="text-sm text-muted-foreground">
                   Avg CAP Score
                 </span>
-                <span className={`font-bold ${getCAPScoreColor(stats.byTier.performance.avgCAPScore)}`}>
+                <span
+                  className={`font-bold ${getCAPScoreColor(
+                    stats.byTier.performance.avgCAPScore
+                  )}`}
+                >
                   {stats.byTier.performance.avgCAPScore}
                 </span>
               </div>
@@ -181,7 +192,11 @@ export function StatsDashboard({
                 <span className="text-sm text-muted-foreground">
                   Avg Adjusted CAP
                 </span>
-                <span className={`font-bold ${getCAPScoreColor(stats.byTier.performance.avgAdjustedCAPScore)}`}>
+                <span
+                  className={`font-bold ${getCAPScoreColor(
+                    stats.byTier.performance.avgAdjustedCAPScore
+                  )}`}
+                >
                   {stats.byTier.performance.avgAdjustedCAPScore}
                 </span>
               </div>
@@ -189,7 +204,11 @@ export function StatsDashboard({
                 <div className="pt-2 border-t">
                   <p className="text-xs text-gray-600">
                     Lead Attainment Impact: -
-                    {(stats.byTier.performance.avgCAPScore - stats.byTier.performance.avgAdjustedCAPScore).toFixed(1)} points
+                    {(
+                      stats.byTier.performance.avgCAPScore -
+                      stats.byTier.performance.avgAdjustedCAPScore
+                    ).toFixed(1)}{" "}
+                    points
                   </p>
                 </div>
               )}
@@ -202,11 +221,18 @@ export function StatsDashboard({
               <CardTitle className="text-lg flex items-center space-x-2">
                 <Badge variant="secondary">Standard Tier</Badge>
                 <span className="text-sm text-gray-500">
-                  ({stats.byTier.standard.agentCount} agents)
+                  {stats.byTier.standard.totalAgentCount !== undefined &&
+                  stats.byTier.standard.totalAgentCount !==
+                    stats.byTier.standard.agentCount
+                    ? `(${stats.byTier.standard.agentCount} of ${stats.byTier.standard.totalAgentCount} scheduled)`
+                    : `(${stats.byTier.standard.agentCount} scheduled for training)`}
                 </span>
               </CardTitle>
               <p className="text-xs text-gray-500 mt-1">
-                Averages for Standard queue {weekOf ? `week of ${new Date(weekOf).toLocaleDateString()}` : ""}
+                Averages for Standard agents in training{" "}
+                {weekOf
+                  ? `week of ${new Date(weekOf).toLocaleDateString()}`
+                  : ""}
               </p>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -214,7 +240,11 @@ export function StatsDashboard({
                 <span className="text-sm text-muted-foreground">
                   Avg CAP Score
                 </span>
-                <span className={`font-bold ${getCAPScoreColor(stats.byTier.standard.avgCAPScore)}`}>
+                <span
+                  className={`font-bold ${getCAPScoreColor(
+                    stats.byTier.standard.avgCAPScore
+                  )}`}
+                >
                   {stats.byTier.standard.avgCAPScore}
                 </span>
               </div>
@@ -222,7 +252,11 @@ export function StatsDashboard({
                 <span className="text-sm text-muted-foreground">
                   Avg Adjusted CAP
                 </span>
-                <span className={`font-bold ${getCAPScoreColor(stats.byTier.standard.avgAdjustedCAPScore)}`}>
+                <span
+                  className={`font-bold ${getCAPScoreColor(
+                    stats.byTier.standard.avgAdjustedCAPScore
+                  )}`}
+                >
                   {stats.byTier.standard.avgAdjustedCAPScore}
                 </span>
               </div>
@@ -230,7 +264,11 @@ export function StatsDashboard({
                 <div className="pt-2 border-t">
                   <p className="text-xs text-gray-600">
                     Lead Attainment Impact: -
-                    {(stats.byTier.standard.avgCAPScore - stats.byTier.standard.avgAdjustedCAPScore).toFixed(1)} points
+                    {(
+                      stats.byTier.standard.avgCAPScore -
+                      stats.byTier.standard.avgAdjustedCAPScore
+                    ).toFixed(1)}{" "}
+                    points
                   </p>
                 </div>
               )}

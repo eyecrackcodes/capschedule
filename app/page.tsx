@@ -70,8 +70,8 @@ export default function HomePage() {
       clt: { performance: 0, standard: 0, total: 0 },
       atx: { performance: 0, standard: 0, total: 0 },
       byTier: {
-        performance: { avgCAPScore: 0, avgAdjustedCAPScore: 0, agentCount: 0 },
-        standard: { avgCAPScore: 0, avgAdjustedCAPScore: 0, agentCount: 0 },
+        performance: { avgCAPScore: 0, avgAdjustedCAPScore: 0, agentCount: 0, totalAgentCount: 0 },
+        standard: { avgCAPScore: 0, avgAdjustedCAPScore: 0, agentCount: 0, totalAgentCount: 0 },
       },
     },
     cohorts: {
@@ -369,11 +369,17 @@ export default function HomePage() {
             avgCAPScore: performanceAvgCAP,
             avgAdjustedCAPScore: performanceAvgAdjustedCAP,
             agentCount: performanceAgents.length,
+            // Note: When loading from DB, we only have agents scheduled for training
+            // not the full company roster, so totalAgentCount equals agentCount
+            totalAgentCount: performanceAgents.length,
           },
           standard: {
             avgCAPScore: standardAvgCAP,
             avgAdjustedCAPScore: standardAvgAdjustedCAP,
             agentCount: standardAgents.length,
+            // Note: When loading from DB, we only have agents scheduled for training
+            // not the full company roster, so totalAgentCount equals agentCount
+            totalAgentCount: standardAgents.length,
           },
         },
       };

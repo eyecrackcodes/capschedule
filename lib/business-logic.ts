@@ -53,7 +53,11 @@ export function calculateStats(agents: AgentRecord[]): Stats {
   const atxPerformance = atxAgents.filter((agent) => agent.tier === "P").length;
   const atxStandard = atxAgents.filter((agent) => agent.tier === "S").length;
 
-  // Calculate tier-specific averages
+  // Calculate tier-specific totals from ALL agents (including zero CAP)
+  const allPerformanceAgents = agents.filter((a) => a.tier === "P");
+  const allStandardAgents = agents.filter((a) => a.tier === "S");
+  
+  // Calculate tier-specific averages from non-zero CAP agents only
   const performanceAgents = nonZeroCAPAgents.filter((a) => a.tier === "P");
   const standardAgents = nonZeroCAPAgents.filter((a) => a.tier === "S");
 
@@ -139,12 +143,14 @@ export function calculateStats(agents: AgentRecord[]): Stats {
       performance: {
         avgCAPScore: performanceAvgCAP,
         avgAdjustedCAPScore: performanceAvgAdjustedCAP,
-        agentCount: performanceAgents.length,
+        agentCount: performanceAgents.length, // Non-zero CAP agents for training
+        totalAgentCount: allPerformanceAgents.length, // All agents in tier
       },
       standard: {
         avgCAPScore: standardAvgCAP,
         avgAdjustedCAPScore: standardAvgAdjustedCAP,
-        agentCount: standardAgents.length,
+        agentCount: standardAgents.length, // Non-zero CAP agents for training
+        totalAgentCount: allStandardAgents.length, // All agents in tier
       },
     },
   };
