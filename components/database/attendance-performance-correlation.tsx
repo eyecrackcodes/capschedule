@@ -83,7 +83,7 @@ export function AttendancePerformanceCorrelation() {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - dateRange * 7);
 
-      // Fetch attendance data
+      // Fetch attendance data - be explicit about the foreign key relationship
       let attendanceQuery = supabase
         .from("agent_assignments")
         .select(
@@ -92,15 +92,21 @@ export function AttendancePerformanceCorrelation() {
           manager,
           site,
           attended,
-          training_sessions!inner (
-            training_schedules!inner (
+          training_sessions!session_id (
+            training_schedules!schedule_id (
               week_of
             )
           )
         `
         )
-        .gte("training_sessions.training_schedules.week_of", startDate.toISOString().split("T")[0])
-        .lte("training_sessions.training_schedules.week_of", endDate.toISOString().split("T")[0]);
+        .gte(
+          "training_sessions.training_schedules.week_of",
+          startDate.toISOString().split("T")[0]
+        )
+        .lte(
+          "training_sessions.training_schedules.week_of",
+          endDate.toISOString().split("T")[0]
+        );
 
       if (locationFilter !== "all") {
         attendanceQuery = attendanceQuery.eq("site", locationFilter);
@@ -110,7 +116,8 @@ export function AttendancePerformanceCorrelation() {
         attendanceQuery = attendanceQuery.eq("manager", managerFilter);
       }
 
-      const { data: attendanceData, error: attendanceError } = await attendanceQuery;
+      const { data: attendanceData, error: attendanceError } =
+        await attendanceQuery;
 
       if (attendanceError) {
         console.error("Error fetching attendance:", attendanceError);
@@ -126,7 +133,10 @@ export function AttendancePerformanceCorrelation() {
         .order("week_of", { ascending: true });
 
       if (locationFilter !== "all") {
-        capScoreQuery = capScoreQuery.eq("site", locationFilter === "CLT" ? "CHA" : "AUS");
+        capScoreQuery = capScoreQuery.eq(
+          "site",
+          locationFilter === "CLT" ? "CHA" : "AUS"
+        );
       }
 
       const { data: capScoreData, error: capScoreError } = await capScoreQuery;
@@ -165,11 +175,17 @@ export function AttendancePerformanceCorrelation() {
       });
 
       // Process CAP score data
-      const agentCapScores = new Map<string, { scores: number[]; weeks: string[] }>();
-      
+      const agentCapScores = new Map<
+        string,
+        { scores: number[]; weeks: string[] }
+      >();
+
       capScoreData?.forEach((record) => {
         const agentName = record.agent_name;
-        const scores = agentCapScores.get(agentName) || { scores: [], weeks: [] };
+        const scores = agentCapScores.get(agentName) || {
+          scores: [],
+          weeks: [],
+        };
         scores.scores.push(record.adjusted_cap_score);
         scores.weeks.push(record.week_of);
         agentCapScores.set(agentName, scores);
@@ -177,23 +193,23 @@ export function AttendancePerformanceCorrelation() {
 
       // Calculate metrics and categorize agents
       const processedAgents: AgentAttendancePerformance[] = [];
-      
+
       agentMap.forEach((agent, agentName) => {
         const capData = agentCapScores.get(agentName);
-        
+
         if (capData && capData.scores.length >= 2) {
           agent.startCapScore = capData.scores[0];
           agent.endCapScore = capData.scores[capData.scores.length - 1];
           agent.capImprovement = agent.endCapScore - agent.startCapScore;
-          agent.improvementRate = 
-            agent.startCapScore !== 0 
-              ? ((agent.capImprovement / agent.startCapScore) * 100)
+          agent.improvementRate =
+            agent.startCapScore !== 0
+              ? (agent.capImprovement / agent.startCapScore) * 100
               : 0;
         }
 
         // Calculate attendance rate
-        agent.attendanceRate = 
-          agent.totalSessions > 0 
+        agent.attendanceRate =
+          agent.totalSessions > 0
             ? (agent.attendedSessions / agent.totalSessions) * 100
             : 0;
 
@@ -215,19 +231,21 @@ export function AttendancePerformanceCorrelation() {
       });
 
       // Filter by manager if needed
-      const filteredAgents = managerFilter === "all" 
-        ? processedAgents 
-        : processedAgents.filter(a => a.manager === managerFilter);
+      const filteredAgents =
+        managerFilter === "all"
+          ? processedAgents
+          : processedAgents.filter((a) => a.manager === managerFilter);
 
       setAgents(filteredAgents);
 
       // Get unique managers for filter
-      const managers = [...new Set(processedAgents.map(a => a.manager))].sort();
+      const managers = [
+        ...new Set(processedAgents.map((a) => a.manager)),
+      ].sort();
       setAvailableManagers(managers);
 
       // Calculate category statistics
       calculateCategoryStats(filteredAgents);
-
     } catch (error) {
       console.error("Error loading data:", error);
     } finally {
@@ -277,14 +295,18 @@ export function AttendancePerformanceCorrelation() {
 
     // Calculate stats for each category
     agents.forEach((agent) => {
-      const categoryIndex = categories.findIndex(c => c.category === agent.category);
+      const categoryIndex = categories.findIndex(
+        (c) => c.category === agent.category
+      );
       if (categoryIndex !== -1) {
         const cat = categories[categoryIndex];
         cat.count += 1;
-        cat.avgAttendance = 
-          (cat.avgAttendance * (cat.count - 1) + agent.attendanceRate) / cat.count;
-        cat.avgImprovement = 
-          (cat.avgImprovement * (cat.count - 1) + agent.improvementRate) / cat.count;
+        cat.avgAttendance =
+          (cat.avgAttendance * (cat.count - 1) + agent.attendanceRate) /
+          cat.count;
+        cat.avgImprovement =
+          (cat.avgImprovement * (cat.count - 1) + agent.improvementRate) /
+          cat.count;
       }
     });
 
@@ -299,8 +321,12 @@ export function AttendancePerformanceCorrelation() {
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
           <p className="font-semibold">{data.agentName}</p>
           <p className="text-sm text-gray-600">Manager: {data.manager}</p>
-          <p className="text-sm">Attendance: {data.attendanceRate.toFixed(1)}%</p>
-          <p className="text-sm">CAP Improvement: {data.improvementRate.toFixed(1)}%</p>
+          <p className="text-sm">
+            Attendance: {data.attendanceRate.toFixed(1)}%
+          </p>
+          <p className="text-sm">
+            CAP Improvement: {data.improvementRate.toFixed(1)}%
+          </p>
           <p className="text-sm">
             Sessions: {data.attendedSessions} / {data.totalSessions}
           </p>
@@ -325,7 +351,9 @@ export function AttendancePerformanceCorrelation() {
       <Card>
         <CardContent className="p-12 text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
-          <p className="text-gray-500">Analyzing attendance and performance data...</p>
+          <p className="text-gray-500">
+            Analyzing attendance and performance data...
+          </p>
         </CardContent>
       </Card>
     );
@@ -341,13 +369,16 @@ export function AttendancePerformanceCorrelation() {
             CAP Training Attendance & Performance Correlation
           </CardTitle>
           <p className="text-sm text-gray-600">
-            Analyzing the relationship between training attendance and agent performance improvement
+            Analyzing the relationship between training attendance and agent
+            performance improvement
           </p>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Time Period</label>
+              <label className="text-sm font-medium mb-2 block">
+                Time Period
+              </label>
               <Select
                 value={dateRange.toString()}
                 onValueChange={(value) => setDateRange(parseInt(value))}
@@ -363,7 +394,7 @@ export function AttendancePerformanceCorrelation() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <label className="text-sm font-medium mb-2 block">Location</label>
               <Select value={locationFilter} onValueChange={setLocationFilter}>
@@ -386,7 +417,7 @@ export function AttendancePerformanceCorrelation() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Managers</SelectItem>
-                  {availableManagers.map(manager => (
+                  {availableManagers.map((manager) => (
                     <SelectItem key={manager} value={manager}>
                       {manager}
                     </SelectItem>
@@ -397,11 +428,15 @@ export function AttendancePerformanceCorrelation() {
 
             <div className="flex items-end">
               <Button
-                onClick={() => setViewMode(viewMode === "scatter" ? "category" : "scatter")}
+                onClick={() =>
+                  setViewMode(viewMode === "scatter" ? "category" : "scatter")
+                }
                 variant="outline"
                 className="w-full"
               >
-                {viewMode === "scatter" ? "Show Categories" : "Show Scatter Plot"}
+                {viewMode === "scatter"
+                  ? "Show Categories"
+                  : "Show Scatter Plot"}
               </Button>
             </div>
           </div>
@@ -415,17 +450,23 @@ export function AttendancePerformanceCorrelation() {
             <CardContent className="p-4">
               <div className="flex items-start justify-between">
                 <div>
-                  <div className="flex items-center gap-2 mb-2" style={{ color: stat.color }}>
+                  <div
+                    className="flex items-center gap-2 mb-2"
+                    style={{ color: stat.color }}
+                  >
                     {stat.icon}
                     <span className="font-medium">{stat.count} agents</span>
                   </div>
-                  <p className="text-sm font-medium text-gray-900">{stat.description}</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {stat.description}
+                  </p>
                   <div className="mt-2 space-y-1">
                     <p className="text-xs text-gray-600">
                       Avg Attendance: {stat.avgAttendance.toFixed(1)}%
                     </p>
                     <p className="text-xs text-gray-600">
-                      Avg Improvement: {stat.avgImprovement > 0 ? "+" : ""}{stat.avgImprovement.toFixed(1)}%
+                      Avg Improvement: {stat.avgImprovement > 0 ? "+" : ""}
+                      {stat.avgImprovement.toFixed(1)}%
                     </p>
                   </div>
                 </div>
@@ -441,50 +482,66 @@ export function AttendancePerformanceCorrelation() {
           <CardHeader>
             <CardTitle>Attendance Rate vs Performance Improvement</CardTitle>
             <p className="text-sm text-gray-600">
-              Each point represents an agent. Quadrants show different attendance-performance patterns.
+              Each point represents an agent. Quadrants show different
+              attendance-performance patterns.
             </p>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={400}>
               <ScatterChart>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="attendanceRate" 
+                <XAxis
+                  dataKey="attendanceRate"
                   name="Attendance Rate"
                   unit="%"
                   domain={[0, 100]}
-                  label={{ value: "Attendance Rate (%)", position: "insideBottom", offset: -10 }}
+                  label={{
+                    value: "Attendance Rate (%)",
+                    position: "insideBottom",
+                    offset: -10,
+                  }}
                 />
-                <YAxis 
-                  dataKey="improvementRate" 
+                <YAxis
+                  dataKey="improvementRate"
                   name="CAP Score Improvement"
                   unit="%"
-                  label={{ value: "CAP Score Improvement (%)", angle: -90, position: "insideLeft" }}
+                  label={{
+                    value: "CAP Score Improvement (%)",
+                    angle: -90,
+                    position: "insideLeft",
+                  }}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <ReferenceLine x={70} stroke="#666" strokeDasharray="5 5" />
                 <ReferenceLine y={5} stroke="#666" strokeDasharray="5 5" />
-                <Scatter 
-                  name="Agents" 
-                  data={agents} 
+                <Scatter
+                  name="Agents"
+                  data={agents}
                   fill="#8884d8"
                   shape={(props: any) => {
                     const { cx, cy, payload } = props;
                     const color = getScatterColor(payload.category);
                     return (
-                      <circle cx={cx} cy={cy} r={6} fill={color} stroke={color} strokeWidth={1} />
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={6}
+                        fill={color}
+                        stroke={color}
+                        strokeWidth={1}
+                      />
                     );
                   }}
                 />
               </ScatterChart>
             </ResponsiveContainer>
-            
+
             {/* Legend */}
             <div className="mt-4 flex flex-wrap gap-4 justify-center">
               {categoryStats.map((cat) => (
                 <div key={cat.category} className="flex items-center gap-2">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
+                  <div
+                    className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: cat.color }}
                   />
                   <span className="text-sm">{cat.description}</span>
@@ -505,7 +562,12 @@ export function AttendancePerformanceCorrelation() {
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={categoryStats}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="description" angle={-15} textAnchor="end" height={80} />
+                <XAxis
+                  dataKey="description"
+                  angle={-15}
+                  textAnchor="end"
+                  height={80}
+                />
                 <YAxis />
                 <Tooltip />
                 <Bar dataKey="count" name="Number of Agents">
@@ -547,11 +609,18 @@ export function AttendancePerformanceCorrelation() {
                   .sort((a, b) => b.improvementRate - a.improvementRate)
                   .slice(0, 20)
                   .map((agent) => (
-                    <tr key={agent.agentName} className="border-b hover:bg-gray-50">
+                    <tr
+                      key={agent.agentName}
+                      className="border-b hover:bg-gray-50"
+                    >
                       <td className="p-2 font-medium">{agent.agentName}</td>
                       <td className="p-2">{agent.manager}</td>
                       <td className="p-2 text-center">
-                        <Badge variant={agent.attendanceRate >= 70 ? "default" : "outline"}>
+                        <Badge
+                          variant={
+                            agent.attendanceRate >= 70 ? "default" : "outline"
+                          }
+                        >
                           {agent.attendanceRate.toFixed(0)}%
                         </Badge>
                       </td>
@@ -561,22 +630,34 @@ export function AttendancePerformanceCorrelation() {
                       <td className="p-2 text-center">{agent.startCapScore}</td>
                       <td className="p-2 text-center">{agent.endCapScore}</td>
                       <td className="p-2 text-center">
-                        <span className={agent.improvementRate > 0 ? "text-green-600" : "text-red-600"}>
-                          {agent.improvementRate > 0 ? "+" : ""}{agent.improvementRate.toFixed(1)}%
+                        <span
+                          className={
+                            agent.improvementRate > 0
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }
+                        >
+                          {agent.improvementRate > 0 ? "+" : ""}
+                          {agent.improvementRate.toFixed(1)}%
                         </span>
                       </td>
                       <td className="p-2 text-center">
-                        <Badge 
+                        <Badge
                           variant="outline"
-                          style={{ 
-                            backgroundColor: getScatterColor(agent.category) + "20",
-                            borderColor: getScatterColor(agent.category)
+                          style={{
+                            backgroundColor:
+                              getScatterColor(agent.category) + "20",
+                            borderColor: getScatterColor(agent.category),
                           }}
                         >
-                          {agent.category === "high-improve" && "High + Improving"}
-                          {agent.category === "high-stagnant" && "High + Stagnant"}
-                          {agent.category === "low-improve" && "Low + Improving"}
-                          {agent.category === "low-stagnant" && "Low + Not Improving"}
+                          {agent.category === "high-improve" &&
+                            "High + Improving"}
+                          {agent.category === "high-stagnant" &&
+                            "High + Stagnant"}
+                          {agent.category === "low-improve" &&
+                            "Low + Improving"}
+                          {agent.category === "low-stagnant" &&
+                            "Low + Not Improving"}
                         </Badge>
                       </td>
                     </tr>
@@ -605,32 +686,46 @@ export function AttendancePerformanceCorrelation() {
             <div className="flex items-start gap-3">
               <div className="w-2 h-2 rounded-full bg-green-500 mt-2" />
               <div>
-                <p className="font-medium">High Attendance Correlates with Improvement</p>
+                <p className="font-medium">
+                  High Attendance Correlates with Improvement
+                </p>
                 <p className="text-sm text-gray-600">
-                  {categoryStats.find(c => c.category === "high-improve")?.count || 0} agents with 70%+ attendance 
-                  show positive CAP score improvement, averaging {categoryStats.find(c => c.category === "high-improve")?.avgImprovement.toFixed(1)}% gains.
+                  {categoryStats.find((c) => c.category === "high-improve")
+                    ?.count || 0}{" "}
+                  agents with 70%+ attendance show positive CAP score
+                  improvement, averaging{" "}
+                  {categoryStats
+                    .find((c) => c.category === "high-improve")
+                    ?.avgImprovement.toFixed(1)}
+                  % gains.
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-start gap-3">
               <div className="w-2 h-2 rounded-full bg-amber-500 mt-2" />
               <div>
-                <p className="font-medium">Some High Attenders Need Different Support</p>
+                <p className="font-medium">
+                  Some High Attenders Need Different Support
+                </p>
                 <p className="text-sm text-gray-600">
-                  {categoryStats.find(c => c.category === "high-stagnant")?.count || 0} agents attend regularly but 
-                  aren't improving. They may need personalized coaching or different training approaches.
+                  {categoryStats.find((c) => c.category === "high-stagnant")
+                    ?.count || 0}{" "}
+                  agents attend regularly but aren't improving. They may need
+                  personalized coaching or different training approaches.
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-start gap-3">
               <div className="w-2 h-2 rounded-full bg-red-500 mt-2" />
               <div>
                 <p className="font-medium">Low Attendance Limits Progress</p>
                 <p className="text-sm text-gray-600">
-                  {categoryStats.find(c => c.category === "low-stagnant")?.count || 0} agents with low attendance 
-                  show minimal improvement. Focus on increasing their training participation.
+                  {categoryStats.find((c) => c.category === "low-stagnant")
+                    ?.count || 0}{" "}
+                  agents with low attendance show minimal improvement. Focus on
+                  increasing their training participation.
                 </p>
               </div>
             </div>

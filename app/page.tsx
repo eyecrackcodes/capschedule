@@ -54,7 +54,13 @@ export default function HomePage() {
     "calendar" | "location" | "manager" | "database"
   >("calendar");
   const [databaseView, setDatabaseView] = useState<
-    "upload" | "save" | "history" | "attendance" | "analytics" | "trends" | "correlation"
+    | "upload"
+    | "save"
+    | "history"
+    | "attendance"
+    | "analytics"
+    | "trends"
+    | "correlation"
   >("upload");
   const [isLoadingFromDB, setIsLoadingFromDB] = useState(true);
   const [appState, setAppState] = useState<AppState>({
@@ -71,8 +77,18 @@ export default function HomePage() {
       clt: { performance: 0, standard: 0, total: 0 },
       atx: { performance: 0, standard: 0, total: 0 },
       byTier: {
-        performance: { avgCAPScore: 0, avgAdjustedCAPScore: 0, agentCount: 0, totalAgentCount: 0 },
-        standard: { avgCAPScore: 0, avgAdjustedCAPScore: 0, agentCount: 0, totalAgentCount: 0 },
+        performance: {
+          avgCAPScore: 0,
+          avgAdjustedCAPScore: 0,
+          agentCount: 0,
+          totalAgentCount: 0,
+        },
+        standard: {
+          avgCAPScore: 0,
+          avgAdjustedCAPScore: 0,
+          agentCount: 0,
+          totalAgentCount: 0,
+        },
       },
     },
     cohorts: {
@@ -163,9 +179,7 @@ export default function HomePage() {
     }
   }
 
-  function convertDatabaseScheduleToAppFormat(
-    data: any
-  ): {
+  function convertDatabaseScheduleToAppFormat(data: any): {
     schedule: DaySchedule[];
     stats: any;
     weekOf?: string;
@@ -825,7 +839,9 @@ export default function HomePage() {
                   {databaseView === "trends" && <AgentPerformanceTrendsV2 />}
 
                   {/* Attendance Performance Correlation View */}
-                  {databaseView === "correlation" && <AttendancePerformanceCorrelation />}
+                  {databaseView === "correlation" && (
+                    <AttendancePerformanceCorrelation />
+                  )}
                 </div>
               )}
             </div>
