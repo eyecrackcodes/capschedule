@@ -259,11 +259,20 @@ export default function HomePage() {
       const excludedCount = metadata.excluded_by_tenure || 0;
       const eligibleCount = metadata.eligible_agents || allAgents.length;
 
+      // Calculate average raw CAP score from agents (excluding zero scores)
+      const agentsWithNonZeroCAP = allAgents.filter((a) => a.capScore > 0);
+      const avgCAPScore = agentsWithNonZeroCAP.length > 0
+        ? Math.round(
+            (agentsWithNonZeroCAP.reduce((sum, agent) => sum + agent.capScore, 0) /
+              agentsWithNonZeroCAP.length) * 10
+          ) / 10
+        : 0;
+
       const stats = {
         totalAgents: totalCompanyAgents, // Full company count from metadata
         eligibleCount: eligibleCount, // Eligible after tenure filter
         excludedCount: excludedCount, // Excluded by tenure
-        avgCAPScore: 0, // Will be calculated from raw data
+        avgCAPScore: avgCAPScore, // Calculated from raw agent data
         avgAdjustedCAPScore: scheduleData.avg_adjusted_cap_score,
         needsTraining: allAgents.length, // Agents scheduled for training
         clt: {
@@ -278,6 +287,7 @@ export default function HomePage() {
         },
       };
 
+      console.log("Calculated avgCAPScore:", avgCAPScore, "from", agentsWithNonZeroCAP.length, "agents");
       console.log("Final stats:", stats);
 
       return { schedule, stats, weekOf: scheduleData.week_of };

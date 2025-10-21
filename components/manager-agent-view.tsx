@@ -114,7 +114,8 @@ export function ManagerAgentView({
             (a) => a.adjustedCAPScore === 0
           ).length;
           const belowAvgCount = data.agents.filter(
-            (a) => a.adjustedCAPScore > 0 && a.adjustedCAPScore < avgAdjustedCAPScore
+            (a) =>
+              a.adjustedCAPScore > 0 && a.adjustedCAPScore < avgAdjustedCAPScore
           ).length;
 
           return (
@@ -161,14 +162,17 @@ export function ManagerAgentView({
                           <div className="flex items-center gap-2 mt-1">
                             <Badge
                               variant={
-                                agent.adjustedCAPScore === 0 ? "destructive" : "outline"
+                                agent.adjustedCAPScore === 0
+                                  ? "destructive"
+                                  : "outline"
                               }
                               className="text-xs"
                             >
                               Adj CAP: {agent.adjustedCAPScore}
                             </Badge>
                             <span className="text-xs text-gray-500">
-                              (Orig: {agent.originalCAPScore} | {agent.leadAttainment.toFixed(0)}%)
+                              (Orig: {agent.originalCAPScore} |{" "}
+                              {agent.leadAttainment.toFixed(0)}%)
                             </span>
                             <Badge
                               className={`text-xs ${
@@ -207,11 +211,12 @@ export function ManagerAgentView({
                           ⚠️ Critical - Immediate intervention required
                         </p>
                       )}
-                      {agent.adjustedCAPScore > 0 && agent.adjustedCAPScore < avgAdjustedCAPScore && (
-                        <p className="text-xs text-orange-600 mt-2">
-                          Below company average ({avgAdjustedCAPScore})
-                        </p>
-                      )}
+                      {agent.adjustedCAPScore > 0 &&
+                        agent.adjustedCAPScore < avgAdjustedCAPScore && (
+                          <p className="text-xs text-orange-600 mt-2">
+                            Below company average ({avgAdjustedCAPScore})
+                          </p>
+                        )}
                     </div>
                   ))}
                 </div>

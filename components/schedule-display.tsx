@@ -194,8 +194,8 @@ export function ScheduleDisplay({
             </p>
             <div className="text-sm text-yellow-700 mt-1">
               <p>
-                • <strong>Company Average Adjusted CAP:</strong> {avgAdjustedCAPScore}{" "}
-                (with Lead Attainment)
+                • <strong>Company Average Adjusted CAP:</strong>{" "}
+                {avgAdjustedCAPScore} (with Lead Attainment)
               </p>
               <p>
                 • <strong>Zero CAP Agents:</strong> Immediate remediation on
