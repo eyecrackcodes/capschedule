@@ -525,8 +525,7 @@ export function AttendancePerformanceCorrelation() {
                   strokeWidth={1.5}
                   label={{ 
                     value: "70%", 
-                    position: "topLeft",
-                    offset: 10,
+                    position: "top",
                     style: { fontSize: 12, fill: "#666" }
                   }}
                 />
@@ -537,8 +536,7 @@ export function AttendancePerformanceCorrelation() {
                   strokeWidth={1.5}
                   label={{ 
                     value: "5%", 
-                    position: "insideTopRight",
-                    offset: -10,
+                    position: "right",
                     style: { fontSize: 12, fill: "#666" }
                   }}
                 />
