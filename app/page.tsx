@@ -46,7 +46,7 @@ export default function HomePage() {
     "calendar" | "location" | "manager" | "database"
   >("calendar");
   const [databaseView, setDatabaseView] = useState<
-    "upload" | "save" | "history" | "attendance" | "analytics"
+    "upload" | "save" | "history" | "attendance" | "analytics" | "trends"
   >("upload");
   const [isLoadingFromDB, setIsLoadingFromDB] = useState(true);
   const [appState, setAppState] = useState<AppState>({
