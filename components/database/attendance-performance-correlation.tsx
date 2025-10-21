@@ -487,9 +487,9 @@ export function AttendancePerformanceCorrelation() {
             </p>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={400}>
+            <ResponsiveContainer width="100%" height={350}>
               <ScatterChart
-                margin={{ top: 20, right: 20, bottom: 60, left: 60 }}
+                margin={{ top: 10, right: 80, bottom: 50, left: 80 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
@@ -502,6 +502,7 @@ export function AttendancePerformanceCorrelation() {
                     value: "Attendance Rate (%)",
                     position: "insideBottom",
                     offset: -5,
+                    style: { fontSize: 14 }
                   }}
                 />
                 <YAxis
@@ -513,6 +514,7 @@ export function AttendancePerformanceCorrelation() {
                     value: "CAP Score Improvement (%)",
                     angle: -90,
                     position: "insideLeft",
+                    style: { fontSize: 14 }
                   }}
                 />
                 <Tooltip content={<CustomTooltip />} />
@@ -520,15 +522,25 @@ export function AttendancePerformanceCorrelation() {
                   x={70} 
                   stroke="#666" 
                   strokeDasharray="5 5" 
-                  strokeWidth={2}
-                  label={{ value: "70% Attendance", position: "top" }}
+                  strokeWidth={1.5}
+                  label={{ 
+                    value: "70%", 
+                    position: "topLeft",
+                    offset: 10,
+                    style: { fontSize: 12, fill: "#666" }
+                  }}
                 />
                 <ReferenceLine 
                   y={5} 
                   stroke="#666" 
                   strokeDasharray="5 5"
-                  strokeWidth={2}
-                  label={{ value: "5% Improvement", position: "right" }}
+                  strokeWidth={1.5}
+                  label={{ 
+                    value: "5%", 
+                    position: "insideTopRight",
+                    offset: -10,
+                    style: { fontSize: 12, fill: "#666" }
+                  }}
                 />
                 <Scatter
                   name="Agents"
