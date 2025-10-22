@@ -19,6 +19,7 @@ import { AttendanceTrackerEnhanced } from "@/components/database/attendance-trac
 import { AnalyticsDashboard } from "@/components/database/analytics-dashboard";
 import { AgentPerformanceTrendsV2 } from "@/components/database/agent-performance-trends-v2";
 import { WeeklyDataUploader } from "@/components/database/weekly-data-uploader";
+import { AttendancePerformanceCorrelation } from "@/components/database/attendance-performance-correlation";
 import {
   calculateStats,
   createCohorts,
@@ -53,7 +54,13 @@ export default function HomePage() {
     "calendar" | "location" | "manager" | "database"
   >("calendar");
   const [databaseView, setDatabaseView] = useState<
-    "upload" | "save" | "history" | "attendance" | "analytics" | "trends"
+    | "upload"
+    | "save"
+    | "history"
+    | "attendance"
+    | "analytics"
+    | "trends"
+    | "correlation"
   >("upload");
   const [isLoadingFromDB, setIsLoadingFromDB] = useState(true);
   const [appState, setAppState] = useState<AppState>({
@@ -70,8 +77,18 @@ export default function HomePage() {
       clt: { performance: 0, standard: 0, total: 0 },
       atx: { performance: 0, standard: 0, total: 0 },
       byTier: {
-        performance: { avgCAPScore: 0, avgAdjustedCAPScore: 0, agentCount: 0, totalAgentCount: 0 },
-        standard: { avgCAPScore: 0, avgAdjustedCAPScore: 0, agentCount: 0, totalAgentCount: 0 },
+        performance: {
+          avgCAPScore: 0,
+          avgAdjustedCAPScore: 0,
+          agentCount: 0,
+          totalAgentCount: 0,
+        },
+        standard: {
+          avgCAPScore: 0,
+          avgAdjustedCAPScore: 0,
+          agentCount: 0,
+          totalAgentCount: 0,
+        },
       },
     },
     cohorts: {
@@ -162,9 +179,7 @@ export default function HomePage() {
     }
   }
 
-  function convertDatabaseScheduleToAppFormat(
-    data: any
-  ): {
+  function convertDatabaseScheduleToAppFormat(data: any): {
     schedule: DaySchedule[];
     stats: any;
     weekOf?: string;
@@ -744,6 +759,16 @@ export default function HomePage() {
                     >
                       Performance Trends
                     </button>
+                    <button
+                      onClick={() => setDatabaseView("correlation")}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        databaseView === "correlation"
+                          ? "bg-white text-blue-600 shadow-sm"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      Attendance Impact
+                    </button>
                   </div>
 
                   {/* Upload New Week View */}
@@ -812,6 +837,11 @@ export default function HomePage() {
 
                   {/* Performance Trends View */}
                   {databaseView === "trends" && <AgentPerformanceTrendsV2 />}
+
+                  {/* Attendance Performance Correlation View */}
+                  {databaseView === "correlation" && (
+                    <AttendancePerformanceCorrelation />
+                  )}
                 </div>
               )}
             </div>
