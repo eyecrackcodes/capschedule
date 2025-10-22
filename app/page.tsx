@@ -161,7 +161,7 @@ export default function HomePage() {
               ...prev,
               schedule: dbSchedule.schedule,
               stats: dbSchedule.stats,
-              percentiles: dbSchedule.percentiles,
+              percentiles: undefined, // Don't load percentiles from DB - they should only come from file uploads
             }));
             setLoadedWeekOf(dbSchedule.weekOf);
           } else {
@@ -189,7 +189,6 @@ export default function HomePage() {
     schedule: DaySchedule[];
     stats: any;
     weekOf?: string;
-    percentiles?: any;
   } | null {
     try {
       const { schedule: scheduleData, sessions } = data;
@@ -431,13 +430,10 @@ export default function HomePage() {
         `  Standard - Raw: ${standardAvgCAP}, Adjusted: ${standardAvgAdjustedCAP} (${standardAgents.length} agents)`
       );
 
-      // Calculate percentiles for the loaded agents
-      const percentiles = calculateMetricPercentiles(allAgents);
-      console.log("Percentiles calculated:", percentiles);
-
       console.log("Final stats:", stats);
 
-      return { schedule, stats, weekOf: scheduleData.week_of, percentiles };
+      // Don't calculate percentiles from DB data - only from fresh file uploads
+      return { schedule, stats, weekOf: scheduleData.week_of };
     } catch (error) {
       console.error("Error converting database schedule:", error);
       return null;
