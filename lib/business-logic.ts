@@ -386,37 +386,45 @@ export function calculateMetricPercentiles(agents: AgentRecord[]) {
 
   // Calculate percentiles for Performance tier
   const perfCloseRates = performanceAgents
-    .filter((a) => a.closeRate && a.closeRate > 0)
+    .filter((a) => a.closeRate !== undefined && a.closeRate !== null && a.closeRate > 0)
     .map((a) => a.closeRate!)
     .sort((a, b) => a - b);
 
   const perfAnnualPremiums = performanceAgents
-    .filter((a) => a.annualPremium && a.annualPremium > 0)
+    .filter((a) => a.annualPremium !== undefined && a.annualPremium !== null && a.annualPremium > 0)
     .map((a) => a.annualPremium!)
     .sort((a, b) => a - b);
 
   // Include 0 values for place rate but don't penalize agents
   const perfPlaceRates = performanceAgents
-    .filter((a) => a.placeRate !== undefined && a.placeRate !== null)
+    .filter((a) => a.placeRate !== undefined && a.placeRate !== null && a.placeRate > 0)
     .map((a) => a.placeRate!)
     .sort((a, b) => a - b);
 
   // Calculate percentiles for Standard tier
   const stdCloseRates = standardAgents
-    .filter((a) => a.closeRate && a.closeRate > 0)
+    .filter((a) => a.closeRate !== undefined && a.closeRate !== null && a.closeRate > 0)
     .map((a) => a.closeRate!)
     .sort((a, b) => a - b);
 
   const stdAnnualPremiums = standardAgents
-    .filter((a) => a.annualPremium && a.annualPremium > 0)
+    .filter((a) => a.annualPremium !== undefined && a.annualPremium !== null && a.annualPremium > 0)
     .map((a) => a.annualPremium!)
     .sort((a, b) => a - b);
 
   // Include 0 values for place rate but don't penalize agents
   const stdPlaceRates = standardAgents
-    .filter((a) => a.placeRate !== undefined && a.placeRate !== null)
+    .filter((a) => a.placeRate !== undefined && a.placeRate !== null && a.placeRate > 0)
     .map((a) => a.placeRate!)
     .sort((a, b) => a - b);
+  
+  // Debug: Log place rate data for Standard tier
+  console.log("🔍 Standard Tier Place Rates:");
+  console.log("  Total Standard agents:", standardAgents.length);
+  console.log("  With valid place rates (> 0):", stdPlaceRates.length);
+  console.log("  First 10 values:", stdPlaceRates.slice(0, 10));
+  console.log("  25th percentile index:", Math.floor(stdPlaceRates.length * 0.25));
+  console.log("  Value at 25th percentile:", stdPlaceRates[Math.floor(stdPlaceRates.length * 0.25)]);
 
   const result = {
     performance: {
