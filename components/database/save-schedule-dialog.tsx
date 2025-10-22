@@ -14,6 +14,7 @@ interface SaveScheduleDialogProps {
   avgAdjustedCAPScore: number;
   eligibleAgents: any[];
   fullStats?: any;
+  percentiles?: any;
   onSaveComplete?: () => void;
 }
 
@@ -23,6 +24,7 @@ export function SaveScheduleDialog({
   avgAdjustedCAPScore,
   eligibleAgents,
   fullStats,
+  percentiles,
   onSaveComplete,
 }: SaveScheduleDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -46,13 +48,14 @@ export function SaveScheduleDialog({
     setSaveStatus(null);
 
     try {
-      // Save the schedule with full stats
+      // Save the schedule with full stats and percentiles
       const scheduleResult = await saveTrainingSchedule(
         schedule,
         new Date(weekOf),
         avgCAPScore,
         avgAdjustedCAPScore,
-        fullStats
+        fullStats,
+        percentiles
       );
 
       if (!scheduleResult.success) {

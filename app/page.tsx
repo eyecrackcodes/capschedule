@@ -161,7 +161,7 @@ export default function HomePage() {
               ...prev,
               schedule: dbSchedule.schedule,
               stats: dbSchedule.stats,
-              percentiles: undefined, // Don't load percentiles from DB - they should only come from file uploads
+              percentiles: dbSchedule.percentiles, // Load percentiles from DB if available
             }));
             setLoadedWeekOf(dbSchedule.weekOf);
           } else {
@@ -189,6 +189,7 @@ export default function HomePage() {
     schedule: DaySchedule[];
     stats: any;
     weekOf?: string;
+    percentiles?: any;
   } | null {
     try {
       const { schedule: scheduleData, sessions } = data;
@@ -432,8 +433,10 @@ export default function HomePage() {
 
       console.log("Final stats:", stats);
 
-      // Don't calculate percentiles from DB data - only from fresh file uploads
-      return { schedule, stats, weekOf: scheduleData.week_of };
+      // Extract percentiles from metadata if available
+      const percentiles = scheduleData.metadata?.percentiles || undefined;
+
+      return { schedule, stats, weekOf: scheduleData.week_of, percentiles };
     } catch (error) {
       console.error("Error converting database schedule:", error);
       return null;
@@ -804,6 +807,7 @@ export default function HomePage() {
                         avgAdjustedCAPScore={appState.stats.avgAdjustedCAPScore}
                         eligibleAgents={appState.eligibleAgents}
                         fullStats={appState.stats}
+                        percentiles={appState.percentiles}
                         onSaveComplete={() => {
                           alert("Schedule saved successfully!");
                           setDatabaseView("history");
