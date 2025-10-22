@@ -386,39 +386,47 @@ export function calculateMetricPercentiles(agents: AgentRecord[]) {
 
   // Calculate percentiles for Performance tier
   const perfCloseRates = performanceAgents
-    .filter((a) => a.closeRate && a.closeRate > 0)
+    .filter((a) => a.closeRate !== undefined && a.closeRate !== null && a.closeRate > 0)
     .map((a) => a.closeRate!)
     .sort((a, b) => a - b);
 
   const perfAnnualPremiums = performanceAgents
-    .filter((a) => a.annualPremium && a.annualPremium > 0)
+    .filter((a) => a.annualPremium !== undefined && a.annualPremium !== null && a.annualPremium > 0)
     .map((a) => a.annualPremium!)
     .sort((a, b) => a - b);
 
   // Include 0 values for place rate but don't penalize agents
   const perfPlaceRates = performanceAgents
-    .filter((a) => a.placeRate !== undefined && a.placeRate !== null)
+    .filter((a) => a.placeRate !== undefined && a.placeRate !== null && a.placeRate > 0)
     .map((a) => a.placeRate!)
     .sort((a, b) => a - b);
 
   // Calculate percentiles for Standard tier
   const stdCloseRates = standardAgents
-    .filter((a) => a.closeRate && a.closeRate > 0)
+    .filter((a) => a.closeRate !== undefined && a.closeRate !== null && a.closeRate > 0)
     .map((a) => a.closeRate!)
     .sort((a, b) => a - b);
 
   const stdAnnualPremiums = standardAgents
-    .filter((a) => a.annualPremium && a.annualPremium > 0)
+    .filter((a) => a.annualPremium !== undefined && a.annualPremium !== null && a.annualPremium > 0)
     .map((a) => a.annualPremium!)
     .sort((a, b) => a - b);
 
   // Include 0 values for place rate but don't penalize agents
   const stdPlaceRates = standardAgents
-    .filter((a) => a.placeRate !== undefined && a.placeRate !== null)
+    .filter((a) => a.placeRate !== undefined && a.placeRate !== null && a.placeRate > 0)
     .map((a) => a.placeRate!)
     .sort((a, b) => a - b);
+  
+  // Debug: Log place rate data for Standard tier
+  console.log("🔍 Standard Tier Place Rates:");
+  console.log("  Total Standard agents:", standardAgents.length);
+  console.log("  With valid place rates (> 0):", stdPlaceRates.length);
+  console.log("  First 10 values:", stdPlaceRates.slice(0, 10));
+  console.log("  25th percentile index:", Math.floor(stdPlaceRates.length * 0.25));
+  console.log("  Value at 25th percentile:", stdPlaceRates[Math.floor(stdPlaceRates.length * 0.25)]);
 
-  return {
+  const result = {
     performance: {
       closeRate50th: get25thPercentile(perfCloseRates),
       annualPremium50th: get25thPercentile(perfAnnualPremiums),
@@ -430,6 +438,22 @@ export function calculateMetricPercentiles(agents: AgentRecord[]) {
       placeRate50th: get25thPercentile(stdPlaceRates),
     },
   };
+  
+  console.log("📊 25th Percentile Thresholds Calculated:");
+  console.log("Performance Tier:", {
+    closeRate: result.performance.closeRate50th,
+    annualPremium: result.performance.annualPremium50th,
+    placeRate: result.performance.placeRate50th,
+    sampleSize: performanceAgents.length
+  });
+  console.log("Standard Tier:", {
+    closeRate: result.standard.closeRate50th,
+    annualPremium: result.standard.annualPremium50th,
+    placeRate: result.standard.placeRate50th,
+    sampleSize: standardAgents.length
+  });
+  
+  return result;
 }
 
 // Determine which training each agent needs based on their weakest metric
@@ -464,6 +488,23 @@ export function assignTrainingRecommendations(
     const belowPlaceRate =
       agent.placeRate !== undefined &&
       agent.placeRate < tierPercentiles.placeRate50th;
+
+    // Debug specific agents
+    if (agent.name === "Patrick Mcmurrey") {
+      console.log("🔍 Checking Patrick Mcmurrey:");
+      console.log("  Tier:", agent.tier);
+      console.log("  Annual Premium:", agent.annualPremium);
+      console.log("  Threshold (25th %ile):", tierPercentiles.annualPremium50th);
+      console.log("  Below threshold?", belowAP);
+      console.log("  All metrics:", {
+        closeRate: agent.closeRate,
+        closeThreshold: tierPercentiles.closeRate50th,
+        belowClose: belowCloseRate,
+        placeRate: agent.placeRate,
+        placeThreshold: tierPercentiles.placeRate50th,
+        belowPlace: belowPlaceRate
+      });
+    }
 
     if (belowCloseRate) recommendations.push("Close Rate Training");
     if (belowAP) recommendations.push("Annual Premium Training");

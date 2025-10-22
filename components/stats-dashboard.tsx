@@ -27,6 +27,7 @@ export function StatsDashboard({
   weekOf,
   percentiles,
 }: StatsDashboardProps) {
+  console.log("📊 StatsDashboard received percentiles:", percentiles);
   const getCAPScoreColor = (score: number) => {
     if (score >= 80) return "text-green-600";
     if (score >= 60) return "text-yellow-600";

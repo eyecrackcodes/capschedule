@@ -23,6 +23,18 @@ export async function saveTrainingSchedule(
     totalAgents: number;
     excludedCount: number;
     eligibleCount: number;
+  },
+  percentiles?: {
+    performance: {
+      closeRate50th: number;
+      annualPremium50th: number;
+      placeRate50th: number;
+    };
+    standard: {
+      closeRate50th: number;
+      annualPremium50th: number;
+      placeRate50th: number;
+    };
   }
 ) {
   try {
@@ -65,6 +77,8 @@ export async function saveTrainingSchedule(
           total_company_agents: fullStats?.totalAgents || totalScheduledAgents,
           excluded_by_tenure: fullStats?.excludedCount || 0,
           eligible_agents: fullStats?.eligibleCount || totalScheduledAgents,
+          // Save percentile thresholds
+          percentiles: percentiles || null,
         },
       })
       .select()

@@ -64,7 +64,13 @@ export function WeeklyDataUploader({ onUploadComplete }: WeeklyDataUploaderProps
         schedule,
         weekDate,
         stats.avgCAPScore,
-        stats.avgCAPScore // Using same for both since we're using adjusted
+        stats.avgAdjustedCAPScore,
+        {
+          totalAgents: stats.totalAgents,
+          excludedCount: stats.excludedCount,
+          eligibleCount: stats.eligibleCount,
+        },
+        percentiles // Pass percentiles to be saved
       );
 
       if (!saveResult.success) {
