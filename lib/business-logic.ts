@@ -481,6 +481,23 @@ export function assignTrainingRecommendations(
       agent.placeRate !== undefined &&
       agent.placeRate < tierPercentiles.placeRate50th;
 
+    // Debug specific agents
+    if (agent.name === "Patrick Mcmurrey") {
+      console.log("🔍 Checking Patrick Mcmurrey:");
+      console.log("  Tier:", agent.tier);
+      console.log("  Annual Premium:", agent.annualPremium);
+      console.log("  Threshold (25th %ile):", tierPercentiles.annualPremium50th);
+      console.log("  Below threshold?", belowAP);
+      console.log("  All metrics:", {
+        closeRate: agent.closeRate,
+        closeThreshold: tierPercentiles.closeRate50th,
+        belowClose: belowCloseRate,
+        placeRate: agent.placeRate,
+        placeThreshold: tierPercentiles.placeRate50th,
+        belowPlace: belowPlaceRate
+      });
+    }
+
     if (belowCloseRate) recommendations.push("Close Rate Training");
     if (belowAP) recommendations.push("Annual Premium Training");
     if (belowPlaceRate) recommendations.push("Place Rate Training");
