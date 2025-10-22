@@ -130,8 +130,14 @@ export default function HomePage() {
           `✅ Found ${schedulesResult.data.length} schedules in database`
         );
 
+        // Sort by week_of descending to get the most recent (highest date)
+        const sortedSchedules = schedulesResult.data.sort((a, b) =>
+          b.week_of.localeCompare(a.week_of)
+        );
+
         // Get the most recent schedule
-        const latestSchedule = schedulesResult.data[0];
+        const latestSchedule = sortedSchedules[0];
+        console.log("📅 All weeks:", sortedSchedules.map((s) => s.week_of));
         console.log("📅 Loading latest schedule:", latestSchedule.week_of);
 
         // Load full schedule details
