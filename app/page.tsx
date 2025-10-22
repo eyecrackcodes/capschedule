@@ -157,6 +157,7 @@ export default function HomePage() {
               dbSchedule.schedule.length,
               "days"
             );
+            console.log("📊 Setting percentiles in state:", dbSchedule.percentiles);
             setAppState((prev) => ({
               ...prev,
               schedule: dbSchedule.schedule,
@@ -435,6 +436,7 @@ export default function HomePage() {
 
       // Extract percentiles from metadata if available
       const percentiles = scheduleData.metadata?.percentiles || undefined;
+      console.log("📊 Loaded percentiles from DB:", percentiles);
 
       return { schedule, stats, weekOf: scheduleData.week_of, percentiles };
     } catch (error) {
