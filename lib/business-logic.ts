@@ -418,7 +418,7 @@ export function calculateMetricPercentiles(agents: AgentRecord[]) {
     .map((a) => a.placeRate!)
     .sort((a, b) => a - b);
 
-  return {
+  const result = {
     performance: {
       closeRate50th: get25thPercentile(perfCloseRates),
       annualPremium50th: get25thPercentile(perfAnnualPremiums),
@@ -430,6 +430,22 @@ export function calculateMetricPercentiles(agents: AgentRecord[]) {
       placeRate50th: get25thPercentile(stdPlaceRates),
     },
   };
+  
+  console.log("📊 25th Percentile Thresholds Calculated:");
+  console.log("Performance Tier:", {
+    closeRate: result.performance.closeRate50th,
+    annualPremium: result.performance.annualPremium50th,
+    placeRate: result.performance.placeRate50th,
+    sampleSize: performanceAgents.length
+  });
+  console.log("Standard Tier:", {
+    closeRate: result.standard.closeRate50th,
+    annualPremium: result.standard.annualPremium50th,
+    placeRate: result.standard.placeRate50th,
+    sampleSize: standardAgents.length
+  });
+  
+  return result;
 }
 
 // Determine which training each agent needs based on their weakest metric
