@@ -488,24 +488,23 @@ export function AttendancePerformanceCorrelation() {
           </CardHeader>
           <CardContent>
             {/* Chart explanation box */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-3">
               <div className="flex items-start gap-2">
-                <Info className="h-4 w-4 text-blue-600 mt-0.5" />
-                <div className="text-sm text-blue-900">
-                  <p className="font-medium mb-1">How to read this chart:</p>
-                  <ul className="space-y-1 text-xs">
-                    <li>• <strong>Y-axis:</strong> Percentage change in CAP score from start to end of period</li>
-                    <li className="ml-3">→ Above 0%: CAP score improved | Below 0%: CAP score declined</li>
-                    <li>• <strong>X-axis:</strong> Percentage of scheduled training sessions attended</li>
-                    <li>• <strong>Horizontal line (5%):</strong> Threshold for meaningful improvement</li>
-                    <li>• <strong>Vertical line (70%):</strong> Threshold for high attendance rate</li>
-                  </ul>
+                <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div className="text-xs text-blue-900">
+                  <p className="font-medium">How to read this chart:</p>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 mt-1">
+                    <div>• <strong>Y-axis:</strong> CAP score change (% from baseline)</div>
+                    <div>• <strong>X-axis:</strong> Training attendance rate (%)</div>
+                    <div>• <strong>Above 0%:</strong> Improvement | <strong>Below 0%:</strong> Decline</div>
+                    <div>• <strong>Lines:</strong> 70% attendance, 5% improvement thresholds</div>
+                  </div>
                 </div>
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={350}>
+            <ResponsiveContainer width="100%" height={450}>
               <ScatterChart
-                margin={{ top: 10, right: 80, bottom: 50, left: 80 }}
+                margin={{ top: 20, right: 90, bottom: 60, left: 90 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
@@ -525,6 +524,7 @@ export function AttendancePerformanceCorrelation() {
                   dataKey="improvementRate"
                   name="CAP Score Improvement"
                   unit="%"
+                  domain={[-25, 35]}
                   ticks={[-20, -10, 0, 10, 20, 30]}
                   label={{
                     value: "CAP Score Change (% from baseline)",
@@ -577,10 +577,11 @@ export function AttendancePerformanceCorrelation() {
                       <circle
                         cx={cx}
                         cy={cy}
-                        r={6}
+                        r={8}
                         fill={color}
                         stroke={color}
                         strokeWidth={1}
+                        opacity={0.8}
                       />
                     );
                   }}
