@@ -5,8 +5,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DaySchedule } from "@/types";
-import { saveTrainingSchedule, saveCAPScoreHistory } from "@/lib/database";
-import { Database, Calendar, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import {
+  saveTrainingSchedule,
+  saveCAPScoreHistory,
+  getScheduledWeeks,
+} from "@/lib/database";
+import {
+  Database,
+  Calendar,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  Info,
+} from "lucide-react";
 
 interface SaveScheduleDialogProps {
   schedule: DaySchedule[];
@@ -30,22 +41,49 @@ export function SaveScheduleDialog({
   const [isOpen, setIsOpen] = useState(false);
   const [weekOf, setWeekOf] = useState(getNextMonday());
   const [isSaving, setIsSaving] = useState(false);
+  const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
   const [saveStatus, setSaveStatus] = useState<{
     success: boolean;
     message: string;
   } | null>(null);
+  const [scheduledWeeks, setScheduledWeeks] = useState<string[]>([]);
+  const [loadingWeeks, setLoadingWeeks] = useState(false);
 
   const totalAgents = schedule.reduce(
     (sum, day) =>
-      sum + day.sessions.reduce((daySum, session) => daySum + session.agents.length, 0),
+      sum +
+      day.sessions.reduce(
+        (daySum, session) => daySum + session.agents.length,
+        0
+      ),
     0
   );
 
-  const totalSessions = schedule.reduce((sum, day) => sum + day.sessions.length, 0);
+  const totalSessions = schedule.reduce(
+    (sum, day) => sum + day.sessions.length,
+    0
+  );
 
-  async function handleSave() {
+  // Load scheduled weeks when dialog opens
+  React.useEffect(() => {
+    if (isOpen) {
+      loadScheduledWeeks();
+    }
+  }, [isOpen]);
+
+  async function loadScheduledWeeks() {
+    setLoadingWeeks(true);
+    const result = await getScheduledWeeks();
+    if (result.success) {
+      setScheduledWeeks(result.weeks);
+    }
+    setLoadingWeeks(false);
+  }
+
+  async function handleSave(forceUpdate: boolean = false) {
     setIsSaving(true);
     setSaveStatus(null);
+    setShowUpdateConfirm(false);
 
     try {
       // Save the schedule with full stats and percentiles
@@ -55,10 +93,17 @@ export function SaveScheduleDialog({
         avgCAPScore,
         avgAdjustedCAPScore,
         fullStats,
+        forceUpdate
         percentiles
       );
 
       if (!scheduleResult.success) {
+        // Check if error is about existing schedule
+        if (scheduleResult.error?.includes("already exists") && !forceUpdate) {
+          setShowUpdateConfirm(true);
+          setIsSaving(false);
+          return;
+        }
         throw new Error(scheduleResult.error);
       }
 
@@ -153,6 +198,43 @@ export function SaveScheduleDialog({
                 <p className="text-xs text-gray-500 mt-1">
                   Schedule will be saved for the week starting on this date
                 </p>
+
+                {/* Existing Schedules Info */}
+                {!loadingWeeks && scheduledWeeks.length > 0 && (
+                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <Info className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-xs">
+                        <p className="font-medium text-blue-900 mb-1">
+                          Existing schedules:
+                        </p>
+                        <div className="text-blue-800 space-y-0.5">
+                          {scheduledWeeks.slice(0, 5).map((week) => (
+                            <div key={week} className="flex items-center gap-1">
+                              <span>•</span>
+                              <span>
+                                Week of {new Date(week).toLocaleDateString()}
+                                {week === weekOf && (
+                                  <Badge
+                                    className="ml-2 text-xs"
+                                    variant="destructive"
+                                  >
+                                    Will be replaced
+                                  </Badge>
+                                )}
+                              </span>
+                            </div>
+                          ))}
+                          {scheduledWeeks.length > 5 && (
+                            <div className="text-blue-600">
+                              ...and {scheduledWeeks.length - 5} more
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Day Breakdown */}
@@ -166,7 +248,7 @@ export function SaveScheduleDialog({
                     >
                       <span className="font-medium">{day.day}</span>
                       <Badge variant="outline">
-                        {day.sessions.length} sessions, {" "}
+                        {day.sessions.length} sessions,{" "}
                         {day.sessions.reduce(
                           (sum, s) => sum + s.agents.length,
                           0
@@ -178,8 +260,43 @@ export function SaveScheduleDialog({
                 </div>
               </div>
 
+              {/* Update Confirmation */}
+              {showUpdateConfirm && (
+                <div className="p-4 rounded-lg bg-amber-50 border border-amber-200">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-amber-800 font-medium">
+                        A schedule already exists for this week
+                      </p>
+                      <p className="text-amber-700 text-sm mt-1">
+                        Would you like to replace the existing schedule? This
+                        will delete the old schedule and its attendance records.
+                      </p>
+                      <div className="flex gap-2 mt-3">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleSave(true)}
+                          className="bg-amber-600 hover:bg-amber-700 text-white border-amber-600"
+                        >
+                          Yes, Update Schedule
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setShowUpdateConfirm(false)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Status Messages */}
-              {saveStatus && (
+              {saveStatus && !showUpdateConfirm && (
                 <div
                   className={`p-4 rounded-lg flex items-start gap-3 ${
                     saveStatus.success
@@ -212,8 +329,8 @@ export function SaveScheduleDialog({
                   Cancel
                 </Button>
                 <Button
-                  onClick={handleSave}
-                  disabled={isSaving || !weekOf}
+                  onClick={() => handleSave()}
+                  disabled={isSaving || !weekOf || showUpdateConfirm}
                   className="bg-green-600 hover:bg-green-700"
                 >
                   {isSaving ? (
@@ -232,7 +349,9 @@ export function SaveScheduleDialog({
 
               {/* Info Box */}
               <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg text-sm">
-                <p className="font-medium text-blue-900 mb-1">What happens when you save?</p>
+                <p className="font-medium text-blue-900 mb-1">
+                  What happens when you save?
+                </p>
                 <ul className="text-blue-800 space-y-1 text-xs">
                   <li>✓ Schedule is stored permanently in the database</li>
                   <li>✓ You can track attendance later</li>
@@ -256,4 +375,3 @@ function getNextMonday(): string {
   nextMonday.setDate(today.getDate() + daysUntilMonday);
   return nextMonday.toISOString().split("T")[0];
 }
-

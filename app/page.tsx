@@ -20,6 +20,7 @@ import { AnalyticsDashboard } from "@/components/database/analytics-dashboard";
 import { AgentPerformanceTrendsV2 } from "@/components/database/agent-performance-trends-v2";
 import { WeeklyDataUploader } from "@/components/database/weekly-data-uploader";
 import { AttendancePerformanceCorrelation } from "@/components/database/attendance-performance-correlation";
+import { DatabaseMaintenance } from "@/components/database/database-maintenance";
 import {
   calculateStats,
   createCohorts,
@@ -61,6 +62,7 @@ export default function HomePage() {
     | "analytics"
     | "trends"
     | "correlation"
+    | "maintenance"
   >("upload");
   const [isLoadingFromDB, setIsLoadingFromDB] = useState(true);
   const [appState, setAppState] = useState<AppState>({
@@ -194,6 +196,11 @@ export default function HomePage() {
   } | null {
     try {
       const { schedule: scheduleData, sessions } = data;
+
+      console.log("=== CONVERT DATABASE SCHEDULE DEBUG ===");
+      console.log("Schedule data:", scheduleData);
+      console.log("Sessions count:", sessions?.length || 0);
+      console.log("First session:", sessions?.[0]);
 
       // Collect all unique agents from all sessions
       const allAgents: AgentRecord[] = [];
@@ -452,11 +459,17 @@ export default function HomePage() {
     }
 
     const eligibleAgents = result.data;
+    console.log("=== FILE PROCESSING DEBUG ===");
+    console.log(`Total eligible agents from file: ${eligibleAgents.length}`);
+    console.log(`Sample agents:`, eligibleAgents.slice(0, 3));
+
     const stats = calculateStats(eligibleAgents);
+    console.log("Stats calculated:", stats);
 
     // Update excluded count from parsing stats
     if (result.stats) {
       stats.excludedCount = result.stats.excludedByTenure;
+      console.log(`Excluded by tenure: ${result.stats.excludedByTenure}`);
     }
 
     // Calculate metric percentiles and assign training recommendations
@@ -502,7 +515,25 @@ export default function HomePage() {
     );
 
     const cohorts = createCohorts(agentsWithRecommendations);
+    console.log("=== COHORT CREATION DEBUG ===");
+    console.log("Cohorts created:", {
+      cltPerformance: cohorts.cltPerformance.length,
+      cltStandard: cohorts.cltStandard.length,
+      atxPerformance: cohorts.atxPerformance.length,
+      atxStandard: cohorts.atxStandard.length,
+      zeroCAPCLT: cohorts.zeroCAPAgents.clt.length,
+      zeroCAPATX: cohorts.zeroCAPAgents.atx.length,
+    });
+
     const schedule = generateSchedule(cohorts, stats.avgAdjustedCAPScore);
+    console.log("=== SCHEDULE GENERATION DEBUG ===");
+    console.log(`Generated schedule with ${schedule.length} days`);
+    let totalSessions = 0;
+    schedule.forEach((day) => {
+      console.log(`${day.day}: ${day.sessions.length} sessions`);
+      totalSessions += day.sessions.length;
+    });
+    console.log(`Total sessions across all days: ${totalSessions}`);
 
     // Validate the generated schedule
     const validation = validateSchedule(schedule);
@@ -776,6 +807,16 @@ export default function HomePage() {
                     >
                       Attendance Impact
                     </button>
+                    <button
+                      onClick={() => setDatabaseView("maintenance")}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        databaseView === "maintenance"
+                          ? "bg-white text-blue-600 shadow-sm"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      Maintenance
+                    </button>
                   </div>
 
                   {/* Upload New Week View */}
@@ -850,6 +891,9 @@ export default function HomePage() {
                   {databaseView === "correlation" && (
                     <AttendancePerformanceCorrelation />
                   )}
+
+                  {/* Database Maintenance View */}
+                  {databaseView === "maintenance" && <DatabaseMaintenance />}
                 </div>
               )}
             </div>

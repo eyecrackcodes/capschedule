@@ -13,15 +13,25 @@ import {
 } from "@/lib/business-logic";
 import { generateSchedule } from "@/lib/schedule-generator-v4";
 import { saveTrainingSchedule, saveCAPScoreHistory } from "@/lib/database";
-import { Upload, Calendar, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import {
+  Upload,
+  Calendar,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 
 interface WeeklyDataUploaderProps {
   onUploadComplete?: () => void;
 }
 
-export function WeeklyDataUploader({ onUploadComplete }: WeeklyDataUploaderProps) {
+export function WeeklyDataUploader({
+  onUploadComplete,
+}: WeeklyDataUploaderProps) {
   const [weekOf, setWeekOf] = useState(getNextMonday());
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
+  const [pendingSchedule, setPendingSchedule] = useState<any>(null);
   const [status, setStatus] = useState<{
     type: "success" | "error" | "info";
     message: string;
@@ -57,7 +67,15 @@ export function WeeklyDataUploader({ onUploadComplete }: WeeklyDataUploaderProps
       setStatus({ type: "info", message: "Saving to database..." });
 
       // Fix timezone issue: parse as local date at noon to avoid UTC shifts
-      const weekDate = new Date(weekOf + 'T12:00:00');
+      const weekDate = new Date(weekOf + "T12:00:00");
+
+      // Store schedule data in case we need to confirm update
+      const scheduleData = {
+        schedule,
+        weekDate,
+        stats,
+        agentsWithRecommendations,
+      };
 
       // 3. Save everything to database
       const saveResult = await saveTrainingSchedule(
@@ -69,11 +87,19 @@ export function WeeklyDataUploader({ onUploadComplete }: WeeklyDataUploaderProps
           totalAgents: stats.totalAgents,
           excludedCount: stats.excludedCount,
           eligibleCount: stats.eligibleCount,
+        }
         },
         percentiles // Pass percentiles to be saved
       );
 
       if (!saveResult.success) {
+        // Check if it's because schedule already exists
+        if (saveResult.error?.includes("already exists")) {
+          setPendingSchedule(scheduleData);
+          setShowUpdateConfirm(true);
+          setIsProcessing(false);
+          return;
+        }
         throw new Error(saveResult.error);
       }
 
@@ -109,6 +135,57 @@ export function WeeklyDataUploader({ onUploadComplete }: WeeklyDataUploaderProps
       setStatus({
         type: "error",
         message: error.message || "Failed to process and save data",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
+  async function handleConfirmUpdate() {
+    if (!pendingSchedule) return;
+
+    setShowUpdateConfirm(false);
+    setIsProcessing(true);
+    setStatus({ type: "info", message: "Updating existing schedule..." });
+
+    try {
+      const { schedule, weekDate, stats, agentsWithRecommendations } =
+        pendingSchedule;
+
+      // Save with update flag
+      const saveResult = await saveTrainingSchedule(
+        schedule,
+        weekDate,
+        stats.avgCAPScore,
+        stats.avgAdjustedCAPScore,
+        {
+          totalAgents: stats.totalAgents,
+          excludedCount: stats.excludedCount,
+          eligibleCount: stats.eligibleCount,
+        },
+        true // updateExisting
+      );
+
+      if (!saveResult.success) {
+        throw new Error(saveResult.error);
+      }
+
+      // Save CAP history
+      await saveCAPScoreHistory(agentsWithRecommendations, weekDate);
+
+      setStatus({
+        type: "success",
+        message: `Successfully updated schedule for week of ${weekDate.toLocaleDateString()}!`,
+      });
+
+      setPendingSchedule(null);
+      setTimeout(() => {
+        onUploadComplete?.();
+      }, 2000);
+    } catch (error: any) {
+      setStatus({
+        type: "error",
+        message: error.message || "Failed to update schedule",
       });
     } finally {
       setIsProcessing(false);
@@ -197,8 +274,47 @@ export function WeeklyDataUploader({ onUploadComplete }: WeeklyDataUploaderProps
           </label>
         </div>
 
+        {/* Update Confirmation */}
+        {showUpdateConfirm && (
+          <div className="p-4 rounded-lg bg-amber-50 border border-amber-200">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-amber-800 font-medium">
+                  A schedule already exists for this week
+                </p>
+                <p className="text-amber-700 text-sm mt-1">
+                  Would you like to replace the existing schedule? This will
+                  delete the old schedule and its attendance records.
+                </p>
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleConfirmUpdate}
+                    className="bg-amber-600 hover:bg-amber-700 text-white border-amber-600"
+                  >
+                    Yes, Update Schedule
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setShowUpdateConfirm(false);
+                      setPendingSchedule(null);
+                      setStatus(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Status Messages */}
-        {status && (
+        {status && !showUpdateConfirm && (
           <div
             className={`p-4 rounded-lg flex items-start gap-3 ${
               status.type === "success"
@@ -254,4 +370,3 @@ function getNextMonday(): string {
   nextMonday.setDate(today.getDate() + daysUntilMonday);
   return nextMonday.toISOString().split("T")[0];
 }
-

@@ -494,10 +494,21 @@ export function AttendancePerformanceCorrelation() {
                 <div className="text-xs text-blue-900">
                   <p className="font-medium">How to read this chart:</p>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 mt-1">
-                    <div>• <strong>Y-axis:</strong> CAP score change (% from baseline)</div>
-                    <div>• <strong>X-axis:</strong> Training attendance rate (%)</div>
-                    <div>• <strong>Above 0%:</strong> Improvement | <strong>Below 0%:</strong> Decline</div>
-                    <div>• <strong>Lines:</strong> 70% attendance, 5% improvement thresholds</div>
+                    <div>
+                      • <strong>Y-axis:</strong> CAP score change (% from
+                      baseline)
+                    </div>
+                    <div>
+                      • <strong>X-axis:</strong> Training attendance rate (%)
+                    </div>
+                    <div>
+                      • <strong>Above 0%:</strong> Improvement |{" "}
+                      <strong>Below 0%:</strong> Decline
+                    </div>
+                    <div>
+                      • <strong>Lines:</strong> 70% attendance, 5% improvement
+                      thresholds
+                    </div>
                   </div>
                 </div>
               </div>
