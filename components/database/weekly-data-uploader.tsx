@@ -88,6 +88,8 @@ export function WeeklyDataUploader({
           excludedCount: stats.excludedCount,
           eligibleCount: stats.eligibleCount,
         }
+        },
+        percentiles // Pass percentiles to be saved
       );
 
       if (!saveResult.success) {

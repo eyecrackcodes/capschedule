@@ -132,8 +132,14 @@ export default function HomePage() {
           `✅ Found ${schedulesResult.data.length} schedules in database`
         );
 
+        // Sort by week_of descending to get the most recent (highest date)
+        const sortedSchedules = schedulesResult.data.sort((a, b) =>
+          b.week_of.localeCompare(a.week_of)
+        );
+
         // Get the most recent schedule
-        const latestSchedule = schedulesResult.data[0];
+        const latestSchedule = sortedSchedules[0];
+        console.log("📅 All weeks:", sortedSchedules.map((s) => s.week_of));
         console.log("📅 Loading latest schedule:", latestSchedule.week_of);
 
         // Load full schedule details
@@ -153,11 +159,12 @@ export default function HomePage() {
               dbSchedule.schedule.length,
               "days"
             );
+            console.log("📊 Setting percentiles in state:", dbSchedule.percentiles);
             setAppState((prev) => ({
               ...prev,
               schedule: dbSchedule.schedule,
               stats: dbSchedule.stats,
-              percentiles: dbSchedule.percentiles,
+              percentiles: dbSchedule.percentiles, // Load percentiles from DB if available
             }));
             setLoadedWeekOf(dbSchedule.weekOf);
           } else {
@@ -432,11 +439,11 @@ export default function HomePage() {
         `  Standard - Raw: ${standardAvgCAP}, Adjusted: ${standardAvgAdjustedCAP} (${standardAgents.length} agents)`
       );
 
-      // Calculate percentiles for the loaded agents
-      const percentiles = calculateMetricPercentiles(allAgents);
-      console.log("Percentiles calculated:", percentiles);
-
       console.log("Final stats:", stats);
+
+      // Extract percentiles from metadata if available
+      const percentiles = scheduleData.metadata?.percentiles || undefined;
+      console.log("📊 Loaded percentiles from DB:", percentiles);
 
       return { schedule, stats, weekOf: scheduleData.week_of, percentiles };
     } catch (error) {
@@ -843,6 +850,7 @@ export default function HomePage() {
                         avgAdjustedCAPScore={appState.stats.avgAdjustedCAPScore}
                         eligibleAgents={appState.eligibleAgents}
                         fullStats={appState.stats}
+                        percentiles={appState.percentiles}
                         onSaveComplete={() => {
                           alert("Schedule saved successfully!");
                           setDatabaseView("history");
