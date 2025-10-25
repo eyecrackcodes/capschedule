@@ -187,6 +187,11 @@ export default function HomePage() {
   } | null {
     try {
       const { schedule: scheduleData, sessions } = data;
+      
+      console.log("=== CONVERT DATABASE SCHEDULE DEBUG ===");
+      console.log("Schedule data:", scheduleData);
+      console.log("Sessions count:", sessions?.length || 0);
+      console.log("First session:", sessions?.[0]);
 
       // Collect all unique agents from all sessions
       const allAgents: AgentRecord[] = [];

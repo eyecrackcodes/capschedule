@@ -13,13 +13,21 @@ import {
 } from "@/lib/business-logic";
 import { generateSchedule } from "@/lib/schedule-generator-v4";
 import { saveTrainingSchedule, saveCAPScoreHistory } from "@/lib/database";
-import { Upload, Calendar, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import {
+  Upload,
+  Calendar,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 
 interface WeeklyDataUploaderProps {
   onUploadComplete?: () => void;
 }
 
-export function WeeklyDataUploader({ onUploadComplete }: WeeklyDataUploaderProps) {
+export function WeeklyDataUploader({
+  onUploadComplete,
+}: WeeklyDataUploaderProps) {
   const [weekOf, setWeekOf] = useState(getNextMonday());
   const [isProcessing, setIsProcessing] = useState(false);
   const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
@@ -59,7 +67,7 @@ export function WeeklyDataUploader({ onUploadComplete }: WeeklyDataUploaderProps
       setStatus({ type: "info", message: "Saving to database..." });
 
       // Fix timezone issue: parse as local date at noon to avoid UTC shifts
-      const weekDate = new Date(weekOf + 'T12:00:00');
+      const weekDate = new Date(weekOf + "T12:00:00");
 
       // Store schedule data in case we need to confirm update
       const scheduleData = {
@@ -133,14 +141,15 @@ export function WeeklyDataUploader({ onUploadComplete }: WeeklyDataUploaderProps
 
   async function handleConfirmUpdate() {
     if (!pendingSchedule) return;
-    
+
     setShowUpdateConfirm(false);
     setIsProcessing(true);
     setStatus({ type: "info", message: "Updating existing schedule..." });
 
     try {
-      const { schedule, weekDate, stats, agentsWithRecommendations } = pendingSchedule;
-      
+      const { schedule, weekDate, stats, agentsWithRecommendations } =
+        pendingSchedule;
+
       // Save with update flag
       const saveResult = await saveTrainingSchedule(
         schedule,
@@ -273,7 +282,8 @@ export function WeeklyDataUploader({ onUploadComplete }: WeeklyDataUploaderProps
                   A schedule already exists for this week
                 </p>
                 <p className="text-amber-700 text-sm mt-1">
-                  Would you like to replace the existing schedule? This will delete the old schedule and its attendance records.
+                  Would you like to replace the existing schedule? This will
+                  delete the old schedule and its attendance records.
                 </p>
                 <div className="flex gap-2 mt-3">
                   <Button
@@ -358,4 +368,3 @@ function getNextMonday(): string {
   nextMonday.setDate(today.getDate() + daysUntilMonday);
   return nextMonday.toISOString().split("T")[0];
 }
-
