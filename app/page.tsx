@@ -20,6 +20,7 @@ import { AnalyticsDashboard } from "@/components/database/analytics-dashboard";
 import { AgentPerformanceTrendsV2 } from "@/components/database/agent-performance-trends-v2";
 import { WeeklyDataUploader } from "@/components/database/weekly-data-uploader";
 import { AttendancePerformanceCorrelation } from "@/components/database/attendance-performance-correlation";
+import { DatabaseMaintenance } from "@/components/database/database-maintenance";
 import {
   calculateStats,
   createCohorts,
@@ -61,6 +62,7 @@ export default function HomePage() {
     | "analytics"
     | "trends"
     | "correlation"
+    | "maintenance"
   >("upload");
   const [isLoadingFromDB, setIsLoadingFromDB] = useState(true);
   const [appState, setAppState] = useState<AppState>({
@@ -187,7 +189,7 @@ export default function HomePage() {
   } | null {
     try {
       const { schedule: scheduleData, sessions } = data;
-      
+
       console.log("=== CONVERT DATABASE SCHEDULE DEBUG ===");
       console.log("Schedule data:", scheduleData);
       console.log("Sessions count:", sessions?.length || 0);
@@ -798,6 +800,16 @@ export default function HomePage() {
                     >
                       Attendance Impact
                     </button>
+                    <button
+                      onClick={() => setDatabaseView("maintenance")}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        databaseView === "maintenance"
+                          ? "bg-white text-blue-600 shadow-sm"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      Maintenance
+                    </button>
                   </div>
 
                   {/* Upload New Week View */}
@@ -870,6 +882,11 @@ export default function HomePage() {
                   {/* Attendance Performance Correlation View */}
                   {databaseView === "correlation" && (
                     <AttendancePerformanceCorrelation />
+                  )}
+                  
+                  {/* Database Maintenance View */}
+                  {databaseView === "maintenance" && (
+                    <DatabaseMaintenance />
                   )}
                 </div>
               )}

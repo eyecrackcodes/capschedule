@@ -129,6 +129,20 @@ export async function saveTrainingSchedule(
     }
 
     console.log(`Total sessions to insert: ${sessions.length}`);
+    
+    // Validate that we have sessions to save
+    if (sessions.length === 0) {
+      // Delete the schedule record we just created since it's empty
+      await supabase
+        .from("training_schedules")
+        .delete()
+        .eq("id", scheduleData.id);
+        
+      throw new Error(
+        "Cannot save empty schedule. No training sessions were generated. " +
+        "This usually means no agents met the training criteria."
+      );
+    }
 
     // Insert all sessions
     const { data: sessionData, error: sessionError } = await supabase
