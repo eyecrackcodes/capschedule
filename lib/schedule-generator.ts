@@ -19,6 +19,16 @@ export function generateSchedule(
   },
   avgCAPScore: number
 ): DaySchedule[] {
+  console.log("=== GENERATE SCHEDULE DEBUG ===");
+  console.log("Input cohorts:", {
+    cltPerformance: cohorts.cltPerformance.length,
+    cltStandard: cohorts.cltStandard.length,
+    atxPerformance: cohorts.atxPerformance.length,
+    atxStandard: cohorts.atxStandard.length,
+    zeroCAPCLT: cohorts.zeroCAPAgents.clt.length,
+    zeroCAPATX: cohorts.zeroCAPAgents.atx.length,
+  });
+
   const schedule: DaySchedule[] = [];
 
   // Initialize days
@@ -82,6 +92,8 @@ export function generateSchedule(
     }
     return a.agents[0].capScore - b.agents[0].capScore;
   });
+
+  console.log(`Total regular cohorts to schedule: ${allRegularCohorts.length}`);
 
   // Schedule regular training on Tuesday, Wednesday, Thursday
   const trainingDays = ["Tuesday", "Wednesday", "Thursday"];
@@ -184,6 +196,11 @@ export function generateSchedule(
     const fridaySchedule = scheduleMap.get("Friday")!;
     scheduleZeroCAPAgents(fridaySchedule, cohorts.zeroCAPAgents, 12); // Start from cohort 13
   }
+
+  console.log("Final schedule summary:");
+  schedule.forEach((day) => {
+    console.log(`${day.day}: ${day.sessions.length} sessions`);
+  });
 
   return schedule;
 }

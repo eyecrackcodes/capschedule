@@ -23,7 +23,8 @@ export async function saveTrainingSchedule(
     totalAgents: number;
     excludedCount: number;
     eligibleCount: number;
-  }
+  },
+  updateExisting: boolean = false
 ) {
   try {
     // 1. Check if schedule already exists for this week
@@ -33,17 +34,37 @@ export async function saveTrainingSchedule(
       .eq("week_of", weekOf.toISOString().split("T")[0])
       .single();
 
-    if (existingSchedule) {
+    if (existingSchedule && !updateExisting) {
       throw new Error(
-        `A schedule for the week of ${weekOf.toLocaleDateString()} already exists. Please delete it first or choose a different week.`
+        `A schedule for the week of ${weekOf.toLocaleDateString()} already exists. Would you like to update it instead?`
       );
+    }
+
+    // If updating, delete the old schedule first (CASCADE will clean up sessions and assignments)
+    if (existingSchedule && updateExisting) {
+      console.log(
+        `📝 Updating existing schedule for week of ${weekOf.toLocaleDateString()}`
+      );
+      const { error: deleteError } = await supabase
+        .from("training_schedules")
+        .delete()
+        .eq("id", existingSchedule.id);
+
+      if (deleteError) {
+        throw new Error(
+          `Failed to update existing schedule: ${deleteError.message}`
+        );
+      }
     }
 
     // 2. Count total scheduled agents
     const totalScheduledAgents = schedule.reduce(
       (sum, day) =>
         sum +
-        day.sessions.reduce((daySum, session) => daySum + session.agents.length, 0),
+        day.sessions.reduce(
+          (daySum, session) => daySum + session.agents.length,
+          0
+        ),
       0
     );
 
@@ -76,7 +97,17 @@ export async function saveTrainingSchedule(
     const sessions: any[] = [];
     const assignments: any[] = [];
 
+    console.log("=== SAVE SCHEDULE DEBUG ===");
+    console.log(`Schedule has ${schedule.length} days`);
+    console.log(
+      `Total sessions to create: ${schedule.reduce(
+        (sum, day) => sum + day.sessions.length,
+        0
+      )}`
+    );
+
     for (const day of schedule) {
+      console.log(`Processing ${day.day}: ${day.sessions.length} sessions`);
       for (const session of day.sessions) {
         // Create session record
         const sessionRecord = {
@@ -97,6 +128,8 @@ export async function saveTrainingSchedule(
       }
     }
 
+    console.log(`Total sessions to insert: ${sessions.length}`);
+
     // Insert all sessions
     const { data: sessionData, error: sessionError } = await supabase
       .from("training_sessions")
@@ -104,11 +137,15 @@ export async function saveTrainingSchedule(
       .select();
 
     if (sessionError) throw sessionError;
-    
+
     if (!sessionData || sessionData.length === 0) {
-      throw new Error("No sessions were created. Cannot save agent assignments.");
+      console.error("Session insert result:", { sessionData, sessionError });
+      console.error("Sessions array that was sent:", sessions);
+      throw new Error(
+        "No sessions were created. Cannot save agent assignments."
+      );
     }
-    
+
     console.log(`✅ Created ${sessionData.length} training sessions`);
 
     // 5. Create agent assignments using the session IDs
@@ -118,13 +155,17 @@ export async function saveTrainingSchedule(
         // Safety check: ensure we have a valid session ID
         if (!sessionData[sessionIndex]) {
           console.error(`❌ Missing session data at index ${sessionIndex}`);
-          throw new Error(`Session data mismatch at index ${sessionIndex}. Expected ${sessions.length} sessions, got ${sessionData.length}.`);
+          throw new Error(
+            `Session data mismatch at index ${sessionIndex}. Expected ${sessions.length} sessions, got ${sessionData.length}.`
+          );
         }
-        
+
         const sessionId = sessionData[sessionIndex].id;
-        
+
         if (!sessionId) {
-          throw new Error(`Session ID is null/undefined at index ${sessionIndex}`);
+          throw new Error(
+            `Session ID is null/undefined at index ${sessionIndex}`
+          );
         }
 
         for (const agent of session.agents) {
@@ -150,8 +191,10 @@ export async function saveTrainingSchedule(
         sessionIndex++;
       }
     }
-    
-    console.log(`📝 Created ${assignments.length} agent assignments for ${sessionData.length} sessions`);
+
+    console.log(
+      `📝 Created ${assignments.length} agent assignments for ${sessionData.length} sessions`
+    );
 
     // Insert all assignments
     const { error: assignmentError } = await supabase
@@ -162,8 +205,10 @@ export async function saveTrainingSchedule(
       console.error("❌ Error inserting assignments:", assignmentError);
       throw assignmentError;
     }
-    
-    console.log(`✅ Successfully saved schedule with ${assignments.length} agent assignments`);
+
+    console.log(
+      `✅ Successfully saved schedule with ${assignments.length} agent assignments`
+    );
 
     return {
       success: true,
@@ -194,6 +239,24 @@ export async function getTrainingSchedules() {
   }
 
   return { success: true, data };
+}
+
+/**
+ * Get list of weeks that have schedules
+ */
+export async function getScheduledWeeks() {
+  const { data, error } = await supabase
+    .from("training_schedules")
+    .select("week_of")
+    .order("week_of", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching scheduled weeks:", error);
+    return { success: false, error: error.message, weeks: [] };
+  }
+
+  const weeks = data?.map((d) => d.week_of) || [];
+  return { success: true, weeks };
 }
 
 /**
@@ -300,8 +363,12 @@ export async function bulkMarkAttendance(
   }>,
   markedBy: string
 ) {
-  console.log("💾 bulkMarkAttendance called with", assignments.length, "updates");
-  
+  console.log(
+    "💾 bulkMarkAttendance called with",
+    assignments.length,
+    "updates"
+  );
+
   // Use individual updates instead of upsert to avoid insert attempts
   const updatePromises = assignments.map((a) => {
     console.log(`  Updating ${a.id}: attended=${a.attended}`);
@@ -317,23 +384,30 @@ export async function bulkMarkAttendance(
   });
 
   const results = await Promise.all(updatePromises);
-  
-  console.log("📊 Update results:", results.map(r => ({ 
-    success: !r.error, 
-    error: r.error?.message 
-  })));
-  
+
+  console.log(
+    "📊 Update results:",
+    results.map((r) => ({
+      success: !r.error,
+      error: r.error?.message,
+    }))
+  );
+
   // Check for any errors
   const errors = results.filter((r) => r.error);
   if (errors.length > 0) {
     console.error("❌ Error bulk marking attendance:", errors);
-    return { 
-      success: false, 
-      error: `Failed to update ${errors.length} out of ${assignments.length} assignments. First error: ${errors[0].error?.message}` 
+    return {
+      success: false,
+      error: `Failed to update ${errors.length} out of ${assignments.length} assignments. First error: ${errors[0].error?.message}`,
     };
   }
 
-  console.log("✅ Successfully updated", assignments.length, "assignments in database");
+  console.log(
+    "✅ Successfully updated",
+    assignments.length,
+    "assignments in database"
+  );
 
   return {
     success: true,
@@ -357,7 +431,10 @@ export async function getPendingAttendance(beforeDate?: Date) {
     .is("attended", null);
 
   if (beforeDate) {
-    query = query.lt("training_schedules.week_of", beforeDate.toISOString().split("T")[0]);
+    query = query.lt(
+      "training_schedules.week_of",
+      beforeDate.toISOString().split("T")[0]
+    );
   }
 
   const { data, error } = await query.order("training_schedules.week_of", {
@@ -439,7 +516,7 @@ export async function getAgentMetricsTrends(
     // Calculate date range
     const endDate = new Date();
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - (weeks * 7));
+    startDate.setDate(startDate.getDate() - weeks * 7);
 
     let query = supabase
       .from("cap_score_history")
@@ -477,11 +554,12 @@ export async function getAgentTrainingHistory(
   try {
     const endDate = new Date();
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - (weeks * 7));
+    startDate.setDate(startDate.getDate() - weeks * 7);
 
     const { data, error } = await supabase
       .from("agent_assignments")
-      .select(`
+      .select(
+        `
         agent_name,
         attended,
         training_sessions (
@@ -491,11 +569,17 @@ export async function getAgentTrainingHistory(
             week_of
           )
         )
-      `)
+      `
+      )
       .eq("agent_name", agentName)
       .eq("attended", true)
-      .gte("training_sessions.training_schedules.week_of", startDate.toISOString().split("T")[0])
-      .order("training_sessions.training_schedules.week_of", { ascending: true });
+      .gte(
+        "training_sessions.training_schedules.week_of",
+        startDate.toISOString().split("T")[0]
+      )
+      .order("training_sessions.training_schedules.week_of", {
+        ascending: true,
+      });
 
     if (error) {
       console.error("Error fetching training history:", error);
@@ -588,4 +672,3 @@ function getTrainingTypeFromDay(day: string): string {
   };
   return map[day] || "General Training";
 }
-

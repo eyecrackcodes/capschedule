@@ -445,11 +445,17 @@ export default function HomePage() {
     }
 
     const eligibleAgents = result.data;
+    console.log("=== FILE PROCESSING DEBUG ===");
+    console.log(`Total eligible agents from file: ${eligibleAgents.length}`);
+    console.log(`Sample agents:`, eligibleAgents.slice(0, 3));
+
     const stats = calculateStats(eligibleAgents);
+    console.log("Stats calculated:", stats);
 
     // Update excluded count from parsing stats
     if (result.stats) {
       stats.excludedCount = result.stats.excludedByTenure;
+      console.log(`Excluded by tenure: ${result.stats.excludedByTenure}`);
     }
 
     // Calculate metric percentiles and assign training recommendations
@@ -495,7 +501,25 @@ export default function HomePage() {
     );
 
     const cohorts = createCohorts(agentsWithRecommendations);
+    console.log("=== COHORT CREATION DEBUG ===");
+    console.log("Cohorts created:", {
+      cltPerformance: cohorts.cltPerformance.length,
+      cltStandard: cohorts.cltStandard.length,
+      atxPerformance: cohorts.atxPerformance.length,
+      atxStandard: cohorts.atxStandard.length,
+      zeroCAPCLT: cohorts.zeroCAPAgents.clt.length,
+      zeroCAPATX: cohorts.zeroCAPAgents.atx.length,
+    });
+
     const schedule = generateSchedule(cohorts, stats.avgAdjustedCAPScore);
+    console.log("=== SCHEDULE GENERATION DEBUG ===");
+    console.log(`Generated schedule with ${schedule.length} days`);
+    let totalSessions = 0;
+    schedule.forEach((day) => {
+      console.log(`${day.day}: ${day.sessions.length} sessions`);
+      totalSessions += day.sessions.length;
+    });
+    console.log(`Total sessions across all days: ${totalSessions}`);
 
     // Validate the generated schedule
     const validation = validateSchedule(schedule);
