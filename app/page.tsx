@@ -883,11 +883,9 @@ export default function HomePage() {
                   {databaseView === "correlation" && (
                     <AttendancePerformanceCorrelation />
                   )}
-                  
+
                   {/* Database Maintenance View */}
-                  {databaseView === "maintenance" && (
-                    <DatabaseMaintenance />
-                  )}
+                  {databaseView === "maintenance" && <DatabaseMaintenance />}
                 </div>
               )}
             </div>

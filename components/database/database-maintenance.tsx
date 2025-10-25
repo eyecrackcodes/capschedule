@@ -4,44 +4,41 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { removeEmptySchedules, getScheduleHealthCheck } from "@/lib/database-cleanup";
-import { 
-  Wrench, 
-  AlertTriangle, 
-  CheckCircle2, 
-  Loader2, 
+import {
+  removeEmptySchedules,
+  getScheduleHealthCheck,
+  type ScheduleHealthReport,
+  type ScheduleHealthStatus,
+} from "@/lib/database-cleanup";
+import {
+  Wrench,
+  AlertTriangle,
+  CheckCircle2,
+  Loader2,
   Trash2,
   RefreshCw,
-  Info 
+  Info,
 } from "lucide-react";
-
-interface HealthCheckResult {
-  week_of: string;
-  total_agents_scheduled: number;
-  actual_sessions: number;
-  actual_assignments: number;
-  status: "HEALTHY" | "EMPTY" | "NO_AGENTS" | "MISMATCH";
-}
 
 export function DatabaseMaintenance() {
   const [isLoading, setIsLoading] = useState(false);
-  const [healthReport, setHealthReport] = useState<HealthCheckResult[]>([]);
+  const [healthReport, setHealthReport] = useState<ScheduleHealthReport[]>([]);
   const [maintenanceLog, setMaintenanceLog] = useState<string[]>([]);
   const [showDetails, setShowDetails] = useState(false);
 
   async function runHealthCheck() {
     setIsLoading(true);
     setMaintenanceLog([]);
-    
+
     try {
       addLog("🔍 Running database health check...");
       const result = await getScheduleHealthCheck();
-      
+
       if (result.success) {
         setHealthReport(result.report || []);
         addLog(`✅ Found ${result.totalSchedules} schedules`);
         addLog(`✨ ${result.healthySchedules} healthy schedules`);
-        
+
         if (result.issues && result.issues.length > 0) {
           addLog(`⚠️ ${result.issues.length} schedules with issues`);
         }
@@ -57,18 +54,18 @@ export function DatabaseMaintenance() {
 
   async function cleanupEmptySchedules() {
     setIsLoading(true);
-    
+
     try {
       addLog("🧹 Starting cleanup of empty schedules...");
       const result = await removeEmptySchedules();
-      
+
       if (result.success) {
         if (result.deletedCount === 0) {
           addLog("✅ No empty schedules found - database is clean!");
         } else {
           addLog(`🗑️ Removed ${result.deletedCount} empty schedules`);
           if (result.deletedSchedules) {
-            result.deletedSchedules.forEach(week => {
+            result.deletedSchedules.forEach((week) => {
               addLog(`   - Week of ${new Date(week).toLocaleDateString()}`);
             });
           }
@@ -86,10 +83,13 @@ export function DatabaseMaintenance() {
   }
 
   function addLog(message: string) {
-    setMaintenanceLog(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
+    setMaintenanceLog((prev) => [
+      ...prev,
+      `${new Date().toLocaleTimeString()}: ${message}`,
+    ]);
   }
 
-  function getStatusBadge(status: string) {
+  function getStatusBadge(status: ScheduleHealthStatus) {
     switch (status) {
       case "HEALTHY":
         return <Badge className="bg-green-100 text-green-800">Healthy</Badge>;
@@ -98,7 +98,9 @@ export function DatabaseMaintenance() {
       case "NO_AGENTS":
         return <Badge className="bg-amber-100 text-amber-800">No Agents</Badge>;
       case "MISMATCH":
-        return <Badge className="bg-orange-100 text-orange-800">Mismatch</Badge>;
+        return (
+          <Badge className="bg-orange-100 text-orange-800">Mismatch</Badge>
+        );
       default:
         return <Badge variant="outline">Unknown</Badge>;
     }
@@ -123,9 +125,17 @@ export function DatabaseMaintenance() {
                   About Database Maintenance
                 </p>
                 <ul className="text-blue-800 space-y-1 text-xs">
-                  <li>• Health Check: Identifies schedules with missing sessions or data mismatches</li>
-                  <li>• Cleanup: Removes empty schedules that may have been created due to errors</li>
-                  <li>• Safe to run anytime - only removes truly empty schedules</li>
+                  <li>
+                    • Health Check: Identifies schedules with missing sessions
+                    or data mismatches
+                  </li>
+                  <li>
+                    • Cleanup: Removes empty schedules that may have been
+                    created due to errors
+                  </li>
+                  <li>
+                    • Safe to run anytime - only removes truly empty schedules
+                  </li>
                 </ul>
               </div>
             </div>
@@ -147,7 +157,10 @@ export function DatabaseMaintenance() {
             </Button>
             <Button
               onClick={cleanupEmptySchedules}
-              disabled={isLoading || healthReport.filter(r => r.status === "EMPTY").length === 0}
+              disabled={
+                isLoading ||
+                healthReport.filter((r) => r.status === "EMPTY").length === 0
+              }
               variant="destructive"
             >
               {isLoading ? (
@@ -182,7 +195,8 @@ export function DatabaseMaintenance() {
                     >
                       <div className="flex items-center gap-3">
                         <span className="text-sm font-medium">
-                          Week of {new Date(schedule.week_of).toLocaleDateString()}
+                          Week of{" "}
+                          {new Date(schedule.week_of).toLocaleDateString()}
                         </span>
                         {getStatusBadge(schedule.status)}
                       </div>
@@ -200,25 +214,28 @@ export function DatabaseMaintenance() {
               <div className="grid grid-cols-4 gap-4 pt-4 border-t">
                 <div className="text-center">
                   <p className="text-2xl font-bold text-green-600">
-                    {healthReport.filter(r => r.status === "HEALTHY").length}
+                    {healthReport.filter((r) => r.status === "HEALTHY").length}
                   </p>
                   <p className="text-xs text-gray-600">Healthy</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-red-600">
-                    {healthReport.filter(r => r.status === "EMPTY").length}
+                    {healthReport.filter((r) => r.status === "EMPTY").length}
                   </p>
                   <p className="text-xs text-gray-600">Empty</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-amber-600">
-                    {healthReport.filter(r => r.status === "NO_AGENTS").length}
+                    {
+                      healthReport.filter((r) => r.status === "NO_AGENTS")
+                        .length
+                    }
                   </p>
                   <p className="text-xs text-gray-600">No Agents</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-orange-600">
-                    {healthReport.filter(r => r.status === "MISMATCH").length}
+                    {healthReport.filter((r) => r.status === "MISMATCH").length}
                   </p>
                   <p className="text-xs text-gray-600">Mismatch</p>
                 </div>
