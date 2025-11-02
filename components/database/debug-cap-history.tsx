@@ -5,13 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
-import { 
-  Bug, 
-  Database, 
+import {
+  Bug,
+  Database,
   Calendar,
   RefreshCw,
   AlertCircle,
-  CheckCircle2 
+  CheckCircle2,
 } from "lucide-react";
 
 interface CAPHistoryRecord {
@@ -54,14 +54,15 @@ export function DebugCAPHistory() {
       setRecords(data || []);
 
       // Extract unique weeks
-      const weeks = [...new Set(data?.map(r => r.week_of) || [])].sort().reverse();
+      const weeks = [...new Set(data?.map((r) => r.week_of) || [])]
+        .sort()
+        .reverse();
       setUniqueWeeks(weeks);
 
       console.log("=== CAP HISTORY DEBUG ===");
       console.log("Total records:", data?.length || 0);
       console.log("Unique weeks:", weeks);
       console.log("Sample records:", data?.slice(0, 5));
-
     } catch (err: any) {
       console.error("Error loading CAP history:", err);
       setError(err.message);
@@ -72,7 +73,7 @@ export function DebugCAPHistory() {
 
   async function checkDateRangeQuery() {
     setLoading(true);
-    
+
     try {
       // Test the same query logic as getAgentMetricsTrends
       const endDate = new Date();
@@ -91,7 +92,10 @@ export function DebugCAPHistory() {
         .order("week_of");
 
       console.log("Date range query result:", data);
-      console.log("Weeks in range:", data?.map(d => d.week_of));
+      console.log(
+        "Weeks in range:",
+        data?.map((d) => d.week_of)
+      );
     } catch (err: any) {
       console.error("Date range test error:", err);
     } finally {
@@ -99,17 +103,25 @@ export function DebugCAPHistory() {
     }
   }
 
-  const weekSummary = uniqueWeeks.map(week => {
-    const weekRecords = records.filter(r => r.week_of === week);
+  const weekSummary = uniqueWeeks.map((week) => {
+    const weekRecords = records.filter((r) => r.week_of === week);
     return {
       week,
       agentCount: weekRecords.length,
-      avgOriginalCAP: weekRecords.length > 0 
-        ? Math.round(weekRecords.reduce((sum, r) => sum + r.original_cap_score, 0) / weekRecords.length)
-        : 0,
-      avgAdjustedCAP: weekRecords.length > 0
-        ? Math.round(weekRecords.reduce((sum, r) => sum + r.adjusted_cap_score, 0) / weekRecords.length)
-        : 0,
+      avgOriginalCAP:
+        weekRecords.length > 0
+          ? Math.round(
+              weekRecords.reduce((sum, r) => sum + r.original_cap_score, 0) /
+                weekRecords.length
+            )
+          : 0,
+      avgAdjustedCAP:
+        weekRecords.length > 0
+          ? Math.round(
+              weekRecords.reduce((sum, r) => sum + r.adjusted_cap_score, 0) /
+                weekRecords.length
+            )
+          : 0,
     };
   });
 
@@ -135,16 +147,16 @@ export function DebugCAPHistory() {
 
           {/* Actions */}
           <div className="flex gap-3">
-            <Button 
-              onClick={loadCAPHistory} 
+            <Button
+              onClick={loadCAPHistory}
               disabled={loading}
               variant="outline"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Reload Data
             </Button>
-            <Button 
-              onClick={checkDateRangeQuery} 
+            <Button
+              onClick={checkDateRangeQuery}
               disabled={loading}
               variant="outline"
             >
@@ -166,16 +178,19 @@ export function DebugCAPHistory() {
             <div className="bg-gray-50 p-4 rounded-lg">
               <p className="text-sm text-gray-600">Date Range</p>
               <p className="text-sm font-medium">
-                {uniqueWeeks.length > 0 
-                  ? `${new Date(uniqueWeeks[uniqueWeeks.length - 1]).toLocaleDateString()} - ${new Date(uniqueWeeks[0]).toLocaleDateString()}`
-                  : "No data"
-                }
+                {uniqueWeeks.length > 0
+                  ? `${new Date(
+                      uniqueWeeks[uniqueWeeks.length - 1]
+                    ).toLocaleDateString()} - ${new Date(
+                      uniqueWeeks[0]
+                    ).toLocaleDateString()}`
+                  : "No data"}
               </p>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg">
               <p className="text-sm text-gray-600">Unique Agents</p>
               <p className="text-2xl font-bold">
-                {[...new Set(records.map(r => r.agent_name))].length}
+                {[...new Set(records.map((r) => r.agent_name))].length}
               </p>
             </div>
           </div>
@@ -185,7 +200,10 @@ export function DebugCAPHistory() {
             <h3 className="font-semibold mb-3">Week-by-Week Summary</h3>
             <div className="space-y-2">
               {weekSummary.map((week) => (
-                <div key={week.week} className="border rounded-lg p-4 bg-gray-50">
+                <div
+                  key={week.week}
+                  className="border rounded-lg p-4 bg-gray-50"
+                >
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">
@@ -196,9 +214,7 @@ export function DebugCAPHistory() {
                       </p>
                     </div>
                     <div className="flex items-center gap-4 text-sm">
-                      <Badge variant="outline">
-                        {week.agentCount} agents
-                      </Badge>
+                      <Badge variant="outline">{week.agentCount} agents</Badge>
                       <span>Avg CAP: {week.avgOriginalCAP}</span>
                       <span>Avg Adj: {week.avgAdjustedCAP}</span>
                     </div>
@@ -227,12 +243,20 @@ export function DebugCAPHistory() {
                 <tbody>
                   {records.slice(0, 10).map((record, idx) => (
                     <tr key={idx} className="border-b">
-                      <td className="p-2">{new Date(record.week_of).toLocaleDateString()}</td>
+                      <td className="p-2">
+                        {new Date(record.week_of).toLocaleDateString()}
+                      </td>
                       <td className="p-2">{record.agent_name}</td>
                       <td className="p-2">{record.manager}</td>
-                      <td className="p-2 text-right">{record.original_cap_score}</td>
-                      <td className="p-2 text-right">{record.adjusted_cap_score}</td>
-                      <td className="p-2 text-right">{record.lead_attainment?.toFixed(1)}%</td>
+                      <td className="p-2 text-right">
+                        {record.original_cap_score}
+                      </td>
+                      <td className="p-2 text-right">
+                        {record.adjusted_cap_score}
+                      </td>
+                      <td className="p-2 text-right">
+                        {record.lead_attainment?.toFixed(1)}%
+                      </td>
                       <td className="p-2 text-xs text-gray-600">
                         {new Date(record.created_at).toLocaleString()}
                       </td>
@@ -249,7 +273,10 @@ export function DebugCAPHistory() {
               <CheckCircle2 className="h-5 w-5 text-blue-600 flex-shrink-0" />
               <div className="text-sm text-blue-800">
                 <p className="font-medium mb-1">Check Browser Console</p>
-                <p>Open developer tools (F12) and check the console for detailed debug information about date ranges and query results.</p>
+                <p>
+                  Open developer tools (F12) and check the console for detailed
+                  debug information about date ranges and query results.
+                </p>
               </div>
             </div>
           </div>

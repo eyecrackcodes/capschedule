@@ -584,37 +584,59 @@ export async function getAgentTrainingHistory(
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - weeks * 7);
 
+    // First approach: get all agent assignments with sessions and schedules
     const { data, error } = await supabase
       .from("agent_assignments")
       .select(
         `
         agent_name,
         attended,
-        training_sessions (
+        session_id,
+        created_at,
+        training_sessions!inner (
+          id,
           day,
           training_type,
-          training_schedules (
+          schedule_id,
+          training_schedules!inner (
             week_of
           )
         )
       `
       )
       .eq("agent_name", agentName)
-      .eq("attended", true)
-      .gte(
-        "training_sessions.training_schedules.week_of",
-        startDate.toISOString().split("T")[0]
-      )
-      .order("training_sessions.training_schedules.week_of", {
-        ascending: true,
-      });
+      .eq("attended", true);
 
     if (error) {
       console.error("Error fetching training history:", error);
       return { success: false, error: error.message };
     }
 
-    return { success: true, data: data || [] };
+    // Filter by date range in-memory since nested filtering isn't supported
+    const filteredData = data?.filter((assignment) => {
+      const weekOf = assignment.training_sessions?.training_schedules?.week_of;
+      if (!weekOf) return false;
+      const weekDate = new Date(weekOf);
+      return weekDate >= startDate && weekDate <= endDate;
+    }) || [];
+
+    // Transform the data to match expected format
+    const transformedData = filteredData.map((assignment) => ({
+      agent_name: assignment.agent_name,
+      attended: assignment.attended,
+      created_at: assignment.created_at,
+      training_type: assignment.training_sessions?.training_type || "Unknown",
+      week_of: assignment.training_sessions?.training_schedules?.week_of,
+      day: assignment.training_sessions?.day,
+    }));
+
+    // Sort by week_of ascending
+    transformedData.sort((a, b) => {
+      if (!a.week_of || !b.week_of) return 0;
+      return a.week_of.localeCompare(b.week_of);
+    });
+
+    return { success: true, data: transformedData };
   } catch (error: any) {
     console.error("Error in getAgentTrainingHistory:", error);
     return { success: false, error: error.message };
@@ -696,7 +718,7 @@ export async function getAgentTrainingProgress(agentName?: string) {
     const agentWeekMap = new Map<string, any[]>();
 
     // Group by agent
-    historyData.forEach(record => {
+    historyData.forEach((record) => {
       if (!agentWeekMap.has(record.agent_name)) {
         agentWeekMap.set(record.agent_name, []);
       }
@@ -707,11 +729,11 @@ export async function getAgentTrainingProgress(agentName?: string) {
     agentWeekMap.forEach((weeks, agentName) => {
       // Sort by week ascending
       weeks.sort((a, b) => a.week_of.localeCompare(b.week_of));
-      
+
       for (let i = 0; i < weeks.length; i++) {
         const current = weeks[i];
         const previous = i > 0 ? weeks[i - 1] : null;
-        
+
         progressData.push({
           agent_name: current.agent_name,
           manager: current.manager,
@@ -720,8 +742,8 @@ export async function getAgentTrainingProgress(agentName?: string) {
           original_cap_score: current.original_cap_score,
           adjusted_cap_score: current.adjusted_cap_score,
           previous_cap_score: previous ? previous.adjusted_cap_score : null,
-          cap_improvement: previous 
-            ? current.adjusted_cap_score - previous.adjusted_cap_score 
+          cap_improvement: previous
+            ? current.adjusted_cap_score - previous.adjusted_cap_score
             : 0,
           lead_attainment: current.lead_attainment,
           close_rate: current.close_rate,

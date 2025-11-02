@@ -93,7 +93,8 @@ export function AgentPerformanceTrendsV2() {
   async function loadAvailableAgents() {
     setIsLoading(true);
     try {
-      const result = await getAgentMetricsTrends([], dateRange);
+      // Use a larger date range to ensure we get all available agents
+      const result = await getAgentMetricsTrends([], 24); // Look back 24 weeks
       if (result.success && result.data) {
         // Extract unique agent names
         const uniqueAgents = [
@@ -116,20 +117,24 @@ export function AgentPerformanceTrendsV2() {
   async function loadAgentTrends() {
     setIsLoading(true);
     try {
-      const result = await getAgentMetricsTrends(selectedAgents, dateRange);
+      // Use a longer date range to ensure we capture all data
+      const result = await getAgentMetricsTrends(selectedAgents, dateRange + 4); // Add 4 weeks buffer
       if (result.success && result.data) {
         console.log("=== PERFORMANCE TRENDS DEBUG ===");
         console.log("Raw data count:", result.data.length);
-        console.log("Unique weeks:", [...new Set(result.data.map((d: any) => d.week_of))]);
+        console.log("Date range requested:", dateRange, "weeks");
+        console.log("Unique weeks in data:", [
+          ...new Set(result.data.map((d: any) => d.week_of)),
+        ]);
         console.log("Sample data:", result.data.slice(0, 5));
-        
+
         // Group data by week for charting - use ISO date string for consistent grouping
         const groupedData = result.data.reduce((acc: any, item: any) => {
           const weekKey = item.week_of; // Use the raw ISO date string
           if (!acc[weekKey]) {
-            acc[weekKey] = { 
+            acc[weekKey] = {
               week: new Date(item.week_of).toLocaleDateString(),
-              weekRaw: item.week_of // Keep raw date for sorting
+              weekRaw: item.week_of, // Keep raw date for sorting
             };
           }
           // Store all metrics for each agent
@@ -144,11 +149,12 @@ export function AgentPerformanceTrendsV2() {
 
         const chartData = Object.values(groupedData).sort(
           (a: any, b: any) =>
-            new Date(a.weekRaw || a.week).getTime() - new Date(b.weekRaw || b.week).getTime()
+            new Date(a.weekRaw || a.week).getTime() -
+            new Date(b.weekRaw || b.week).getTime()
         ) as ChartData[];
-        
+
         console.log("Chart data points:", chartData.length);
-        console.log("Chart data:", chartData);
+        console.log("Chart data with weeks:", chartData.map((d: any) => ({ week: d.week, weekRaw: d.weekRaw })));
         setMetricData(chartData);
       }
     } catch (error) {
@@ -163,16 +169,20 @@ export function AgentPerformanceTrendsV2() {
       const events: TrainingEvent[] = [];
 
       for (const agent of selectedAgents) {
-        const result = await getAgentTrainingHistory(agent, dateRange);
+        const result = await getAgentTrainingHistory(agent, dateRange + 4); // Match the date range buffer
 
         if (result.success && result.data) {
           result.data.forEach((training: any) => {
-            events.push({
-              agentName: agent,
-              date: training.created_at,
-              week: new Date(training.created_at).toLocaleDateString(),
-              trainingType: training.training_type || "Unknown",
-            });
+            // Use week_of if available, otherwise fall back to created_at
+            const trainingDate = training.week_of || training.created_at;
+            if (trainingDate) {
+              events.push({
+                agentName: agent,
+                date: trainingDate,
+                week: new Date(trainingDate).toLocaleDateString(),
+                trainingType: training.training_type || "Unknown",
+              });
+            }
           });
         }
       }

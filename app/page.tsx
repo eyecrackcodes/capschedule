@@ -141,7 +141,10 @@ export default function HomePage() {
 
         // Get the most recent schedule
         const latestSchedule = sortedSchedules[0];
-        console.log("📅 All weeks:", sortedSchedules.map((s) => s.week_of));
+        console.log(
+          "📅 All weeks:",
+          sortedSchedules.map((s) => s.week_of)
+        );
         console.log("📅 Loading latest schedule:", latestSchedule.week_of);
 
         // Load full schedule details
@@ -161,7 +164,10 @@ export default function HomePage() {
               dbSchedule.schedule.length,
               "days"
             );
-            console.log("📊 Setting percentiles in state:", dbSchedule.percentiles);
+            console.log(
+              "📊 Setting percentiles in state:",
+              dbSchedule.percentiles
+            );
             setAppState((prev) => ({
               ...prev,
               schedule: dbSchedule.schedule,
@@ -906,7 +912,7 @@ export default function HomePage() {
 
                   {/* Database Maintenance View */}
                   {databaseView === "maintenance" && <DatabaseMaintenance />}
-                  
+
                   {/* Debug CAP History View */}
                   {databaseView === "debug" && <DebugCAPHistory />}
                 </div>
