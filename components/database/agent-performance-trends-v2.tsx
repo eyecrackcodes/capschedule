@@ -154,7 +154,10 @@ export function AgentPerformanceTrendsV2() {
         ) as ChartData[];
 
         console.log("Chart data points:", chartData.length);
-        console.log("Chart data with weeks:", chartData.map((d: any) => ({ week: d.week, weekRaw: d.weekRaw })));
+        console.log(
+          "Chart data with weeks:",
+          chartData.map((d: any) => ({ week: d.week, weekRaw: d.weekRaw }))
+        );
         setMetricData(chartData);
       }
     } catch (error) {
