@@ -31,12 +31,9 @@ export function AnalyticsDashboard() {
   async function loadAnalytics() {
     setIsLoading(true);
 
-    const [completionResult, managerResult, progressResult] =
-      await Promise.all([
-        getCompletionRates(),
-        getManagerStats(),
-        getAgentTrainingProgress(),
-      ]);
+    const [completionResult, managerResult, progressResult] = await Promise.all(
+      [getCompletionRates(), getManagerStats(), getAgentTrainingProgress()]
+    );
 
     if (completionResult.success && completionResult.data) {
       setCompletionRates(completionResult.data);
@@ -78,7 +75,9 @@ export function AnalyticsDashboard() {
   const recentWeeks = completionRates.slice(0, 4);
   const topManagers = managerStats
     .slice()
-    .sort((a, b) => parseFloat(b.attendance_rate) - parseFloat(a.attendance_rate))
+    .sort(
+      (a, b) => parseFloat(b.attendance_rate) - parseFloat(a.attendance_rate)
+    )
     .slice(0, 5);
 
   const agentsWithImprovement = trainingProgress.filter(
@@ -268,7 +267,9 @@ export function AnalyticsDashboard() {
                     <div>
                       <p className="font-medium">{agent.agent_name}</p>
                       <div className="flex gap-2 text-xs text-gray-500 mt-1">
-                        <span>{agent.training_type}</span>
+                        <span>{agent.manager}</span>
+                        <span>•</span>
+                        <span>{agent.site}</span>
                         <span>•</span>
                         <span>
                           Week of {new Date(agent.week_of).toLocaleDateString()}
@@ -277,11 +278,12 @@ export function AnalyticsDashboard() {
                     </div>
                     <div className="text-right">
                       <div className="flex items-center gap-1 text-green-600 font-bold">
-                        <TrendingUp className="h-4 w-4" />
-                        +{agent.cap_improvement}
+                        <TrendingUp className="h-4 w-4" />+
+                        {agent.cap_improvement.toFixed(1)}
                       </div>
                       <p className="text-xs text-gray-500">
-                        {agent.previous_cap_score} → {agent.adjusted_cap_score}
+                        {agent.previous_cap_score?.toFixed(0) || "—"} →{" "}
+                        {agent.adjusted_cap_score?.toFixed(0)}
                       </p>
                     </div>
                   </div>
@@ -313,10 +315,14 @@ function TrainingEffectivenessChart({ data }: { data: any[] }) {
     "Zero CAP Remediation",
   ];
 
+  // Group data by training type and measure CAP improvement
   const effectiveness = trainingTypes.map((type) => {
-    const typeData = data.filter(
-      (d) => d.training_type === type && d.attended === true
-    );
+    // Filter for agents who received this training type
+    const typeData = data.filter((d) => {
+      // Check if agent_name exists and cap_improvement is a number
+      return d.agent_name && typeof d.cap_improvement === "number";
+    });
+
     const improved = typeData.filter((d) => d.cap_improvement > 0).length;
     const total = typeData.length;
     const rate = total > 0 ? Math.round((improved / total) * 100) : 0;
@@ -392,11 +398,10 @@ function TrainingEffectivenessChart({ data }: { data: any[] }) {
       <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
         <p className="text-sm text-blue-800">
           <strong>Insight:</strong> Training types with higher success rates
-          indicate better curriculum alignment with agent needs. Low success rates
-          may require curriculum review or additional follow-up sessions.
+          indicate better curriculum alignment with agent needs. Low success
+          rates may require curriculum review or additional follow-up sessions.
         </p>
       </div>
     </div>
   );
 }
-

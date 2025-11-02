@@ -56,7 +56,7 @@ export function calculateStats(agents: AgentRecord[]): Stats {
   // Calculate tier-specific totals from ALL agents (including zero CAP)
   const allPerformanceAgents = agents.filter((a) => a.tier === "P");
   const allStandardAgents = agents.filter((a) => a.tier === "S");
-  
+
   // Calculate tier-specific averages from non-zero CAP agents only
   const performanceAgents = nonZeroCAPAgents.filter((a) => a.tier === "P");
   const standardAgents = nonZeroCAPAgents.filter((a) => a.tier === "S");
@@ -160,13 +160,33 @@ export function createCohorts(
   agents: AgentRecord[],
   maxSize: number = 3 // Changed from 5 to 3 for more intimate training
 ): Cohorts & { zeroCAPAgents: { clt: AgentRecord[][]; atx: AgentRecord[][] } } {
+  console.log("=== CREATE COHORTS DEBUG ===");
+  console.log(`Input agents: ${agents.length}`);
+
   // Filter out agents with 0 original CAP score - they are not eligible for training
   const eligibleAgents = agents.filter((agent) => agent.capScore > 0);
+  console.log(`Agents with capScore > 0: ${eligibleAgents.length}`);
+
+  // Show sample of CAP scores
+  if (agents.length > 0) {
+    console.log(
+      "Sample CAP scores:",
+      agents.slice(0, 5).map((a) => ({
+        name: a.name,
+        capScore: a.capScore,
+        adjustedCAPScore: a.adjustedCAPScore,
+      }))
+    );
+  }
 
   // Calculate average excluding zero ADJUSTED CAP scores
   const agentsWithNonZeroCAP = eligibleAgents.filter(
     (agent) => agent.adjustedCAPScore > 0
   );
+  console.log(
+    `Agents with adjustedCAPScore > 0: ${agentsWithNonZeroCAP.length}`
+  );
+
   const avgAdjustedCAPScore =
     agentsWithNonZeroCAP.length > 0
       ? agentsWithNonZeroCAP.reduce(
@@ -174,6 +194,7 @@ export function createCohorts(
           0
         ) / agentsWithNonZeroCAP.length
       : 0;
+  console.log(`Average adjusted CAP score: ${avgAdjustedCAPScore}`);
 
   // No more zero CAP agents in training - they are excluded
   const zeroCAPAgents: AgentRecord[] = [];
@@ -185,6 +206,9 @@ export function createCohorts(
   const trainingAgents = eligibleAgents.filter(
     (agent) =>
       agent.adjustedCAPScore > 0 && agent.adjustedCAPScore < avgAdjustedCAPScore
+  );
+  console.log(
+    `Agents needing training (adjustedCAPScore < ${avgAdjustedCAPScore}): ${trainingAgents.length}`
   );
 
   // Group by location and tier
