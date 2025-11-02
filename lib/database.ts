@@ -541,10 +541,15 @@ export async function getAgentMetricsTrends(
   weeks: number = 12
 ) {
   try {
-    // Calculate date range
+    // Calculate date range - add buffer to ensure we get all data
     const endDate = new Date();
+    endDate.setDate(endDate.getDate() + 7); // Add 7 days to ensure we get current week
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - weeks * 7);
+    startDate.setDate(startDate.getDate() - (weeks + 1) * 7); // Add extra week buffer
+
+    console.log("=== getAgentMetricsTrends DEBUG ===");
+    console.log("Date range - Start:", startDate.toISOString().split("T")[0]);
+    console.log("Date range - End:", endDate.toISOString().split("T")[0]);
 
     let query = supabase
       .from("cap_score_history")
@@ -564,6 +569,9 @@ export async function getAgentMetricsTrends(
       console.error("Error fetching agent trends:", error);
       return { success: false, error: error.message };
     }
+
+    console.log("Total records fetched:", data?.length || 0);
+    console.log("Unique weeks in data:", [...new Set(data?.map(d => d.week_of) || [])]);
 
     return { success: true, data: data || [] };
   } catch (error: any) {
@@ -619,12 +627,13 @@ export async function getAgentTrainingHistory(
         const sessions = Array.isArray(assignment.training_sessions)
           ? assignment.training_sessions[0]
           : assignment.training_sessions;
-        
-        const weekOf = sessions?.training_schedules?.week_of || 
-                       (Array.isArray(sessions?.training_schedules) 
-                         ? sessions?.training_schedules[0]?.week_of 
-                         : null);
-                         
+
+        const weekOf =
+          sessions?.training_schedules?.week_of ||
+          (Array.isArray(sessions?.training_schedules)
+            ? sessions?.training_schedules[0]?.week_of
+            : null);
+
         if (!weekOf) return false;
         const weekDate = new Date(weekOf);
         return weekDate >= startDate && weekDate <= endDate;
@@ -636,10 +645,10 @@ export async function getAgentTrainingHistory(
       const sessions = Array.isArray(assignment.training_sessions)
         ? assignment.training_sessions[0]
         : assignment.training_sessions;
-        
+
       const schedules = sessions?.training_schedules;
-      const weekOf = Array.isArray(schedules) 
-        ? schedules[0]?.week_of 
+      const weekOf = Array.isArray(schedules)
+        ? schedules[0]?.week_of
         : schedules?.week_of;
 
       return {

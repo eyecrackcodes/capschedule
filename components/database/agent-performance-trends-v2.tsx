@@ -117,8 +117,7 @@ export function AgentPerformanceTrendsV2() {
   async function loadAgentTrends() {
     setIsLoading(true);
     try {
-      // Use a longer date range to ensure we capture all data
-      const result = await getAgentMetricsTrends(selectedAgents, dateRange + 4); // Add 4 weeks buffer
+      const result = await getAgentMetricsTrends(selectedAgents, dateRange);
       if (result.success && result.data) {
         console.log("=== PERFORMANCE TRENDS DEBUG ===");
         console.log("Raw data count:", result.data.length);
@@ -172,7 +171,7 @@ export function AgentPerformanceTrendsV2() {
       const events: TrainingEvent[] = [];
 
       for (const agent of selectedAgents) {
-        const result = await getAgentTrainingHistory(agent, dateRange + 4); // Match the date range buffer
+        const result = await getAgentTrainingHistory(agent, dateRange);
 
         if (result.success && result.data) {
           result.data.forEach((training: any) => {

@@ -102,6 +102,41 @@ export function DebugCAPHistory() {
       setLoading(false);
     }
   }
+  
+  async function checkMissingWeeks() {
+    setLoading(true);
+    try {
+      // Get all schedules
+      const { data: schedules } = await supabase
+        .from("training_schedules")
+        .select("week_of")
+        .order("week_of", { ascending: true });
+        
+      // Get all CAP history weeks
+      const { data: capWeeks } = await supabase
+        .from("cap_score_history")
+        .select("week_of")
+        .order("week_of", { ascending: true });
+        
+      const scheduleWeeks = [...new Set(schedules?.map(s => s.week_of) || [])];
+      const historyWeeks = [...new Set(capWeeks?.map(c => c.week_of) || [])];
+      
+      const missingWeeks = scheduleWeeks.filter(w => !historyWeeks.includes(w));
+      
+      console.log("=== MISSING WEEKS CHECK ===");
+      console.log("Schedule weeks:", scheduleWeeks);
+      console.log("CAP history weeks:", historyWeeks);
+      console.log("Missing CAP history for weeks:", missingWeeks);
+      
+      if (missingWeeks.length > 0) {
+        alert(`Missing CAP history for weeks: ${missingWeeks.join(", ")}. You may need to re-upload the data for these weeks.`);
+      }
+    } catch (err: any) {
+      console.error("Missing weeks check error:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const weekSummary = uniqueWeeks.map((week) => {
     const weekRecords = records.filter((r) => r.week_of === week);
@@ -146,7 +181,7 @@ export function DebugCAPHistory() {
           )}
 
           {/* Actions */}
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             <Button
               onClick={loadCAPHistory}
               disabled={loading}
@@ -162,6 +197,15 @@ export function DebugCAPHistory() {
             >
               <Calendar className="h-4 w-4 mr-2" />
               Test Date Range Query
+            </Button>
+            <Button
+              onClick={checkMissingWeeks}
+              disabled={loading}
+              variant="outline"
+              className="bg-amber-50 hover:bg-amber-100 border-amber-200"
+            >
+              <AlertCircle className="h-4 w-4 mr-2 text-amber-600" />
+              Check Missing Weeks
             </Button>
           </div>
 
