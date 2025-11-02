@@ -584,23 +584,6 @@ export async function getAgentTrainingHistory(
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - weeks * 7);
 
-    // Define the expected type structure
-    type AssignmentWithJoins = {
-      agent_name: string;
-      attended: boolean;
-      session_id: string;
-      created_at: string;
-      training_sessions: {
-        id: string;
-        day: string;
-        training_type: string;
-        schedule_id: string;
-        training_schedules: {
-          week_of: string;
-        };
-      };
-    };
-
     // First approach: get all agent assignments with sessions and schedules
     const { data, error } = await supabase
       .from("agent_assignments")
@@ -629,28 +612,45 @@ export async function getAgentTrainingHistory(
       return { success: false, error: error.message };
     }
 
-    // Type assertion to help TypeScript understand the structure
-    const typedData = data as AssignmentWithJoins[] | null;
-
     // Filter by date range in-memory since nested filtering isn't supported
     const filteredData =
-      typedData?.filter((assignment) => {
-        const weekOf =
-          assignment.training_sessions?.training_schedules?.week_of;
+      data?.filter((assignment: any) => {
+        // Handle both array and object formats from Supabase
+        const sessions = Array.isArray(assignment.training_sessions)
+          ? assignment.training_sessions[0]
+          : assignment.training_sessions;
+        
+        const weekOf = sessions?.training_schedules?.week_of || 
+                       (Array.isArray(sessions?.training_schedules) 
+                         ? sessions?.training_schedules[0]?.week_of 
+                         : null);
+                         
         if (!weekOf) return false;
         const weekDate = new Date(weekOf);
         return weekDate >= startDate && weekDate <= endDate;
       }) || [];
 
     // Transform the data to match expected format
-    const transformedData = filteredData.map((assignment) => ({
-      agent_name: assignment.agent_name,
-      attended: assignment.attended,
-      created_at: assignment.created_at,
-      training_type: assignment.training_sessions?.training_type || "Unknown",
-      week_of: assignment.training_sessions?.training_schedules?.week_of,
-      day: assignment.training_sessions?.day,
-    }));
+    const transformedData = filteredData.map((assignment: any) => {
+      // Handle both array and object formats
+      const sessions = Array.isArray(assignment.training_sessions)
+        ? assignment.training_sessions[0]
+        : assignment.training_sessions;
+        
+      const schedules = sessions?.training_schedules;
+      const weekOf = Array.isArray(schedules) 
+        ? schedules[0]?.week_of 
+        : schedules?.week_of;
+
+      return {
+        agent_name: assignment.agent_name,
+        attended: assignment.attended,
+        created_at: assignment.created_at,
+        training_type: sessions?.training_type || "Unknown",
+        week_of: weekOf,
+        day: sessions?.day,
+      };
+    });
 
     // Sort by week_of ascending
     transformedData.sort((a, b) => {
