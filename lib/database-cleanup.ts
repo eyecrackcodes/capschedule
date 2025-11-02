@@ -1,6 +1,10 @@
 import { supabase } from "./supabase";
 
-export type ScheduleHealthStatus = "EMPTY" | "NO_AGENTS" | "MISMATCH" | "HEALTHY";
+export type ScheduleHealthStatus =
+  | "EMPTY"
+  | "NO_AGENTS"
+  | "MISMATCH"
+  | "HEALTHY";
 
 export interface ScheduleHealthReport {
   week_of: string;

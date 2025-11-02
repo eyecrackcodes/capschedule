@@ -75,6 +75,7 @@ export function WeeklyDataUploader({
         weekDate,
         stats,
         agentsWithRecommendations,
+        percentiles,
       };
 
       // 3. Save everything to database
@@ -87,8 +88,8 @@ export function WeeklyDataUploader({
           totalAgents: stats.totalAgents,
           excludedCount: stats.excludedCount,
           eligibleCount: stats.eligibleCount,
-        }
         },
+        false, // updateExisting
         percentiles // Pass percentiles to be saved
       );
 
@@ -149,7 +150,7 @@ export function WeeklyDataUploader({
     setStatus({ type: "info", message: "Updating existing schedule..." });
 
     try {
-      const { schedule, weekDate, stats, agentsWithRecommendations } =
+      const { schedule, weekDate, stats, agentsWithRecommendations, percentiles } =
         pendingSchedule;
 
       // Save with update flag
@@ -163,7 +164,8 @@ export function WeeklyDataUploader({
           excludedCount: stats.excludedCount,
           eligibleCount: stats.eligibleCount,
         },
-        true // updateExisting
+        true, // updateExisting
+        percentiles
       );
 
       if (!saveResult.success) {

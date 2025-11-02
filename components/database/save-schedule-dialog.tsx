@@ -93,7 +93,7 @@ export function SaveScheduleDialog({
         avgCAPScore,
         avgAdjustedCAPScore,
         fullStats,
-        forceUpdate
+        forceUpdate,
         percentiles
       );
 

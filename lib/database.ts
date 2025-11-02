@@ -24,7 +24,7 @@ export async function saveTrainingSchedule(
     excludedCount: number;
     eligibleCount: number;
   },
-  updateExisting: boolean = false
+  updateExisting: boolean = false,
   percentiles?: {
     performance: {
       closeRate50th: number;
