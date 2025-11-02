@@ -118,11 +118,19 @@ export function AgentPerformanceTrendsV2() {
     try {
       const result = await getAgentMetricsTrends(selectedAgents, dateRange);
       if (result.success && result.data) {
-        // Group data by week for charting
+        console.log("=== PERFORMANCE TRENDS DEBUG ===");
+        console.log("Raw data count:", result.data.length);
+        console.log("Unique weeks:", [...new Set(result.data.map((d: any) => d.week_of))]);
+        console.log("Sample data:", result.data.slice(0, 5));
+        
+        // Group data by week for charting - use ISO date string for consistent grouping
         const groupedData = result.data.reduce((acc: any, item: any) => {
-          const weekKey = new Date(item.week_of).toLocaleDateString();
+          const weekKey = item.week_of; // Use the raw ISO date string
           if (!acc[weekKey]) {
-            acc[weekKey] = { week: weekKey };
+            acc[weekKey] = { 
+              week: new Date(item.week_of).toLocaleDateString(),
+              weekRaw: item.week_of // Keep raw date for sorting
+            };
           }
           // Store all metrics for each agent
           acc[weekKey][`${item.agent_name}_adjusted_cap_score`] =
@@ -136,9 +144,11 @@ export function AgentPerformanceTrendsV2() {
 
         const chartData = Object.values(groupedData).sort(
           (a: any, b: any) =>
-            new Date(a.week).getTime() - new Date(b.week).getTime()
+            new Date(a.weekRaw || a.week).getTime() - new Date(b.weekRaw || b.week).getTime()
         ) as ChartData[];
-
+        
+        console.log("Chart data points:", chartData.length);
+        console.log("Chart data:", chartData);
         setMetricData(chartData);
       }
     } catch (error) {

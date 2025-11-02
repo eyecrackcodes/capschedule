@@ -21,6 +21,7 @@ import { AgentPerformanceTrendsV2 } from "@/components/database/agent-performanc
 import { WeeklyDataUploader } from "@/components/database/weekly-data-uploader";
 import { AttendancePerformanceCorrelation } from "@/components/database/attendance-performance-correlation";
 import { DatabaseMaintenance } from "@/components/database/database-maintenance";
+import { DebugCAPHistory } from "@/components/database/debug-cap-history";
 import {
   calculateStats,
   createCohorts,
@@ -63,6 +64,7 @@ export default function HomePage() {
     | "trends"
     | "correlation"
     | "maintenance"
+    | "debug"
   >("upload");
   const [isLoadingFromDB, setIsLoadingFromDB] = useState(true);
   const [appState, setAppState] = useState<AppState>({
@@ -817,6 +819,16 @@ export default function HomePage() {
                     >
                       Maintenance
                     </button>
+                    <button
+                      onClick={() => setDatabaseView("debug")}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        databaseView === "debug"
+                          ? "bg-white text-blue-600 shadow-sm"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      Debug
+                    </button>
                   </div>
 
                   {/* Upload New Week View */}
@@ -894,6 +906,9 @@ export default function HomePage() {
 
                   {/* Database Maintenance View */}
                   {databaseView === "maintenance" && <DatabaseMaintenance />}
+                  
+                  {/* Debug CAP History View */}
+                  {databaseView === "debug" && <DebugCAPHistory />}
                 </div>
               )}
             </div>

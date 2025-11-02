@@ -150,8 +150,13 @@ export function WeeklyDataUploader({
     setStatus({ type: "info", message: "Updating existing schedule..." });
 
     try {
-      const { schedule, weekDate, stats, agentsWithRecommendations, percentiles } =
-        pendingSchedule;
+      const {
+        schedule,
+        weekDate,
+        stats,
+        agentsWithRecommendations,
+        percentiles,
+      } = pendingSchedule;
 
       // Save with update flag
       const saveResult = await saveTrainingSchedule(

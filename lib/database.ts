@@ -669,8 +669,82 @@ export async function getManagerStats(manager?: string, weekOf?: Date) {
 
 /**
  * Get agent training progress (improvements over time)
+ * Updated to use cap_score_history for more accurate week-over-week tracking
  */
 export async function getAgentTrainingProgress(agentName?: string) {
+  try {
+    // First, get all cap score history records
+    let query = supabase
+      .from("cap_score_history")
+      .select("*")
+      .order("agent_name")
+      .order("week_of", { ascending: true });
+
+    if (agentName) {
+      query = query.eq("agent_name", agentName);
+    }
+
+    const { data: historyData, error: historyError } = await query;
+
+    if (historyError) throw historyError;
+    if (!historyData || historyData.length === 0) {
+      return { success: true, data: [] };
+    }
+
+    // Process data to calculate week-over-week improvements
+    const progressData: any[] = [];
+    const agentWeekMap = new Map<string, any[]>();
+
+    // Group by agent
+    historyData.forEach(record => {
+      if (!agentWeekMap.has(record.agent_name)) {
+        agentWeekMap.set(record.agent_name, []);
+      }
+      agentWeekMap.get(record.agent_name)!.push(record);
+    });
+
+    // Calculate improvements for each agent
+    agentWeekMap.forEach((weeks, agentName) => {
+      // Sort by week ascending
+      weeks.sort((a, b) => a.week_of.localeCompare(b.week_of));
+      
+      for (let i = 0; i < weeks.length; i++) {
+        const current = weeks[i];
+        const previous = i > 0 ? weeks[i - 1] : null;
+        
+        progressData.push({
+          agent_name: current.agent_name,
+          manager: current.manager,
+          site: current.site,
+          week_of: current.week_of,
+          original_cap_score: current.original_cap_score,
+          adjusted_cap_score: current.adjusted_cap_score,
+          previous_cap_score: previous ? previous.adjusted_cap_score : null,
+          cap_improvement: previous 
+            ? current.adjusted_cap_score - previous.adjusted_cap_score 
+            : 0,
+          lead_attainment: current.lead_attainment,
+          close_rate: current.close_rate,
+          annual_premium: current.annual_premium,
+          place_rate: current.place_rate,
+        });
+      }
+    });
+
+    // Sort by week descending (most recent first) for display
+    progressData.sort((a, b) => b.week_of.localeCompare(a.week_of));
+
+    return { success: true, data: progressData };
+  } catch (error: any) {
+    console.error("Error fetching training progress:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Get agent training progress from view (legacy - kept for compatibility)
+ */
+export async function getAgentTrainingProgressFromView(agentName?: string) {
   let query = supabase.from("agent_training_progress").select("*");
 
   if (agentName) {
