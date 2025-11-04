@@ -571,7 +571,9 @@ export async function getAgentMetricsTrends(
     }
 
     console.log("Total records fetched:", data?.length || 0);
-    console.log("Unique weeks in data:", [...new Set(data?.map(d => d.week_of) || [])]);
+    console.log("Unique weeks in data:", [
+      ...new Set(data?.map((d) => d.week_of) || []),
+    ]);
 
     return { success: true, data: data || [] };
   } catch (error: any) {
@@ -812,6 +814,157 @@ export async function getAgentTrainingProgressFromView(agentName?: string) {
   }
 
   return { success: true, data };
+}
+
+// Get training effectiveness grouped by training type
+export async function getTrainingEffectivenessByType() {
+  try {
+    console.log("=== FETCHING TRAINING EFFECTIVENESS ===");
+    
+    // First, let's check if there are any assignments at all
+    const { data: allAssignments, error: allError } = await supabase
+      .from("agent_assignments")
+      .select("*");
+    
+    console.log("Total assignments in DB:", allAssignments?.length || 0);
+    console.log("Assignments with attended=true:", allAssignments?.filter(a => a.attended === true).length || 0);
+    
+    // Get all training assignments with their sessions
+    const { data: assignments, error: assignError } = await supabase
+      .from("agent_assignments")
+      .select(`
+        agent_name,
+        attended,
+        training_sessions!agent_assignments_session_id_fkey (
+          day,
+          training_type,
+          training_schedules (
+            week_of
+          )
+        )
+      `)
+      .eq("attended", true);
+
+    if (assignError) throw assignError;
+    
+    console.log("Attended assignments with sessions:", assignments?.length || 0);
+    if (assignments && assignments.length > 0) {
+      console.log("Sample assignment:", JSON.stringify(assignments[0], null, 2));
+    }
+
+    // Get CAP score history for comparison
+    const { data: capHistory, error: capError } = await supabase
+      .from("cap_score_history")
+      .select("*")
+      .order("week_of", { ascending: true });
+
+    if (capError) throw capError;
+
+    // Build a map of agent improvements by week
+    const improvementMap = new Map<string, Map<string, number>>();
+    
+    const agentWeekMap = new Map<string, any[]>();
+    capHistory?.forEach((record) => {
+      if (!agentWeekMap.has(record.agent_name)) {
+        agentWeekMap.set(record.agent_name, []);
+      }
+      agentWeekMap.get(record.agent_name)!.push(record);
+    });
+
+    // Calculate improvements
+    agentWeekMap.forEach((weeks, agentName) => {
+      weeks.sort((a, b) => a.week_of.localeCompare(b.week_of));
+      
+      for (let i = 1; i < weeks.length; i++) {
+        const current = weeks[i];
+        const previous = weeks[i - 1];
+        const improvement = current.adjusted_cap_score - previous.adjusted_cap_score;
+        
+        if (!improvementMap.has(agentName)) {
+          improvementMap.set(agentName, new Map());
+        }
+        improvementMap.get(agentName)!.set(current.week_of, improvement);
+      }
+    });
+
+    // Process assignments by training type
+    const trainingTypeStats = new Map<string, {
+      total: number;
+      improved: number;
+      totalImprovement: number;
+    }>();
+
+    assignments?.forEach((assignment: any) => {
+      console.log("Processing assignment:", {
+        agent_name: assignment.agent_name,
+        attended: assignment.attended,
+        training_sessions: assignment.training_sessions
+      });
+      
+      // Handle case where training_sessions might be an array
+      const session = Array.isArray(assignment.training_sessions) 
+        ? assignment.training_sessions[0] 
+        : assignment.training_sessions;
+      
+      if (!session) {
+        console.log("No session found for assignment");
+        return;
+      }
+      
+      const trainingType = getTrainingTypeFromDay(session.day);
+      const schedules = Array.isArray(session.training_schedules)
+        ? session.training_schedules[0]
+        : session.training_schedules;
+      
+      if (!schedules) {
+        console.log("No schedule found for session");
+        return;
+      }
+      
+      const weekOf = schedules.week_of;
+      const improvement = improvementMap.get(assignment.agent_name)?.get(weekOf) || 0;
+      
+      console.log("Training effectiveness data point:", {
+        agent: assignment.agent_name,
+        type: trainingType,
+        weekOf,
+        improvement
+      });
+
+      if (!trainingTypeStats.has(trainingType)) {
+        trainingTypeStats.set(trainingType, {
+          total: 0,
+          improved: 0,
+          totalImprovement: 0,
+        });
+      }
+
+      const stats = trainingTypeStats.get(trainingType)!;
+      stats.total++;
+      if (improvement > 0) {
+        stats.improved++;
+        stats.totalImprovement += improvement;
+      }
+    });
+
+    // Convert to array format
+    const effectivenessData = Array.from(trainingTypeStats.entries()).map(([type, stats]) => ({
+      type,
+      total: stats.total,
+      improved: stats.improved,
+      rate: stats.total > 0 ? Math.round((stats.improved / stats.total) * 100) : 0,
+      avgImprovement: stats.improved > 0 ? Math.round(stats.totalImprovement / stats.improved) : 0,
+    }));
+
+    console.log("=== TRAINING EFFECTIVENESS BY TYPE ===");
+    console.log("Total assignments processed:", assignments?.length || 0);
+    console.log("Training type stats:", effectivenessData);
+
+    return { success: true, data: effectivenessData };
+  } catch (error: any) {
+    console.error("Error fetching training effectiveness:", error);
+    return { success: false, error: error.message };
+  }
 }
 
 // ============================================================================
