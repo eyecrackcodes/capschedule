@@ -7,6 +7,7 @@ import {
   getCompletionRates,
   getManagerStats,
   getAgentTrainingProgress,
+  getTrainingEffectivenessByType,
 } from "@/lib/database";
 import {
   TrendingUp,
@@ -22,6 +23,7 @@ export function AnalyticsDashboard() {
   const [completionRates, setCompletionRates] = useState<any[]>([]);
   const [managerStats, setManagerStats] = useState<any[]>([]);
   const [trainingProgress, setTrainingProgress] = useState<any[]>([]);
+  const [trainingEffectiveness, setTrainingEffectiveness] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -31,8 +33,8 @@ export function AnalyticsDashboard() {
   async function loadAnalytics() {
     setIsLoading(true);
 
-    const [completionResult, managerResult, progressResult] = await Promise.all(
-      [getCompletionRates(), getManagerStats(), getAgentTrainingProgress()]
+    const [completionResult, managerResult, progressResult, effectivenessResult] = await Promise.all(
+      [getCompletionRates(), getManagerStats(), getAgentTrainingProgress(), getTrainingEffectivenessByType()]
     );
 
     if (completionResult.success && completionResult.data) {
@@ -45,6 +47,10 @@ export function AnalyticsDashboard() {
 
     if (progressResult.success && progressResult.data) {
       setTrainingProgress(progressResult.data);
+    }
+
+    if (effectivenessResult.success && effectivenessResult.data) {
+      setTrainingEffectiveness(effectivenessResult.data);
     }
 
     setIsLoading(false);
@@ -300,7 +306,7 @@ export function AnalyticsDashboard() {
           <CardTitle>Training Effectiveness by Type</CardTitle>
         </CardHeader>
         <CardContent>
-          <TrainingEffectivenessChart data={trainingProgress} />
+          <TrainingEffectivenessChart data={trainingEffectiveness} />
         </CardContent>
       </Card>
     </div>
@@ -308,46 +314,16 @@ export function AnalyticsDashboard() {
 }
 
 function TrainingEffectivenessChart({ data }: { data: any[] }) {
-  const trainingTypes = [
-    "Close Rate Training",
-    "Annual Premium Training",
-    "Place Rate Training",
-    "Zero CAP Remediation",
-  ];
+  // Filter out Zero CAP Remediation and any entries with that type
+  const effectiveness = data.filter(item => 
+    item.type !== "Zero CAP Remediation / Overfill" && 
+    item.type !== "Zero CAP Remediation"
+  );
 
-  // Group data by training type and measure CAP improvement
-  const effectiveness = trainingTypes.map((type) => {
-    // Filter for agents who received this training type
-    const typeData = data.filter((d) => {
-      // Check if agent_name exists and cap_improvement is a number
-      return d.agent_name && typeof d.cap_improvement === "number";
-    });
-
-    const improved = typeData.filter((d) => d.cap_improvement > 0).length;
-    const total = typeData.length;
-    const rate = total > 0 ? Math.round((improved / total) * 100) : 0;
-    const avgImprovement =
-      improved > 0
-        ? Math.round(
-            typeData
-              .filter((d) => d.cap_improvement > 0)
-              .reduce((sum, d) => sum + d.cap_improvement, 0) / improved
-          )
-        : 0;
-
-    return {
-      type,
-      rate,
-      improved,
-      total,
-      avgImprovement,
-    };
-  });
-
-  if (data.length === 0) {
+  if (effectiveness.length === 0) {
     return (
       <p className="text-gray-500 text-center py-8">
-        No training effectiveness data available yet
+        No training effectiveness data available yet. Mark attendance to see effectiveness metrics.
       </p>
     );
   }
