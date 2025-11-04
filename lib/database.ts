@@ -819,16 +819,26 @@ export async function getAgentTrainingProgressFromView(agentName?: string) {
 // Get training effectiveness grouped by training type
 export async function getTrainingEffectivenessByType() {
   try {
+    console.log("=== FETCHING TRAINING EFFECTIVENESS ===");
+    
+    // First, let's check if there are any assignments at all
+    const { data: allAssignments, error: allError } = await supabase
+      .from("agent_assignments")
+      .select("*");
+    
+    console.log("Total assignments in DB:", allAssignments?.length || 0);
+    console.log("Assignments with attended=true:", allAssignments?.filter(a => a.attended === true).length || 0);
+    
     // Get all training assignments with their sessions
     const { data: assignments, error: assignError } = await supabase
       .from("agent_assignments")
       .select(`
         agent_name,
         attended,
-        training_sessions!inner (
+        training_sessions!agent_assignments_session_id_fkey (
           day,
           training_type,
-          training_schedules!inner (
+          training_schedules (
             week_of
           )
         )
@@ -836,6 +846,11 @@ export async function getTrainingEffectivenessByType() {
       .eq("attended", true);
 
     if (assignError) throw assignError;
+    
+    console.log("Attended assignments with sessions:", assignments?.length || 0);
+    if (assignments && assignments.length > 0) {
+      console.log("Sample assignment:", JSON.stringify(assignments[0], null, 2));
+    }
 
     // Get CAP score history for comparison
     const { data: capHistory, error: capError } = await supabase
@@ -880,22 +895,41 @@ export async function getTrainingEffectivenessByType() {
     }>();
 
     assignments?.forEach((assignment: any) => {
+      console.log("Processing assignment:", {
+        agent_name: assignment.agent_name,
+        attended: assignment.attended,
+        training_sessions: assignment.training_sessions
+      });
+      
       // Handle case where training_sessions might be an array
       const session = Array.isArray(assignment.training_sessions) 
         ? assignment.training_sessions[0] 
         : assignment.training_sessions;
       
-      if (!session) return;
+      if (!session) {
+        console.log("No session found for assignment");
+        return;
+      }
       
       const trainingType = getTrainingTypeFromDay(session.day);
       const schedules = Array.isArray(session.training_schedules)
         ? session.training_schedules[0]
         : session.training_schedules;
       
-      if (!schedules) return;
+      if (!schedules) {
+        console.log("No schedule found for session");
+        return;
+      }
       
       const weekOf = schedules.week_of;
       const improvement = improvementMap.get(assignment.agent_name)?.get(weekOf) || 0;
+      
+      console.log("Training effectiveness data point:", {
+        agent: assignment.agent_name,
+        type: trainingType,
+        weekOf,
+        improvement
+      });
 
       if (!trainingTypeStats.has(trainingType)) {
         trainingTypeStats.set(trainingType, {

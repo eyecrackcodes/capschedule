@@ -102,7 +102,7 @@ export function DebugCAPHistory() {
       setLoading(false);
     }
   }
-  
+
   async function checkMissingWeeks() {
     setLoading(true);
     try {
@@ -111,25 +111,33 @@ export function DebugCAPHistory() {
         .from("training_schedules")
         .select("week_of")
         .order("week_of", { ascending: true });
-        
+
       // Get all CAP history weeks
       const { data: capWeeks } = await supabase
         .from("cap_score_history")
         .select("week_of")
         .order("week_of", { ascending: true });
-        
-      const scheduleWeeks = [...new Set(schedules?.map(s => s.week_of) || [])];
-      const historyWeeks = [...new Set(capWeeks?.map(c => c.week_of) || [])];
-      
-      const missingWeeks = scheduleWeeks.filter(w => !historyWeeks.includes(w));
-      
+
+      const scheduleWeeks = [
+        ...new Set(schedules?.map((s) => s.week_of) || []),
+      ];
+      const historyWeeks = [...new Set(capWeeks?.map((c) => c.week_of) || [])];
+
+      const missingWeeks = scheduleWeeks.filter(
+        (w) => !historyWeeks.includes(w)
+      );
+
       console.log("=== MISSING WEEKS CHECK ===");
       console.log("Schedule weeks:", scheduleWeeks);
       console.log("CAP history weeks:", historyWeeks);
       console.log("Missing CAP history for weeks:", missingWeeks);
-      
+
       if (missingWeeks.length > 0) {
-        alert(`Missing CAP history for weeks: ${missingWeeks.join(", ")}. You may need to re-upload the data for these weeks.`);
+        alert(
+          `Missing CAP history for weeks: ${missingWeeks.join(
+            ", "
+          )}. You may need to re-upload the data for these weeks.`
+        );
       }
     } catch (err: any) {
       console.error("Missing weeks check error:", err);

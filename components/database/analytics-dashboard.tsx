@@ -320,11 +320,21 @@ function TrainingEffectivenessChart({ data }: { data: any[] }) {
     item.type !== "Zero CAP Remediation"
   );
 
+  console.log("Training effectiveness data received:", effectiveness);
+
   if (effectiveness.length === 0) {
     return (
-      <p className="text-gray-500 text-center py-8">
-        No training effectiveness data available yet. Mark attendance to see effectiveness metrics.
-      </p>
+      <div className="text-gray-500 text-center py-8 space-y-2">
+        <p>No training effectiveness data available yet.</p>
+        <p className="text-sm">
+          To see effectiveness metrics:
+        </p>
+        <ol className="text-sm text-left max-w-md mx-auto list-decimal list-inside space-y-1">
+          <li>Save a training schedule to the database</li>
+          <li>Mark attendance for completed sessions</li>
+          <li>Upload new weekly data to track CAP improvements</li>
+        </ol>
+      </div>
     );
   }
 
