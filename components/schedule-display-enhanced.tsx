@@ -36,6 +36,13 @@ const dayColors: Record<string, string> = {
   Friday: "from-amber-500 to-orange-600",
 };
 
+const dayFocus: Record<string, string> = {
+  Tuesday: "Close Rate Training",
+  Wednesday: "Annual Premium Training",
+  Thursday: "Place Rate Training",
+  Friday: "Zero CAP Score Remediation",
+};
+
 export function ScheduleDisplayEnhanced({
   schedule,
   filters,
@@ -119,7 +126,7 @@ export function ScheduleDisplayEnhanced({
                   <span className="text-2xl">{dayIcons[day.day]}</span>
                   <div>
                     <h3 className="text-xl font-bold">{day.day}</h3>
-                    <p className="text-sm opacity-90">{day.focus}</p>
+                    <p className="text-sm opacity-90">{dayFocus[day.day]}</p>
                   </div>
                 </div>
                 <Badge className="bg-white/20 text-white border-white/30">
