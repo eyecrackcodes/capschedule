@@ -42,13 +42,18 @@ export function AgentInsights({ agent, className }: AgentInsightsProps) {
     <Card className={cn("overflow-hidden", className)}>
       <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex-1">
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-purple-600" />
-              AI Performance Insights
+              {agent.name}
             </CardTitle>
             <CardDescription>
-              Personalized coaching recommendations for {agent.name}
+              <div className="mt-1 flex items-center gap-4">
+                <span>Adj CAP: {agent.adjustedCAPScore}</span>
+                <span>Close Rate: {agent.closeRate}%</span>
+                <span>AP: ${agent.annualPremium}</span>
+                <span>Place Rate: {agent.placeRate}%</span>
+              </div>
             </CardDescription>
           </div>
           <Button

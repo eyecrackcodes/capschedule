@@ -75,20 +75,7 @@ export function AIDashboard({ schedule, agents, stats }: AIDashboardProps) {
           
           {topPerformers.map((agent, i) => (
             <AnimatedCard key={agent.name} delay={i * 100}>
-              <div className="p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <div>
-                    <h4 className="font-semibold">{agent.name}</h4>
-                    <div className="mt-1 flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>Adj CAP: {agent.adjustedCAPScore}</span>
-                      <span>Close Rate: {agent.closeRate}%</span>
-                      <span>AP: ${agent.annualPremium}</span>
-                    </div>
-                  </div>
-                  <div className="text-2xl">🥇</div>
-                </div>
-                <AgentInsights agent={agent} />
-              </div>
+              <AgentInsights agent={agent} />
             </AnimatedCard>
           ))}
         </TabsContent>
@@ -105,22 +92,7 @@ export function AIDashboard({ schedule, agents, stats }: AIDashboardProps) {
           
           {needsSupport.map((agent, i) => (
             <AnimatedCard key={agent.name} delay={i * 100}>
-              <div className="p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <div>
-                    <h4 className="font-semibold">{agent.name}</h4>
-                    <div className="mt-1 flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>Adj CAP: {agent.adjustedCAPScore}</span>
-                      <span>Close Rate: {agent.closeRate}%</span>
-                      <span>AP: ${agent.annualPremium}</span>
-                    </div>
-                  </div>
-                  <div className="rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
-                    Needs Support
-                  </div>
-                </div>
-                <AgentInsights agent={agent} />
-              </div>
+              <AgentInsights agent={agent} />
             </AnimatedCard>
           ))}
         </TabsContent>
