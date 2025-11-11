@@ -22,14 +22,14 @@ interface ScheduleDisplayEnhancedProps {
   avgAdjustedCAPScore: number;
 }
 
-const dayIcons = {
+const dayIcons: Record<string, string> = {
   Tuesday: "💪",
   Wednesday: "💰",
   Thursday: "🎯",
   Friday: "🔧",
 };
 
-const dayColors = {
+const dayColors: Record<string, string> = {
   Tuesday: "from-green-500 to-emerald-600",
   Wednesday: "from-blue-500 to-indigo-600",
   Thursday: "from-purple-500 to-pink-600",
