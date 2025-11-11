@@ -964,7 +964,7 @@ export default function HomePage() {
               {activeView === "ai" && (
                 <AIDashboard
                   schedule={appState.schedule}
-                  agents={appState.eligibleAgents}
+                  agents={appState.eligibleAgents.length > 0 ? appState.eligibleAgents : appState.rawData.filter(a => a.capScore > 0)}
                   stats={appState.stats}
                 />
               )}

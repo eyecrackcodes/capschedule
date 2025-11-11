@@ -21,7 +21,9 @@ export function AIDashboard({ schedule, agents, stats }: AIDashboardProps) {
     .sort((a, b) => b.adjustedCAPScore - a.adjustedCAPScore);
   
   const topPerformers = sortedAgents.slice(0, 3);
-  const needsSupport = sortedAgents.slice(-3).reverse();
+  const needsSupport = sortedAgents.length > 3 
+    ? sortedAgents.slice(-3).reverse() 
+    : sortedAgents;
 
   return (
     <div className="space-y-6">
@@ -73,11 +75,19 @@ export function AIDashboard({ schedule, agents, stats }: AIDashboardProps) {
             </p>
           </AnimatedCard>
           
-          {topPerformers.map((agent, i) => (
-            <AnimatedCard key={agent.name} delay={i * 100}>
-              <AgentInsights agent={agent} />
+          {topPerformers.length > 0 ? (
+            topPerformers.map((agent, i) => (
+              <AnimatedCard key={agent.name} delay={i * 100}>
+                <AgentInsights agent={agent} />
+              </AnimatedCard>
+            ))
+          ) : (
+            <AnimatedCard className="p-8 text-center">
+              <p className="text-muted-foreground">
+                No agents available for analysis. Please ensure you have loaded agent data with CAP scores greater than 0.
+              </p>
             </AnimatedCard>
-          ))}
+          )}
         </TabsContent>
 
         <TabsContent value="needs-support" className="mt-6 space-y-4">
@@ -90,11 +100,19 @@ export function AIDashboard({ schedule, agents, stats }: AIDashboardProps) {
             </p>
           </AnimatedCard>
           
-          {needsSupport.map((agent, i) => (
-            <AnimatedCard key={agent.name} delay={i * 100}>
-              <AgentInsights agent={agent} />
+          {needsSupport.length > 0 ? (
+            needsSupport.map((agent, i) => (
+              <AnimatedCard key={agent.name} delay={i * 100}>
+                <AgentInsights agent={agent} />
+              </AnimatedCard>
+            ))
+          ) : (
+            <AnimatedCard className="p-8 text-center">
+              <p className="text-muted-foreground">
+                No agents available for analysis. Please ensure you have loaded agent data with CAP scores greater than 0.
+              </p>
             </AnimatedCard>
-          ))}
+          )}
         </TabsContent>
       </Tabs>
     </div>
