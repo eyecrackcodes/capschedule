@@ -5,6 +5,7 @@ import { FileUpload } from "@/components/file-upload";
 import { StatsDashboard } from "@/components/stats-dashboard";
 import { StatsDashboardEnhanced } from "@/components/stats-dashboard-enhanced";
 import { ScheduleDisplay } from "@/components/schedule-display";
+import { ScheduleDisplayEnhanced } from "@/components/schedule-display-enhanced";
 import { AIDashboard } from "@/components/ai/ai-dashboard";
 import { ExportControls } from "@/components/export-controls";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -754,12 +755,21 @@ export default function HomePage() {
 
               {/* Schedule Display */}
               {activeView === "calendar" && (
-                <ScheduleDisplay
-                  schedule={appState.schedule}
-                  filters={appState.filters}
-                  onFiltersChange={handleFiltersChange}
-                  avgAdjustedCAPScore={appState.stats.avgAdjustedCAPScore}
-                />
+                useEnhancedUI ? (
+                  <ScheduleDisplayEnhanced
+                    schedule={appState.schedule}
+                    filters={appState.filters}
+                    onFiltersChange={handleFiltersChange}
+                    avgAdjustedCAPScore={appState.stats.avgAdjustedCAPScore}
+                  />
+                ) : (
+                  <ScheduleDisplay
+                    schedule={appState.schedule}
+                    filters={appState.filters}
+                    onFiltersChange={handleFiltersChange}
+                    avgAdjustedCAPScore={appState.stats.avgAdjustedCAPScore}
+                  />
+                )
               )}
 
               {activeView === "location" && (

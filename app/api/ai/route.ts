@@ -6,11 +6,53 @@ const openai = process.env.OPENAI_API_KEY ? new OpenAI({
 }) : null;
 
 export async function POST(request: NextRequest) {
+  // If no OpenAI key, return mock data for demo purposes
   if (!openai) {
-    return NextResponse.json(
-      { error: 'OpenAI API key not configured' },
-      { status: 500 }
-    );
+    const body = await request.json();
+    const { type } = body;
+    
+    // Return appropriate mock data based on request type
+    if (type === 'agent-insights') {
+      return NextResponse.json({
+        agentName: body.data.agent.name,
+        strengths: [
+          "Consistent follow-up with leads",
+          "Strong rapport building skills"
+        ],
+        areasForImprovement: [
+          "Focus on closing techniques",
+          "Improve objection handling"
+        ],
+        personalizedTips: [
+          "Practice the assumptive close technique in role-plays",
+          "Review successful call recordings from top performers",
+          "Set daily goals for conversion rate improvement"
+        ],
+        priorityFocus: "Enhance closing techniques to convert more qualified leads into sales"
+      });
+    }
+    
+    if (type === 'schedule-optimization') {
+      return NextResponse.json([
+        {
+          suggestion: "Consider grouping agents by similar performance metrics for peer learning",
+          reason: "Agents with similar challenges can learn from shared experiences",
+          impact: "high"
+        },
+        {
+          suggestion: "Schedule high-energy training sessions in the morning slots",
+          reason: "Morning sessions typically have better engagement and retention",
+          impact: "medium"
+        },
+        {
+          suggestion: "Add 15-minute buffer between sessions for Q&A and follow-up",
+          reason: "Allow time for personalized coaching and questions",
+          impact: "medium"
+        }
+      ]);
+    }
+    
+    return NextResponse.json({ error: 'Invalid request type' }, { status: 400 });
   }
 
   try {
