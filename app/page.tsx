@@ -3,7 +3,9 @@
 import React, { useState } from "react";
 import { FileUpload } from "@/components/file-upload";
 import { StatsDashboard } from "@/components/stats-dashboard";
+import { StatsDashboardEnhanced } from "@/components/stats-dashboard-enhanced";
 import { ScheduleDisplay } from "@/components/schedule-display";
+import { AIDashboard } from "@/components/ai/ai-dashboard";
 import { ExportControls } from "@/components/export-controls";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { EdgeCaseHandler } from "@/components/edge-case-handler";
@@ -53,8 +55,9 @@ import { useEffect } from "react";
 
 export default function HomePage() {
   const [activeView, setActiveView] = useState<
-    "calendar" | "location" | "manager" | "database"
+    "calendar" | "location" | "manager" | "database" | "ai"
   >("calendar");
+  const [useEnhancedUI, setUseEnhancedUI] = useState(true);
   const [databaseView, setDatabaseView] = useState<
     | "upload"
     | "save"
@@ -639,11 +642,19 @@ export default function HomePage() {
           <ErrorBoundary>
             <div className="space-y-8">
               {/* Stats Dashboard */}
-              <StatsDashboard
-                stats={appState.stats}
-                weekOf={loadedWeekOf}
-                percentiles={appState.percentiles}
-              />
+              {useEnhancedUI ? (
+                <StatsDashboardEnhanced
+                  stats={appState.stats}
+                  weekOf={loadedWeekOf}
+                  percentiles={appState.percentiles}
+                />
+              ) : (
+                <StatsDashboard
+                  stats={appState.stats}
+                  weekOf={loadedWeekOf}
+                  percentiles={appState.percentiles}
+                />
+              )}
 
               {/* Time Zone Information */}
               <TimeZoneDisplay />
@@ -675,6 +686,17 @@ export default function HomePage() {
                 onExportManager={handleExportManager}
                 onExportEmail={handleExportEmail}
               />
+
+              {/* UI Mode Toggle */}
+              <div className="mb-4 flex justify-end">
+                <button
+                  onClick={() => setUseEnhancedUI(!useEnhancedUI)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors"
+                >
+                  <span>{useEnhancedUI ? '✨' : '📊'}</span>
+                  {useEnhancedUI ? 'Enhanced UI' : 'Classic UI'}
+                </button>
+              </div>
 
               {/* View Tabs */}
               <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg">
@@ -717,6 +739,16 @@ export default function HomePage() {
                   }`}
                 >
                   Database & Analytics
+                </button>
+                <button
+                  onClick={() => setActiveView("ai")}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeView === "ai"
+                      ? "bg-white text-blue-600 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  AI Insights
                 </button>
               </div>
 
@@ -916,6 +948,15 @@ export default function HomePage() {
                   {/* Debug CAP History View */}
                   {databaseView === "debug" && <DebugCAPHistory />}
                 </div>
+              )}
+
+              {/* AI Insights View */}
+              {activeView === "ai" && (
+                <AIDashboard
+                  schedule={appState.schedule}
+                  agents={appState.eligibleAgents}
+                  stats={appState.stats}
+                />
               )}
             </div>
           </ErrorBoundary>
