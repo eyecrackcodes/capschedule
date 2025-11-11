@@ -20,11 +20,13 @@ export function AgentInsights({ agent, className }: AgentInsightsProps) {
   const [error, setError] = useState<string | null>(null);
 
   const handleGenerateInsights = async () => {
+    console.log('🎯 Generate Insights clicked for:', agent.name);
     setLoading(true);
     setError(null);
     
     try {
       const result = await generateAgentInsights(agent);
+      console.log('🎯 Insights result:', result);
       if (result) {
         setInsights(result);
       } else {
@@ -32,7 +34,7 @@ export function AgentInsights({ agent, className }: AgentInsightsProps) {
       }
     } catch (err) {
       setError('Failed to generate insights');
-      console.error(err);
+      console.error('🎯 Error:', err);
     } finally {
       setLoading(false);
     }
@@ -40,8 +42,8 @@ export function AgentInsights({ agent, className }: AgentInsightsProps) {
 
   return (
     <Card className={cn("overflow-hidden", className)}>
-      <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
-        <div className="flex items-center justify-between">
+      <CardHeader className="relative bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
+        <div className="flex items-center justify-between gap-4">
           <div className="flex-1">
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-purple-600" />
@@ -60,7 +62,8 @@ export function AgentInsights({ agent, className }: AgentInsightsProps) {
             onClick={handleGenerateInsights}
             disabled={loading}
             size="sm"
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            className="relative z-10 cursor-pointer bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:cursor-not-allowed disabled:opacity-50"
+            style={{ pointerEvents: loading ? 'none' : 'auto' }}
           >
             {loading ? (
               <>
