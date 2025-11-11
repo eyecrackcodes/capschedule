@@ -15,10 +15,31 @@ interface AIDashboardProps {
 }
 
 export function AIDashboard({ schedule, agents, stats }: AIDashboardProps) {
+  console.log('🤖 AI Dashboard - Agents received:', agents.length);
+  console.log('🤖 AI Dashboard - Schedule days:', schedule.length);
+  
+  // Get all agents from the schedule if no agents provided
+  let allAgents = agents;
+  if (agents.length === 0 && schedule.length > 0) {
+    console.log('🤖 AI Dashboard - No agents provided, extracting from schedule');
+    const agentMap = new Map<string, any>();
+    schedule.forEach(day => {
+      day.sessions.forEach(session => {
+        session.agents.forEach(agent => {
+          agentMap.set(agent.name, agent);
+        });
+      });
+    });
+    allAgents = Array.from(agentMap.values());
+    console.log('🤖 AI Dashboard - Extracted agents from schedule:', allAgents.length);
+  }
+  
   // Get top and bottom performers for insights
-  const sortedAgents = [...agents]
+  const sortedAgents = [...allAgents]
     .filter(a => a.capScore > 0)
     .sort((a, b) => b.adjustedCAPScore - a.adjustedCAPScore);
+  
+  console.log('🤖 AI Dashboard - Sorted agents:', sortedAgents.length);
   
   const topPerformers = sortedAgents.slice(0, 3);
   const needsSupport = sortedAgents.length > 3 
