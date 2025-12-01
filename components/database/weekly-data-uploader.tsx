@@ -221,22 +221,38 @@ export function WeeklyDataUploader({
           </ul>
         </div>
 
-        {/* Week Selection */}
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            <Calendar className="inline h-4 w-4 mr-2" />
-            Week Of (Monday)
+        {/* Week Selection - Prominent */}
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-6 rounded-lg border-2 border-blue-200 dark:border-blue-800">
+          <label className="block text-lg font-semibold mb-3 text-blue-900 dark:text-blue-100">
+            <Calendar className="inline h-5 w-5 mr-2" />
+            Choose Week (Select Monday of the week)
           </label>
           <input
             type="date"
             value={weekOf}
             onChange={(e) => setWeekOf(e.target.value)}
-            className="w-full px-3 py-2 border rounded-md"
+            className="w-full px-4 py-3 border-2 border-blue-300 rounded-lg text-lg font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             disabled={isProcessing}
           />
-          <p className="text-xs text-gray-500 mt-1">
-            This will be saved as the schedule for this week
-          </p>
+          <div className="mt-3 flex items-start gap-2 text-sm">
+            <div className="flex-shrink-0 mt-0.5">
+              <svg className="h-4 w-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="text-blue-700 dark:text-blue-300">
+              <p className="font-medium">Important: Select a Monday date</p>
+              <p className="text-xs mt-1">
+                Default: {new Date().toLocaleDateString('en-US', { weekday: 'long' })}, {new Date().toLocaleDateString()}
+                {dayOfWeek === 0 && " (Last week's Monday is shown)"}
+                {dayOfWeek === 1 && " (Today is Monday!)"}
+                {dayOfWeek > 1 && " (This week's Monday is shown)"}
+              </p>
+              <p className="text-xs mt-1">
+                Selected: {new Date(weekOf).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* File Upload */}
@@ -369,11 +385,24 @@ export function WeeklyDataUploader({
   );
 }
 
-function getNextMonday(): string {
+function getCurrentOrLastMonday(): string {
   const today = new Date();
-  const dayOfWeek = today.getDay();
-  const daysUntilMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
-  const nextMonday = new Date(today);
-  nextMonday.setDate(today.getDate() + daysUntilMonday);
-  return nextMonday.toISOString().split("T")[0];
+  const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  
+  // Calculate days to subtract to get to last Monday (or today if it's Monday)
+  let daysToSubtract;
+  if (dayOfWeek === 0) {
+    // Sunday - go back 6 days to last Monday
+    daysToSubtract = 6;
+  } else if (dayOfWeek === 1) {
+    // Monday - use today
+    daysToSubtract = 0;
+  } else {
+    // Tue-Sat - go back to Monday of this week
+    daysToSubtract = dayOfWeek - 1;
+  }
+  
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - daysToSubtract);
+  return monday.toISOString().split("T")[0];
 }
